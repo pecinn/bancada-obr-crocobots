@@ -1,0 +1,293 @@
+
+<div id="topo">
+  <span class="marca"><img class="logo" id="logoTopo" src="LOGO_DATA" alt="CROCOBOTS"><span><span class="nome">Bancada OBR</span><span class="sub">CROCOBOTS · Clube de Robótica JGP</span></span></span>
+  <span class="tag" id="tagProj">programa novo</span>
+  <button class="bt" id="btAbrir" title="Abrir um projeto do SPIKE">Abrir .llsp3</button>
+  <input type="file" id="arq" accept=".llsp3,.lms,.sb3,.zip,.json" style="display:none">
+  <select id="selExemplo" class="bt" title="Exemplos e programas guardados neste navegador">
+    <option value="">Programas…</option>
+    <optgroup label="Exemplos">
+      <option value="cor">Seguidor por cor (2 sensores)</option>
+      <option value="reflexo">Seguidor por reflexo · P (2 sensores)</option>
+      <option value="borda">Seguidor de borda · P (1 sensor)</option>
+      <option value="pd">Seguidor PD + regras OBR + obstáculo + resgate</option>
+      <option value="samurai">Samurai OBR v11 (da equipe, com resgate)</option>
+    </optgroup>
+    <optgroup label="Guardados neste navegador" id="grpMeus"></optgroup>
+    <option value="#guardar">💾 Guardar o programa atual…</option>
+  </select>
+  <button class="bt" id="btBaixar">⤓ Baixar</button>
+  <button class="bt" id="btLimpar">Limpar</button>
+  <span class="espaco"></span>
+  <select id="selPista" class="bt" title="Escolher a pista"></select>
+  <button class="bt primaria" id="btRodar">▶ Rodar</button>
+  <button class="bt parar" id="btParar">■ Parar</button>
+  <button class="bt icone" id="btPausa" title="Pausar">⏸</button>
+  <button class="bt icone" id="btReset" title="Voltar para a largada">⟲</button>
+  <button class="bt teste" id="btTestar" title="Roda o programa em todas as pistas e mostra o relatório">🧪 Testar tudo</button>
+  <button class="bt icone" id="btSom" title="Som ligado">🔊</button>
+</div>
+<form id="guardaBox" hidden>
+  <label for="guardaNome">Guardar o programa atual como</label>
+  <input id="guardaNome" maxlength="60" autocomplete="off">
+  <small id="guardaAviso"></small>
+  <div class="acoes"><button type="button" id="guardaApagar" class="bt" hidden>Apagar este</button><span class="esp"></span>
+  <button type="button" id="guardaCancela" class="bt">Cancelar</button><button type="submit" class="bt pri">💾 Guardar</button></div>
+</form>
+
+<div id="corpo">
+  <div id="trilho"></div>
+  <div id="paleta"></div>
+
+  <div id="mesa">
+    <div id="lousa"></div>
+    <div id="dica">arraste blocos da paleta · role para navegar · Ctrl+roda para zoom</div>
+    <div id="lixeira">🗑</div>
+    <div id="zoombar">
+      <button id="zMenos" title="Diminuir">−</button>
+      <button id="zMais" title="Aumentar">+</button>
+      <button id="zCem" title="100%" style="width:auto;padding:0 10px">100%</button>
+      <button id="zArruma" title="Arrumar os blocos em colunas, sem um em cima do outro" style="width:auto;padding:0 10px">🧹 Arrumar</button>
+    </div>
+  </div>
+
+  <div id="divisor" title="Arraste para aumentar a pista ou os blocos"></div>
+
+  <div id="hub">
+    <div id="palco" class="semlente">
+      <canvas id="lona" width="600" height="450"></canvas>
+      <canvas id="lona2" width="600" height="450" hidden></canvas>
+      <canvas id="confete"></canvas>
+      <img id="marcaDagua" src="LOGO_DATA" alt="">
+      <div id="selo"></div>
+      <div id="hudTopo">
+        <span class="chip"><span class="ponto" id="hPonto"></span><span id="hEstado">parado</span></span>
+        <span class="chip" id="hTempo">0,0 s</span>
+        <span class="chip prog"><span>percurso</span><span class="barra"><i id="hBarra"></i></span><span id="hPct">0%</span></span>
+        <span class="esp"></span>
+        <span class="chip" id="hEquipe">🤖 Samurai</span>
+      </div>
+      <div id="sensHud" class="hud">
+        <canvas id="lente" width="256" height="256" title="O que os sensores de cor estão vendo"></canvas>
+        <div id="sensChips"></div>
+      </div>
+      <div id="vistaBar" class="hud">
+        <button id="vb3d" class="on" title="Câmera livre: arraste para girar, role para aproximar">3D</button>
+        <button id="vbSegue" title="Câmera atrás do robô">Atrás</button>
+        <button id="vbCima" title="Vista de cima">De cima</button>
+        <button id="vbLente" title="Mostrar a lupa dos sensores (o que eles veem de perto)">Lupa</button>
+        <button id="btCheio" title="Tela cheia (F)">⛶</button>
+      </div>
+      <div id="resultado" class="hud"></div>
+      <div id="contagem" hidden></div>
+      <div id="painelCheio"></div>
+      <div id="barraCheia">
+        <button class="verde" id="fcRodar">▶ Rodar</button>
+        <button class="rubro" id="fcParar">■ Parar</button>
+        <button id="fcPausa">⏸ Pausar</button>
+        <button id="fcReset">⟲ Recomeçar</button>
+        <div class="sep"></div>
+        <input type="range" id="fcVel" min="0.25" max="6" step="0.25" value="1" style="width:110px">
+        <span id="fcVelTxt">1× real</span>
+        <div class="sep"></div>
+        <button id="fcSair">⤢ Sair (Esc)</button>
+      </div>
+    </div>
+
+    <div id="abas">
+      <button data-aba="sens" class="on">📡 Sensores</button>
+      <button data-aba="robo">🛠 Robô</button>
+      <button data-aba="pista">🗺 Pista</button>
+      <button data-aba="testes">🧪 Testes</button>
+      <button data-aba="console">💬 Console</button>
+    </div>
+
+    <div id="hubrolo">
+      <div id="avisoTres" class="aviso" style="display:none">
+        A biblioteca 3D não carregou. A bancada está funcionando na vista de cima.
+      </div>
+
+      <!-- ============ SENSORES ============ -->
+      <div class="aba" data-aba="sens">
+        <div class="cartao">
+          <h5>Velocidade da simulação</h5>
+          <div class="linha">
+            <input type="range" id="vel" min="0.25" max="6" step="0.25" value="1">
+            <span id="velTxt" style="min-width:74px;font-weight:800;font-size:12px">1× real</span>
+          </div>
+        </div>
+        <div class="cartao">
+          <h5>Gráfico ao vivo · últimos 10 s</h5>
+          <canvas id="grafico" width="720" height="300"></canvas>
+          <div class="legenda" id="legenda"></div>
+          <canvas id="faixaCores" class="faixa-cores" width="720" height="56" title="A cor que cada sensor viu ao longo do tempo"></canvas>
+          <p class="nota">As linhas mostram a <b>luz refletida</b> (0 a 100). A faixa de baixo mostra a <b>cor</b> que cada sensor
+            reconheceu. Use para achar o limiar entre preto e branco e para ajustar o Kp do seguidor.</p>
+        </div>
+        <div class="cartao">
+          <h5>Sensores agora</h5>
+          <div class="grade3" id="leituras"></div>
+        </div>
+        <div class="cartao">
+          <h5>Estado</h5>
+          <div class="grade" id="estado"></div>
+        </div>
+      </div>
+
+      <!-- ============ ROBO ============ -->
+      <div class="aba" data-aba="robo" hidden>
+        <div class="cartao">
+          <h5>Modelo do robô</h5>
+          <div class="modelos" id="modelos" role="radiogroup" aria-label="Modelo do robô">
+            <button data-modelo="rodas4" role="radio"><svg viewBox="0 0 64 40" aria-hidden="true"><rect x="14" y="9" width="36" height="22" rx="4" fill="currentColor" opacity=".35"/><rect x="10" y="2" width="14" height="7" rx="2"/><rect x="40" y="2" width="14" height="7" rx="2"/><rect x="10" y="31" width="14" height="7" rx="2"/><rect x="40" y="31" width="14" height="7" rx="2"/></svg><b>4 rodas</b><small>tração nas 4, engrenagens</small></button>
+            <button data-modelo="esteira" role="radio"><svg viewBox="0 0 64 40" aria-hidden="true"><rect x="14" y="9" width="36" height="22" rx="4" fill="currentColor" opacity=".35"/><rect x="6" y="1" width="52" height="8" rx="4"/><rect x="6" y="31" width="52" height="8" rx="4"/></svg><b>Esteira</b><small>lagarta, sobe fácil</small></button>
+            <button data-modelo="rodas2" role="radio"><svg viewBox="0 0 64 40" aria-hidden="true"><rect x="14" y="9" width="36" height="22" rx="4" fill="currentColor" opacity=".35"/><rect x="25" y="2" width="14" height="7" rx="2"/><rect x="25" y="31" width="14" height="7" rx="2"/><circle cx="12" cy="20" r="4"/></svg><b>2 rodas</b><small>+ bolinha atrás</small></button>
+          </div>
+          <p class="nota">Muda o desenho do robô. O jeito de andar é o mesmo nos três: cada lado tem um motor
+            (A esquerdo, B direito), então o mesmo programa serve para qualquer modelo.</p>
+        </div>
+        <div class="cartao">
+          <h5>Pá coletora · motor C</h5>
+          <p class="nota" style="margin-top:0">Uma pá rasa de 3 × 15,6 cm na frente do robô. <b>Motor C em 90°</b>: abaixada no chão,
+            ela empurra as vítimas. Quando o robô <b>aperta a vítima contra a parede</b>, ela sobe para dentro da pá e fica presa
+            (anda junto, até de ré). <b>Motor C em 0°</b>: a pá levanta e joga as vítimas para a frente, uns 6 cm além da boca,
+            por cima da borda do recipiente. Use o bloco <b>motor C ir para a posição</b>. O ultrassônico fica a 8 cm do chão:
+            não enxerga as vítimas (bolas de 4 a 5 cm) nem a borda de 6 cm do recipiente, só as paredes.</p>
+        </div>
+        <div class="cartao">
+          <h5>Equipe</h5>
+          <div class="linha"><label>Nome</label><input id="cfgEquipe" maxlength="18" value="CROCOBOTS"></div>
+          <div class="linha"><label>Cor</label><div class="cores-equipe" id="coresEquipe"></div></div>
+        </div>
+        <div class="cartao">
+          <h5>Sensores de cor · posição</h5>
+          <div class="deslize"><label for="cfgSep">Do centro até cada sensor</label><output id="oSep"></output>
+            <input type="range" id="cfgSep" min="1" max="5" step="0.1"></div>
+          <div class="deslize"><label for="cfgFrente">Distância à frente das rodas</label><output id="oFrente"></output>
+            <input type="range" id="cfgFrente" min="2" max="10" step="0.5"></div>
+          <div class="deslize"><label for="cfgMancha">Tamanho da mancha de luz</label><output id="oMancha"></output>
+            <input type="range" id="cfgMancha" min="0.6" max="2.4" step="0.1"></div>
+          <p class="nota">Manual da OBR: fita preta de 1 a 2 cm (fita isolante = 19 mm) e verde de 2,5 × 2,5 cm encostado nela.
+            Com os sensores a <b>2,2 cm</b> do centro, cada um passa no meio do verde e os dois nunca ficam no preto ao mesmo tempo numa reta.
+            Mais longe: o robô "balança" mais sem enxergar a linha e pode passar na borda do verde.</p>
+        </div>
+        <div class="cartao">
+          <h5>Portas do hub</h5>
+          <div id="portas"></div>
+          <div class="linha"><label>Rodas Ø</label>
+            <input type="number" id="cfgRoda" value="56" step="1" style="max-width:80px"><span style="font-size:12px">mm</span>
+            <label style="min-width:auto">Eixo</label>
+            <input type="number" id="cfgEixo" value="14" step="0.5" style="max-width:80px"><span style="font-size:12px">cm</span>
+          </div>
+        </div>
+        <div class="cartao">
+          <h5>Mundo real · deixe o programa robusto</h5>
+          <div class="deslize"><label for="cfgRuido">Ruído dos sensores</label><output id="oRuido"></output>
+            <input type="range" id="cfgRuido" min="0" max="8" step="0.5"></div>
+          <div class="deslize"><label for="cfgMotor">Diferença entre os motores</label><output id="oMotor"></output>
+            <input type="range" id="cfgMotor" min="0" max="10" step="0.5"></div>
+          <div class="deslize"><label for="cfgInercia">Inércia (arrancada e freada)</label><output id="oInercia"></output>
+            <input type="range" id="cfgInercia" min="0" max="0.3" step="0.02"></div>
+          <div class="linha"><label style="min-width:auto;display:flex;gap:6px;align-items:center;cursor:pointer">
+            <input type="checkbox" id="chkRaio" checked style="flex:none;width:auto"> Mostrar o feixe do sensor de distância</label></div>
+          <p class="nota">Robô de verdade nunca é perfeito. Aumente esses valores e rode os testes de novo: se ainda
+            completar, o programa está pronto para a arena.</p>
+        </div>
+      </div>
+
+      <!-- ============ PISTA ============ -->
+      <div class="aba" data-aba="pista" hidden>
+        <div class="cartao">
+          <h5>Sobre esta pista</h5>
+          <div class="pista-desc" id="pistaDesc"></div>
+        </div>
+        <div class="cartao">
+          <h5>Área de resgate</h5>
+          <div class="linha"><label for="selNivel">Nível</label>
+            <select id="selNivel" class="bt" style="flex:1">
+              <option value="2">Nível 2 · recipiente com borda de 6 cm</option>
+              <option value="1">Nível 1 · triângulo com borda de 5 mm</option>
+            </select></div>
+          <p class="nota">No <b>Nível 2</b> (ensino médio) a área de resgate é um recipiente com borda de 6 cm e centro oco:
+            o robô não passa por cima, então precisa levantar a pá e jogar as vítimas por cima da borda. O chão de dentro
+            é branco, então os sensores de cor de baixo não veem de que cor ele é. No <b>Nível 1</b> é um triângulo pintado
+            com uma elevação de 5 mm. Troque também a variável <b>nivel</b> no bloco <b>resgate</b> do programa.</p>
+        </div>
+        <div class="cartao" id="cartaoLad">
+          <h5>Ladrilhos · 8 × 6 de 30 cm</h5>
+          <div id="tab"></div>
+          <div class="aviso" id="avisoEncaixe" style="display:none"></div>
+          <div id="pal"></div>
+          <div class="linha">
+            <button class="bt" id="btGirar" style="flex:1">⟳ Girar (0°)</button>
+            <button class="bt" id="btVerde" style="flex:1">Verde: desligado</button>
+          </div>
+          <div class="linha">
+            <button class="bt" id="btMapaPadrao" style="flex:1">Desfazer mudanças</button>
+            <button class="bt" id="btMapaLimpo" style="flex:1">Limpar tapete</button>
+          </div>
+          <p class="nota">Escolha um ladrilho, gire se precisar e clique numa casa do tapete. Com <b>Verde</b> ligado,
+            o clique põe (ou tira) o quadrado verde de 25 mm no canto escolhido.</p>
+        </div>
+        <div class="cartao">
+          <h5>Objetos na pista</h5>
+          <div class="linha">
+            <button class="bt" id="btAddObst" style="flex:1">+ Obstáculo</button>
+            <button class="bt" id="btAddVit" style="flex:1">+ Vítima</button>
+          </div>
+          <div class="linha">
+            <button class="bt" id="btDelObj" style="flex:1">Remover selecionado</button>
+            <button class="bt" id="btLimpaObst" style="flex:1">Tirar todos</button>
+          </div>
+          <div id="objInfo" class="nota" style="font-size:11.5px;color:var(--tinta2);font-weight:600"></div>
+        </div>
+        <div class="cartao">
+          <h5>Pista de imagem (como no Open Roberta)</h5>
+          <div class="linha">
+            <button class="bt" id="btImg" style="flex:1">🖼 Carregar imagem da pista</button>
+            <input type="file" id="arqImg" accept="image/*" style="display:none">
+          </div>
+          <div class="linha"><label>Largura</label>
+            <input type="number" id="imgLarg" value="240" min="60" max="240" step="10" style="max-width:90px"><span style="font-size:12px">cm (o tapete tem 240 × 180)</span></div>
+          <p class="nota">Use um fundo exportado do Open Roberta, um desenho ou a foto de um ladrilho. Os sensores leem os
+            pixels da imagem de verdade, então linha preta, verde e vermelho funcionam igual ao tapete.</p>
+        </div>
+      </div>
+
+      <!-- ============ TESTES ============ -->
+      <div class="aba" data-aba="testes" hidden>
+        <div class="cartao">
+          <h5>Bateria de testes</h5>
+          <p class="nota" style="margin-top:0">Roda o programa atual em <b>todas as pistas</b>, bem rápido e sem desenhar,
+            e mostra onde ele completa e onde ele se perde. Clique numa miniatura para abrir aquela pista.</p>
+          <p class="nota">Sem limite de tempo: cada pista roda até o robô validar a chegada, travar, perder a linha
+            ou ficar 60 s sem avançar. No fim aparece o tempo e a nota: <b>Perfeito</b> (validou sem sair da linha),
+            <b>Bom</b> (validou com erros) ou <b>Ruim</b> (não validou).</p>
+          <div class="linha"><button class="bt teste" id="btTestar2" style="flex:1">🧪 Testar em todas as pistas</button></div>
+          <div id="barraTeste"><i></i></div>
+          <div id="placar"></div>
+          <div class="res-lista" id="resLista"></div>
+        </div>
+        <div class="cartao">
+          <h5>Últimas corridas</h5>
+          <div id="historico" class="nota" style="margin:0">Nenhuma corrida ainda.</div>
+        </div>
+      </div>
+
+      <!-- ============ CONSOLE ============ -->
+      <div class="aba" data-aba="console" hidden>
+        <div class="cartao">
+          <h5>Variáveis e mensagens</h5>
+          <div class="linha" style="margin-top:0">
+            <label style="min-width:auto;display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="checkbox" id="chkRastro" style="flex:none;width:auto">
+              Registrar as rotinas chamadas
+            </label>
+          </div>
+          <div id="console" style="height:260px"></div>
+          <div class="grade" id="varsVivas" style="margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

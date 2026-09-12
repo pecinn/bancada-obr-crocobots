@@ -1,0 +1,206 @@
+
+/* ======================= v2: layout, palco e HUD ======================= */
+:root{ --palco:#1a1f27; --hud:rgba(16,20,27,.78); --hudb:rgba(255,255,255,.12); --amarelo:#ffd23f; }
+#topo{gap:8px}
+#topo .marca{display:flex;align-items:center;gap:9px;margin-right:4px}
+#topo .logo{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:17px;
+  background:linear-gradient(135deg,#ffd23f,#ff8c1a);box-shadow:0 2px 6px rgba(255,140,26,.35)}
+#topo .nome{margin:0}
+#topo .sub{font-size:10.5px;font-weight:800;color:var(--tinta3);letter-spacing:.08em;text-transform:uppercase;display:block;line-height:1}
+#topo select.bt{padding:6px 8px;max-width:230px}
+.bt.teste{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border-color:transparent}
+.bt.teste:hover{filter:brightness(1.1)}
+.bt.icone{padding:7px 9px}
+#corpo{position:relative}
+#divisor{width:7px;flex:none;cursor:col-resize;background:var(--borda);position:relative;z-index:3}
+#divisor:hover,#divisor.ativo{background:var(--marca)}
+#divisor::after{content:"";position:absolute;left:2px;top:50%;width:3px;height:36px;margin-top:-18px;border-radius:2px;background:rgba(255,255,255,.7)}
+#hub{width:46vw;min-width:360px;max-width:74vw}
+#palco{background:var(--palco);overflow:hidden}
+#palco canvas{touch-action:none}
+
+/* HUD sobre a pista */
+.hud{position:absolute;z-index:4;background:var(--hud);border:1px solid var(--hudb);color:#eef3f8;
+  border-radius:12px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+#selo{display:none}
+#hudTopo{position:absolute;z-index:4;left:10px;top:10px;right:10px;display:flex;gap:8px;align-items:center;background:none;border:0;box-shadow:none;backdrop-filter:none;pointer-events:none}
+#hudTopo .chip{background:var(--hud);border:1px solid var(--hudb);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:800;
+  color:#eef3f8;display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px);white-space:nowrap}
+#hudTopo .ponto{width:8px;height:8px;border-radius:50%;background:#8a95a2}
+#hudTopo .ponto.on{background:#34d058;box-shadow:0 0 8px #34d058}
+#hudTopo .ponto.pausa{background:#ffd23f}
+#hudTopo .prog{flex:1;max-width:260px;min-width:90px}
+#hudTopo .barra{flex:1;height:7px;border-radius:9px;background:rgba(255,255,255,.14);overflow:hidden;min-width:50px}
+#hudTopo .barra i{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,#34d058,#ffd23f);transition:width .25s}
+#hudTopo .esp{flex:1}
+#sensHud{left:10px;bottom:10px;padding:8px;display:flex;gap:8px;align-items:flex-end}
+#lente{width:128px;height:128px;border-radius:50%;display:block;background:#000;border:2px solid rgba(255,255,255,.25);
+  box-shadow:0 0 0 3px rgba(0,0,0,.25), inset 0 0 20px rgba(0,0,0,.6)}
+#sensChips{display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:800;min-width:118px}
+.schip{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.07);border-radius:9px;padding:4px 7px}
+.schip .amostra{width:16px;height:16px;border-radius:5px;border:1px solid rgba(255,255,255,.4);flex:none}
+.schip .rf{margin-left:auto;font-variant-numeric:tabular-nums;color:#ffd23f}
+.schip small{display:block;font-size:9.5px;color:#aab4bf;font-weight:700;line-height:1.1}
+#vistaBar{right:10px;bottom:10px;display:flex;gap:4px;padding:5px}
+#vistaBar button{border:0;background:transparent;color:#dfe6ee;border-radius:9px;padding:6px 9px;font-size:12px;font-weight:800}
+#vistaBar button:hover{background:rgba(255,255,255,.12)}
+#vistaBar button.on{background:#ffd23f;color:#1a1f27}
+#palco.semlente #lente{display:none}
+#palco.pequeno #sensHud{transform:scale(.82);transform-origin:left bottom}
+
+/* cartao de resultado */
+#resultado{left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);opacity:0;pointer-events:none;
+  padding:18px 22px;text-align:center;min-width:250px;transition:all .25s;z-index:8}
+#resultado.show{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto}
+#resultado .estrelas{font-size:34px;letter-spacing:4px;margin:2px 0 4px;filter:drop-shadow(0 2px 6px rgba(255,210,63,.4))}
+#resultado h3{margin:0 0 2px;font-size:19px}
+#resultado p{margin:4px 0;font-size:13px;color:#c9d2dc;font-weight:600}
+#resultado .nums{display:flex;gap:8px;justify-content:center;margin:10px 0}
+#resultado .nums div{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 10px;min-width:64px}
+#resultado .nums b{display:block;font-size:18px;color:#fff}
+#resultado .nums span{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#9aa6b2;font-weight:800}
+#resultado button{margin:4px 3px 0;border:1px solid var(--hudb);background:rgba(255,255,255,.1);color:#fff;border-radius:9px;padding:7px 12px}
+#resultado button.verde{background:#2ea44f;border-color:transparent}
+#confete{position:absolute;inset:0;pointer-events:none;z-index:7}
+
+/* abas */
+#abas{display:flex;gap:2px;padding:6px 8px 0;background:var(--painel);border-bottom:1px solid var(--borda);flex:none;overflow-x:auto}
+#abas button{border:0;background:transparent;color:var(--tinta2);padding:8px 11px;border-radius:9px 9px 0 0;font-size:13px;white-space:nowrap;border-bottom:3px solid transparent}
+#abas button.on{color:var(--tinta);border-bottom-color:var(--marca);background:var(--painel2)}
+#abas button:hover{color:var(--tinta)}
+.aba[hidden]{display:none!important}
+#hubrolo{padding:10px 12px}
+.cartao p.nota{font-size:11.5px;color:var(--tinta2);font-weight:600;margin:6px 0 0;line-height:1.45}
+#grafico{display:block;width:100%;height:150px;border-radius:9px;background:var(--painel);border:1px solid var(--borda)}
+.legenda{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;font-weight:800;color:var(--tinta2);margin-top:6px}
+.legenda i{display:inline-block;width:14px;height:4px;border-radius:2px;vertical-align:middle;margin-right:4px}
+.faixa-cores{display:block;width:100%;height:28px;border-radius:7px;margin-top:6px;border:1px solid var(--borda)}
+.cores-equipe{display:flex;gap:6px;flex-wrap:wrap}
+.cores-equipe button{width:28px;height:28px;border-radius:50%;border:2px solid var(--painel);box-shadow:0 0 0 1px var(--borda)}
+.cores-equipe button.on{box-shadow:0 0 0 2px var(--marca)}
+.deslize{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;margin:8px 0}
+.deslize label{font-size:12px;font-weight:700;color:var(--tinta2)}
+.deslize output{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.deslize input{grid-column:1 / span 2;width:100%}
+.pista-desc{font-size:12.5px;font-weight:600;color:var(--tinta2);line-height:1.5}
+.pista-desc b{color:var(--tinta)}
+.res-lista{display:grid;gap:8px}
+.res{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center;background:var(--painel);border:1px solid var(--borda);border-radius:10px;padding:7px}
+.res canvas{width:120px;height:90px;border-radius:6px;display:block;background:#eee;cursor:pointer}
+.res b{font-size:13px}
+.res .st{font-size:12px;font-weight:800;margin:2px 0}
+.res .st.ok{color:var(--ok)} .res .st.meio{color:#d97706} .res .st.ruim{color:var(--erro)}
+.res small{display:block;font-size:11.5px;color:var(--tinta2);font-weight:600;line-height:1.4}
+.placar{display:flex;gap:8px;margin-bottom:8px}
+.placar div{flex:1;background:var(--painel);border:1px solid var(--borda);border-radius:10px;padding:7px;text-align:center}
+.placar b{display:block;font-size:20px}
+.placar span{font-size:10.5px;color:var(--tinta3);font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+#barraTeste{height:8px;border-radius:8px;background:var(--borda);overflow:hidden;margin:8px 0}
+#barraTeste i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c3aed,#4f46e5);transition:width .2s}
+@media (max-width:1180px){ #paleta{width:180px} #hub{width:44vw} }
+
+/* ============ identidade CROCOBOTS: preto metalico, garras e circuitos ============ */
+:root,:root[data-theme="light"],:root[data-theme="dark"]{
+  color-scheme:dark;
+  --fundo:#101215; --painel:#17191d; --painel2:#1e2126; --borda:#2c3036;
+  --tinta:#eceef1; --tinta2:#aab1ba; --tinta3:#737b86; --trilho:#131518;
+  --sombra:0 1px 2px rgba(0,0,0,.5), 0 6px 18px rgba(0,0,0,.35);
+  --marca:#8fd14f; --ok:#3fae5a; --erro:#e5484d;
+  --avfundo:#2b2314; --avborda:#5b4520; --avtinta:#ffd8a8;
+  --aco:linear-gradient(180deg,#f4f6f8 0%,#b9c0c8 45%,#6f7780 55%,#d6dbe0 100%);
+}
+body{background:var(--fundo)}
+#topo{height:58px;background:
+  radial-gradient(120% 140% at 0% 0%, rgba(143,209,79,.10), transparent 45%),
+  linear-gradient(180deg,#1c1f24,#121418);border-bottom:1px solid #2e333a;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+#topo .logo{width:auto;height:48px;border-radius:0;background:none;box-shadow:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+#topo .nome{font-family:"Black Ops One","Nunito",sans-serif;font-weight:400;font-size:19px;letter-spacing:.5px;
+  background:var(--aco);-webkit-background-clip:text;background-clip:text;color:transparent}
+#topo .sub{color:#8d96a1;font-size:9.5px;margin-top:2px}
+#topo .tag{border-color:#3a4048;color:#9aa3ad}
+.bt{background:linear-gradient(180deg,#2a2e34,#1f2227);border-color:#3a3f47;color:#e7eaee}
+.bt:hover{background:linear-gradient(180deg,#343941,#262a30)}
+.bt.primaria{background:linear-gradient(180deg,#55c46b,#2f9447);color:#fff}
+.bt.parar{background:linear-gradient(180deg,#f06a6e,#c93338);color:#fff}
+.bt.teste{background:linear-gradient(135deg,#8fd14f,#3fae5a);color:#0c1a06}
+#corpo{height:calc(100vh - 58px)}
+#mesa{background-color:#0f1114;background-image:
+  radial-gradient(circle at 1px 1px, #262a30 1px, transparent 0);background-size:24px 24px}
+#mesa::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520'%3E%3Cg fill='none' stroke='%23262b31' stroke-width='2'%3E%3Cpath d='M20 500V380l40-40h80M60 520V420l30-30M120 520V440l20-20h60M500 20H380l-40 40v70M520 70H420l-30 30'/%3E%3C/g%3E%3Cg fill='%23262b31'%3E%3Ccircle cx='140' cy='340' r='4'/%3E%3Ccircle cx='90' cy='390' r='4'/%3E%3Ccircle cx='200' cy='420' r='4'/%3E%3Ccircle cx='340' cy='130' r='4'/%3E%3Ccircle cx='390' cy='100' r='4'/%3E%3C/g%3E%3C/svg%3E") right bottom/520px no-repeat}
+#paleta,#trilho{background:#141619}
+#hub{background:#15171b}
+.cartao{background:linear-gradient(180deg,#1d2025,#191b1f);border-color:#2c3036}
+.leitura{background:#121417}
+#console{background:#0e1012;color:#b7f28a}
+#abas{background:#15171b}
+#abas button.on{border-bottom-color:#8fd14f}
+#palco{background:#0e1013}
+#marcaDagua{position:absolute;right:12px;top:48px;width:74px;opacity:.55;z-index:3;pointer-events:none;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
+#palco.pequeno #marcaDagua{width:56px}
+#hudTopo .barra i{background:linear-gradient(90deg,#3fae5a,#8fd14f,#e9f7a6)}
+#vistaBar button.on{background:linear-gradient(180deg,#b9e886,#8fd14f);color:#10200a}
+#resultado h3{font-family:"Black Ops One","Nunito",sans-serif;font-weight:400;font-size:22px;letter-spacing:.5px;
+  background:var(--aco);-webkit-background-clip:text;background-clip:text;color:transparent}
+#resultado .logoRes{width:92px;display:block;margin:-4px auto 2px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
+#grafico,.faixa-cores{background:#0f1114}
+#tab canvas{background:#f3f2ee}
+.res{background:#121417}
+.placar div{background:#121417}
+/* garras no canto do palco */
+#palco::after{content:"";position:absolute;left:-10px;bottom:-10px;width:170px;height:170px;pointer-events:none;z-index:2;opacity:.14;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%23c9d0d8'%3E%3Cpath d='M8 92C30 60 52 34 88 8C60 38 38 64 14 96Z'/%3E%3Cpath d='M-4 78C18 52 38 30 70 6C46 34 28 56 2 84Z'/%3E%3Cpath d='M22 100C42 74 62 52 96 30C70 58 50 80 30 104Z'/%3E%3C/g%3E%3C/svg%3E") no-repeat center/contain}
+#palco.cheio #painelCheio{display:none}
+
+#topo .bt{white-space:nowrap;padding:7px 10px}
+#topo{overflow:hidden}
+@media (max-width:1560px){ #topo .tag{display:none} #topo .sub{display:none} }
+@media (max-width:1320px){ #btLimpar,#btBaixar{padding:7px 8px} #topo select.bt{max-width:170px} }
+#lente{width:112px;height:112px}
+
+#contagem{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;pointer-events:none;text-align:center;
+  background:rgba(200,50,42,.88);color:#fff;border-radius:16px;padding:8px 20px;box-shadow:0 8px 26px rgba(0,0,0,.45)}
+#contagem b{display:block;font-family:"Black Ops One","Nunito",sans-serif;font-weight:400;font-size:40px;line-height:1.05}
+#contagem span{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+#resultado{max-width:92%;max-height:94%;overflow:auto;padding:14px 18px}
+#palco.baixo #resultado .logoRes{display:none}
+#palco.baixo #resultado .estrelas{font-size:26px}
+#palco.baixo #resultado .nums{margin:6px 0}
+#sensHud{pointer-events:none;background:rgba(16,20,27,.62)}
+#marcaDagua{opacity:.32;width:64px}
+@media (prefers-reduced-motion: reduce){ *,*::before,*::after{transition:none!important;animation:none!important} }
+/* tela cheia: controles no canto esquerdo, livre para a pista */
+/* tela cheia: controles num menu vertical na esquerda, fora da pista */
+#palco.cheio #barraCheia{left:14px;top:50%;bottom:auto;transform:translateY(-50%);flex-direction:column;align-items:stretch;
+  width:150px;box-sizing:border-box;gap:6px;padding:10px;max-height:calc(100% - 230px);overflow-y:auto;overflow-x:hidden}
+#palco.cheio #barraCheia button{text-align:left;padding:8px 10px;width:100%;box-sizing:border-box;white-space:nowrap}
+#palco.cheio #barraCheia .sep{width:auto;height:1px;margin:2px 0}
+#palco.cheio #barraCheia input[type=range]{width:100%!important;box-sizing:border-box;margin:0}
+#palco.cheio #barraCheia span{text-align:left;min-width:0}
+#palco.cheio #sensHud{bottom:14px;left:14px}
+/* guardar programa */
+#guardaBox{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:300;width:min(360px,92vw);display:grid;gap:8px;
+  background:#1a1e24;border:1px solid #3a4048;border-radius:12px;padding:14px;box-shadow:0 14px 40px rgba(0,0,0,.55);color:#e6eaef}
+#guardaBox label{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#9aa3ad}
+#guardaBox input{font:inherit;font-size:15px;padding:8px 10px;border-radius:8px;border:1px solid #454c56;background:#101215;color:#f2f4f6}
+#guardaBox input:focus{outline:2px solid #8fd14f;outline-offset:1px}
+#guardaBox small{min-height:1em;color:#c9a54a;font-size:12px}
+#guardaBox .acoes{display:flex;gap:8px;align-items:center}
+#guardaBox .esp{flex:1}
+#guardaBox .pri{background:linear-gradient(180deg,#b9e886,#8fd14f);color:#10200a;border-color:transparent;font-weight:800}
+
+/* nota da corrida */
+.pilula{display:inline-block;border-radius:999px;padding:1px 8px;font-size:10.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#10130f}
+.pilula.ok{background:#8fd14f} .pilula.meio{background:#f0b429} .pilula.ruim{background:#e5534b;color:#fff}
+
+/* escolha do modelo do robô */
+.modelos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.modelos button{display:grid;justify-items:center;gap:2px;padding:10px 6px 8px;border-radius:10px;border:1px solid #3a4048;
+  background:#121417;color:#c9d0d8;font:inherit;cursor:pointer}
+.modelos button svg{width:58px;height:36px;fill:currentColor}
+.modelos button b{font-size:13px;color:#eef1f4}
+.modelos button small{font-size:10.5px;color:#8d96a1;font-weight:700;text-align:center;line-height:1.2}
+.modelos button:hover{border-color:#6b7380}
+.modelos button:focus-visible{outline:2px solid #8fd14f;outline-offset:2px}
+.modelos button[aria-checked="true"]{border-color:#8fd14f;background:linear-gradient(180deg,#1f2a17,#141a10);color:#8fd14f}

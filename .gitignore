@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+fonte/bancada-obr.html
+.DS_Store
