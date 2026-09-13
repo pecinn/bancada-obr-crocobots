@@ -436,7 +436,7 @@ function montaCarro3d() {
   }
   /* pá coletora da frente (motor C): gira em torno de um eixo alto; abaixada, a bandeja fica no chão */
   PECAS.pa = null;
-  if (CFG[PA_PORTA] === "motor") {
+  if (CFG[PLAT.pa] === "motor") {
     const piv = new THREE.Group(); piv.position.set(PA_PIVO.x, PA_PIVO.h, 0);
     const fundo = caixaR(PA.x1 - PA.x0, 0.5, 2 * PA.meia + 0.6, 0.2, M.azul);
     fundo.position.set((PA.x0 + PA.x1) / 2 - PA_PIVO.x, 0.3 - PA_PIVO.h, 0); piv.add(fundo);

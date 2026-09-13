@@ -1,62 +1,117 @@
 <!-- ======================= PORTAL DA ROBÓTICA: entrada, kits e trilha ======================= -->
 <div id="portal" data-tela="login">
 
-  <!-- ---------- entrada ---------- -->
-  <section class="tela" id="telaLogin" aria-labelledby="tituloPortal">
-    <div class="login-grade">
-      <div class="login-hero">
-        <img class="login-logo" src="LOGO_DATA" alt="CROCOBOTS">
-        <p class="sobre">CROCOBOTS · Clube de Robótica JGP</p>
-        <h1 id="tituloPortal">Portal da Robótica</h1>
-        <p class="lema">Do primeiro bloco ao pódio: aqui você sai do zero e chega a 100 como um robô campeão.</p>
-        <ol class="degraus" aria-label="A trilha">
-          <li><b>Iniciante</b><span>andar, girar, repetir e o primeiro sensor</span></li>
-          <li><b>Intermediário</b><span>seguir linha, verdes, obstáculo e a fita prata</span></li>
-          <li><b>Avançado</b><span>as pistas da OBR 2026, com resgate</span></li>
-        </ol>
-        <div class="kits-mini" aria-label="Kits">
-          <span class="kchip spike">SPIKE Prime <small>.llsp3</small></span>
-          <span class="kchip ev3">EV3 <small>.lmsp</small></span>
-          <span class="kchip ard">Arduino <small>.ino</small></span>
-        </div>
+  <!-- ---------- entrada (identidade RoboHub) ---------- -->
+  <section class="tela rh" id="telaLogin" aria-labelledby="tituloPortal">
+    <div class="rh-fundo" aria-hidden="true"></div>
+    <p class="rh-canto rh-tl" aria-hidden="true">Aprender<br>Criar<br>Programar<br>Evoluir</p>
+    <p class="rh-canto rh-bl" aria-hidden="true">Robótica<br>é mais<br>que tecnologia,<br>é transformação.<i></i></p>
+    <p class="rh-canto rh-br" aria-hidden="true">Tecnologia<br>Educação<br>Inovação<br>sem limites<i></i></p>
+
+    <div class="rh-login">
+      <div class="rh-lado rh-esq" aria-hidden="true">
+        <figure class="rh-foto f-ev3"><img data-foto="ev3" alt=""><figcaption>LEGO<br>EV3<i data-ico="rabisco"></i></figcaption></figure>
+        <figure class="rh-foto f-spike"><img data-foto="spike" alt=""><figcaption>LEGO<br>SPIKE<i data-ico="rabisco"></i></figcaption></figure>
       </div>
 
-      <form class="login-cartao" id="formLogin" autocomplete="on">
-        <h2>Entrar</h2>
-        <label for="lgUsuario">Usuário</label>
-        <input id="lgUsuario" name="usuario" autocomplete="username" required spellcheck="false">
-        <label for="lgSenha">Senha</label>
-        <input id="lgSenha" name="senha" type="password" autocomplete="current-password" required>
-        <p class="erro" id="lgErro" role="alert"></p>
-        <button type="submit" class="entrar">Entrar no portal</button>
-        <div class="demo">
-          <b>Acesso da equipe</b>
-          <span>login <code>crocobots</code> · senha <code>123456</code></span>
+      <form class="rh-cartao" id="formLogin" autocomplete="on">
+        <div class="rh-logo grande" data-logo></div>
+        <h1 id="tituloPortal" class="rh-bemvindo">Seja bem-vindo(a)!</h1>
+        <p class="rh-sub">Acesse sua conta e continue sua jornada no mundo da robótica.</p>
+        <label class="rh-campo"><span class="rh-sr">Usuário</span><i data-ico="user"></i>
+          <input id="lgUsuario" name="usuario" placeholder="Usuário ou e-mail" autocomplete="username" required spellcheck="false"></label>
+        <label class="rh-campo"><span class="rh-sr">Senha</span><i data-ico="lock"></i>
+          <input id="lgSenha" name="senha" type="password" placeholder="Senha" autocomplete="current-password" required>
+          <button type="button" class="rh-olho" id="lgOlho" aria-label="Mostrar senha" aria-pressed="false"><i data-ico="olho"></i></button></label>
+        <p class="rh-msg" id="lgErro" role="alert"></p>
+        <button type="submit" class="rh-entrar">Entrar<i data-ico="seta"></i></button>
+        <div class="rh-linha">
+          <label class="rh-check"><input type="checkbox" id="lgLembrar" checked><span>Manter-me conectado</span></label>
+          <button type="button" class="rh-link" data-acao="esqueci">Esqueceu sua senha?</button>
         </div>
+        <div class="rh-ou"><span>ou</span></div>
+        <button type="button" class="rh-google" data-acao="google"><b aria-hidden="true">G</b>Entrar com o Google</button>
+        <p class="rh-demo">Acesso de demonstração: <code>crocobots</code> · <code>123456</code></p>
+        <p class="rh-conta">Ainda não tem uma conta? <button type="button" class="rh-link" data-acao="conta">Fale com sua instituição.</button></p>
       </form>
+
+      <div class="rh-lado rh-dir">
+        <p class="rh-mao" aria-hidden="true">Grandes<br>ideias<br>começam<br>aqui!<i></i></p>
+        <figure class="rh-foto f-ard" aria-hidden="true"><img data-foto="arduino" alt=""><figcaption>ARDUINO<i data-ico="rabisco"></i></figcaption></figure>
+        <ul class="rh-pilares">
+          <li><i data-ico="barras"></i>Do básico<br>ao avançado</li>
+          <li><i data-ico="lampada"></i>Projetos reais</li>
+          <li><i data-ico="grupo"></i>Aprendizagem<br>na prática</li>
+          <li><i data-ico="foguete"></i>Desenvolva<br>o seu futuro</li>
+        </ul>
+      </div>
     </div>
 
-    <footer class="patrocinio" aria-label="Patrocinadores">
-      <span class="rotulo">Patrocinadores</span>
-      <div class="logos" id="logosPatrocinio"></div>
+    <footer class="rh-rodape">
+      <span></span>
+      <p class="rh-passos" aria-label="A jornada"><span>Ideias</span><i data-ico="seta_dir"></i><span>Código</span><i data-ico="seta_dir"></i><span>Robôs</span><i data-ico="seta_dir"></i><span>Grandes conquistas</span></p>
+      <div class="rh-patro" aria-label="Patrocinadores"><span>Patrocínio</span><div class="logos" id="logosPatrocinio"></div></div>
     </footer>
   </section>
 
-  <!-- ---------- escolha do kit ---------- -->
-  <section class="tela" id="telaKits" aria-labelledby="tituloKits" hidden>
-    <header class="portal-topo">
-      <img class="mini-logo" src="LOGO_DATA" alt="">
-      <span class="marca-portal">Portal da Robótica</span>
-      <span class="esp"></span>
-      <span class="ola" id="olaKits"></span>
-      <button class="link" data-acao="sair">Sair</button>
+  <!-- ---------- escolha do robô (identidade RoboHub) ---------- -->
+  <section class="tela rh" id="telaKits" aria-labelledby="tituloKits" hidden>
+    <div class="rh-fundo" aria-hidden="true"></div>
+    <header class="rh-topo">
+      <div class="rh-logo" data-logo></div>
+      <span class="rh-div" aria-hidden="true"></span>
+      <p class="rh-portal"><b>Portal da Robótica</b><span>CROCOBOTS</span></p>
+      <nav class="rh-nav" aria-label="Portal">
+        <button class="on" aria-current="page" data-acao="inicio"><i data-ico="casa"></i><span>Início</span></button>
+        <button data-acao="jornada"><i data-ico="barras"></i><span>Minha Jornada</span></button>
+        <button data-acao="conquistas"><i data-ico="trofeu"></i><span>Conquistas</span></button>
+        <button data-acao="ajuda"><i data-ico="ajuda"></i><span>Ajuda</span></button>
+      </nav>
+      <div class="rh-usuario">
+        <button class="rh-eu" id="btEu" aria-expanded="false" aria-haspopup="menu" aria-controls="menuEu">
+          <span class="rh-avatar" id="avatarKits" aria-hidden="true"></span>
+          <span class="rh-ola"><b id="olaKits"></b><small>Aluno</small></span><i data-ico="seta_baixo"></i></button>
+        <div class="rh-menu" id="menuEu" role="menu" hidden>
+          <button role="menuitem" data-acao="jornada">Minha jornada</button>
+          <button role="menuitem" data-acao="sair">Sair</button>
+        </div>
+      </div>
     </header>
-    <div class="kits-miolo">
-      <h1 id="tituloKits">Com qual robô você vai treinar?</h1>
-      <p class="sub">A trilha é a mesma; os blocos, as portas, os sensores e o arquivo que você baixa mudam para ficar igual ao kit da sua mesa.</p>
-      <div class="kits" id="listaKits"></div>
+
+    <div class="rh-kits-miolo">
+      <div class="rh-hero">
+        <div>
+          <p class="rh-eyebrow">Escolha sua plataforma</p>
+          <h1 id="tituloKits" tabindex="-1">Com qual <em>robô</em> você vai treinar hoje?</h1>
+          <p class="rh-lead">A trilha é a mesma: aprender, criar, programar e evoluir.<br>Escolha a plataforma e continue sua jornada no mundo da robótica.</p>
+        </div>
+        <p class="rh-mao" aria-hidden="true">Grandes ideias<br>começam aqui!<i></i></p>
+        <p class="rh-verbos" aria-hidden="true">Aprender<br>Criar<br>Programar<br>Evoluir</p>
+      </div>
+      <p class="rh-aviso" id="avisoKits" role="status"></p>
+      <div class="rh-kits" id="listaKits"></div>
     </div>
+
+    <footer class="rh-rodape">
+      <p class="rh-frase"><b aria-hidden="true">“</b>Tecnologia hoje,<br>mais possibilidades amanhã.<i></i></p>
+      <p class="rh-passos" aria-label="A jornada"><i data-ico="lampada"></i><span>Ideias</span><i data-ico="seta_dir"></i><i data-ico="engrenagem"></i><span>Código</span><i data-ico="seta_dir"></i><i data-ico="robo"></i><span>Robôs</span><i data-ico="seta_dir"></i><i data-ico="trofeu"></i><span>Grandes conquistas</span></p>
+      <p class="rh-canto-dir">Ciência<br>de dados<br>e inovação<i></i></p>
+    </footer>
   </section>
+
+  <!-- ajuda do portal -->
+  <div class="rh-dialogo" id="rhAjuda" role="dialog" aria-modal="true" aria-labelledby="rhAjudaT" hidden>
+    <div class="rh-dialogo-caixa">
+      <h2 id="rhAjudaT">Como funciona o portal</h2>
+      <ol>
+        <li><b>Escolha o robô</b> igual ao kit da sua mesa. Os blocos, as portas e os sensores mudam para ficar iguais aos dele.</li>
+        <li><b>Siga a trilha</b>: Iniciante, Intermediário e Avançado (as pistas da OBR). Cada desafio dá até 3 estrelas e libera o próximo.</li>
+        <li><b>Treine na bancada livre</b> para montar o seu programa em qualquer pista.</li>
+        <li><b>Leve para o robô de verdade</b>: o SPIKE baixa .llsp3, o EV3 baixa .lmsp e o Arduino baixa .ino.</li>
+      </ol>
+      <button type="button" class="rh-entrar" data-acao="fechaAjuda">Entendi</button>
+    </div>
+  </div>
 
   <!-- ---------- trilha ---------- -->
   <section class="tela" id="telaTrilha" aria-labelledby="tituloTrilha" hidden>

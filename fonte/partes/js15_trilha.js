@@ -432,6 +432,7 @@ function mostraPortal(tela) {
   document.querySelectorAll("#portal .tela").forEach(t => t.hidden = t.id !== { login: "telaLogin", kits: "telaKits", trilha: "telaTrilha" }[tela]);
   document.body.classList.add("no-portal");
   if (tela === "kits") desenhaKits();
+  if (tela === "login") preparaFotos();
   if (tela === "trilha") desenhaTrilha();
   SESSAO.tela = tela; gravaSessao(SESSAO);
   const foco = portal.querySelector("#" + { login: "lgUsuario", kits: "tituloKits", trilha: "tituloTrilha" }[tela]);
@@ -446,24 +447,6 @@ function escondePortal() { portal.hidden = true; document.body.classList.remove(
   else d.innerHTML = [1, 2, 3, 4].map(() => '<span class="slot-p">sua marca aqui</span>').join("");
 })();
 
-$("formLogin").onsubmit = e => {
-  e.preventDefault();
-  const u = $("lgUsuario").value.trim().toLowerCase(), s = $("lgSenha").value;
-  if (!USUARIOS[u] || USUARIOS[u] !== s) { $("lgErro").textContent = "Usuário ou senha não conferem. Confira as letras e tente de novo."; $("lgSenha").select(); return; }
-  $("lgErro").textContent = "";
-  SESSAO.usuario = u; gravaSessao(SESSAO);
-  mostraPortal(SESSAO.plataforma ? "trilha" : "kits");
-};
-portal.addEventListener("click", e => {
-  const a = e.target.closest("[data-acao]"); if (!a) return;
-  const acao = a.dataset.acao;
-  if (acao === "sair") { delete SESSAO.usuario; SESSAO.tela = "login"; gravaSessao(SESSAO); $("lgSenha").value = ""; mostraPortal("login"); }
-  if (acao === "kits") mostraPortal("kits");
-  if (acao === "livre") abreLivre();
-  if (acao === "kit") escolheKit(a.dataset.kit);
-  if (acao === "desafio") abreDesafio(a.dataset.id);
-});
-
 const ARTE_KIT = {
   spike: '<svg viewBox="0 0 160 110" aria-hidden="true"><rect x="22" y="60" width="116" height="16" rx="5" fill="#f2f3f0"/><circle cx="36" cy="82" r="17" fill="#1d1e20"/><circle cx="36" cy="82" r="10" fill="#c5cbd3"/><circle cx="36" cy="82" r="4" fill="#00a3da"/><circle cx="124" cy="82" r="17" fill="#1d1e20"/><circle cx="124" cy="82" r="10" fill="#c5cbd3"/><circle cx="124" cy="82" r="4" fill="#00a3da"/><rect x="46" y="20" width="68" height="44" rx="9" fill="#fdfdfb" stroke="#d5d9de" stroke-width="2"/><rect x="56" y="27" width="40" height="30" rx="4" fill="#2b2f35"/><g fill="#ffcf00">' +
     [0, 1, 2, 3, 4].map(i => [0, 1, 2, 3, 4].map(j => (i + j) % 2 ? "" : '<rect x="' + (59 + j * 7) + '" y="' + (30 + i * 5.2) + '" width="4.4" height="3.6" rx="1"/>').join("")).join("") +
@@ -471,28 +454,6 @@ const ARTE_KIT = {
   ev3: '<svg viewBox="0 0 160 110" aria-hidden="true"><rect x="18" y="62" width="124" height="14" rx="4" fill="#3b3f45"/><circle cx="34" cy="82" r="17" fill="#15161a"/><circle cx="34" cy="82" r="9" fill="#b9bec5"/><circle cx="34" cy="82" r="3.5" fill="#d0342c"/><circle cx="126" cy="82" r="17" fill="#15161a"/><circle cx="126" cy="82" r="9" fill="#b9bec5"/><circle cx="126" cy="82" r="3.5" fill="#d0342c"/><rect x="44" y="12" width="72" height="52" rx="7" fill="#c9ccd0"/><rect x="50" y="17" width="60" height="42" rx="5" fill="#3b3f45"/><rect x="56" y="22" width="36" height="22" rx="2" fill="#a9b89c"/><text x="74" y="37" font-family="monospace" font-size="9" text-anchor="middle" fill="#2b3226">EV3</text><rect x="96" y="24" width="10" height="16" rx="2" fill="#6b7078"/><rect x="62" y="48" width="24" height="7" rx="3" fill="#d0342c" opacity=".85"/><rect x="138" y="52" width="14" height="12" rx="3" fill="#2b2e33"/><circle cx="145" cy="58" r="3" fill="#d0342c"/></svg>',
   arduino: '<svg viewBox="0 0 160 110" aria-hidden="true"><rect x="14" y="52" width="132" height="30" rx="6" fill="#dff3f3" opacity=".55" stroke="#9fd5d6" stroke-width="2"/><rect x="10" y="60" width="16" height="30" rx="4" fill="#f2c230"/><circle cx="18" cy="84" r="15" fill="#15161a"/><circle cx="18" cy="84" r="8" fill="#f2c230"/><rect x="134" y="60" width="16" height="30" rx="4" fill="#f2c230"/><circle cx="142" cy="84" r="15" fill="#15161a"/><circle cx="142" cy="84" r="8" fill="#f2c230"/><rect x="44" y="22" width="64" height="40" rx="3" fill="#00979d"/><rect x="48" y="25" width="40" height="4" fill="#1b1b1b"/><rect x="60" y="55" width="40" height="4" fill="#1b1b1b"/><rect x="92" y="34" width="12" height="12" rx="1" fill="#1b1b1b"/><circle cx="54" cy="46" r="3" fill="#e5e5e5"/><rect x="112" y="30" width="30" height="16" rx="2" fill="#1f5fbf"/><circle cx="120" cy="38" r="5.5" fill="#d9dde2"/><circle cx="134" cy="38" r="5.5" fill="#d9dde2"/><rect x="20" y="36" width="20" height="18" rx="2" fill="#b3202a"/><rect x="24" y="30" width="12" height="8" fill="#26292e"/></svg>'
 };
-const INFO_KIT = {
-  spike: { classe: "spike", itens: ["Portas A a F para motores e sensores", "Sensor de cor com luz refletida, cor e <b>valor bruto RGB</b>", "Giroscópio dentro do hub"], arq: ".llsp3 · abre no app LEGO Education SPIKE" },
-  ev3: { classe: "ev3", itens: ["Motores em A a D, sensores em 1 a 4", "Sensor de cor com luz refletida e cor (sem RGB bruto)", "Giroscópio e ultrassônico em portas"], arq: ".lmsp · abre no EV3 Classroom" },
-  arduino: { classe: "ard", itens: ["UNO + ponte H L298N + servo da pá", "Sensores de linha TCRT5000 e de cor TCS3200", "HC-SR04 e MPU-6050"], arq: ".ino · abre na Arduino IDE (C++ comentado)" }
-};
-function desenhaKits() {
-  $("olaKits").textContent = "Olá, " + (SESSAO.usuario || "");
-  $("listaKits").innerHTML = Object.keys(PLATAFORMAS).map(k => {
-    const P = PLATAFORMAS[k], I = INFO_KIT[k], atual = SESSAO.plataforma === k;
-    return '<article class="kit ' + I.classe + (atual ? " atual" : "") + '"><div class="kit-arte">' + ARTE_KIT[k] + "</div>" +
-      '<div class="kit-texto"><p class="kit-fab">' + esc(P.fabricante) + '</p><h2 class="kit-nome">' + esc(P.nome) + "</h2>" +
-      "<ul>" + I.itens.map(t => "<li>" + t + "</li>").join("") + '</ul><p class="kit-ext">' + esc(I.arq) + "</p>" +
-      '<button class="escolher" data-acao="kit" data-kit="' + k + '">' + (atual ? "Continuar com " : "Treinar com ") + esc(P.nome) + " ›</button></div></article>";
-  }).join("");
-}
-function escolheKit(k) {
-  if (!PLATAFORMAS[k]) return;
-  const troca = k !== PLAT.id;
-  SESSAO.plataforma = k; SESSAO.tela = "trilha"; gravaSessao(SESSAO);
-  if (troca) { if (typeof salvaAgora === "function") salvaAgora(); location.reload(); return; }
-  mostraPortal("trilha");
-}
 let NIVEL_TELA = "ini";
 function desenhaTrilha() {
   const seg = segAtual(), R_ = resumoDesempenho(seg);
@@ -622,6 +583,9 @@ function mostraAbaDesafio() {
 /* começa o portal depois que a bancada terminou de carregar */
 function iniciaPortal() {
   NIVEL_TELA = SESSAO.nivelTela && NIVEIS[SESSAO.nivelTela] ? SESSAO.nivelTela : "ini";
+  /* "manter-me conectado" desmarcado: a sessão vale só até fechar o navegador */
+  if (SESSAO.usuario && SESSAO.lembrar === false) { let aberta = null; try { aberta = sessionStorage.getItem(CHAVE_ABERTA); } catch (e) {}
+    if (!aberta) { delete SESSAO.usuario; gravaSessao(SESSAO); } }
   if (!SESSAO.usuario) return mostraPortal("login");
   if (!SESSAO.plataforma) return mostraPortal("kits");
   if (SESSAO.tela === "bancada") {
