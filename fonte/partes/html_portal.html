@@ -1,102 +1,76 @@
 <!-- ======================= PORTAL DA ROBÓTICA: entrada, kits e trilha ======================= -->
 <div id="portal" data-tela="login">
 
-  <!-- ---------- entrada (identidade RoboHub) ---------- -->
-  <section class="tela rh" id="telaLogin" aria-labelledby="tituloPortal">
-    <div class="rh-fundo" aria-hidden="true"></div>
-    <p class="rh-canto rh-tl" aria-hidden="true">Aprender<br>Criar<br>Programar<br>Evoluir</p>
-    <p class="rh-canto rh-bl" aria-hidden="true">Robótica<br>é mais<br>que tecnologia,<br>é transformação.<i></i></p>
-    <p class="rh-canto rh-br" aria-hidden="true">Tecnologia<br>Educação<br>Inovação<br>sem limites<i></i></p>
+  <!-- ---------- entrada: modelo RoboHub (modelo/index.html + modelo/robohub-login.png, arte sem alteração) ---------- -->
+  <section class="tela rh-modelo" id="telaLogin" aria-label="ROBOHUB — Login">
+    <div class="page" id="rhPalco">
 
-    <div class="rh-login">
-      <div class="rh-lado rh-esq" aria-hidden="true">
-        <figure class="rh-foto f-ev3"><img data-foto="ev3" alt=""><figcaption>LEGO<br>EV3<i data-ico="rabisco"></i></figcaption></figure>
-        <figure class="rh-foto f-spike"><img data-foto="spike" alt=""><figcaption>LEGO<br>SPIKE<i data-ico="rabisco"></i></figcaption></figure>
-      </div>
+      <img class="art" src="ROBOHUB_LOGIN_DATA" alt="ROBOHUB — Conhecimento em Movimento">
 
-      <form class="rh-cartao" id="formLogin" autocomplete="on">
-        <div class="rh-logo grande" data-logo></div>
-        <h1 id="tituloPortal" class="rh-bemvindo">Seja bem-vindo(a)!</h1>
-        <p class="rh-sub">Acesse sua conta e continue sua jornada no mundo da robótica.</p>
-        <label class="rh-campo"><span class="rh-sr">Usuário</span><i data-ico="user"></i>
-          <input id="lgUsuario" name="usuario" placeholder="Usuário ou e-mail" autocomplete="username" required spellcheck="false"></label>
-        <label class="rh-campo"><span class="rh-sr">Senha</span><i data-ico="lock"></i>
-          <input id="lgSenha" name="senha" type="password" placeholder="Senha" autocomplete="current-password" required>
-          <button type="button" class="rh-olho" id="lgOlho" aria-label="Mostrar senha" aria-pressed="false"><i data-ico="olho"></i></button></label>
-        <p class="rh-msg" id="lgErro" role="alert"></p>
-        <button type="submit" class="rh-entrar">Entrar<i data-ico="seta"></i></button>
-        <div class="rh-linha">
-          <label class="rh-check"><input type="checkbox" id="lgLembrar" checked><span>Manter-me conectado</span></label>
-          <button type="button" class="rh-link" data-acao="esqueci">Esqueceu sua senha?</button>
+      <form id="formLogin" autocomplete="on">
+        <div class="login-form">
+          <input
+            class="field"
+            id="lgUsuario"
+            name="username"
+            type="text"
+            autocomplete="username"
+            aria-label="Usuário ou e-mail"
+          >
+
+          <div class="password-wrap">
+            <input
+              class="field"
+              id="lgSenha"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              aria-label="Senha"
+            >
+            <button class="toggle-password" type="button" id="lgOlho" aria-label="Mostrar senha"></button>
+          </div>
         </div>
-        <div class="rh-ou"><span>ou</span></div>
-        <button type="button" class="rh-google" data-acao="google"><b aria-hidden="true">G</b>Entrar com o Google</button>
-        <p class="rh-demo">Acesso de demonstração: <code>crocobots</code> · <code>123456</code></p>
-        <p class="rh-conta">Ainda não tem uma conta? <button type="button" class="rh-link" data-acao="conta">Fale com sua instituição.</button></p>
-      </form>
 
-      <div class="rh-lado rh-dir">
-        <p class="rh-mao" aria-hidden="true">Grandes<br>ideias<br>começam<br>aqui!<i></i></p>
-        <figure class="rh-foto f-ard" aria-hidden="true"><img data-foto="arduino" alt=""><figcaption>ARDUINO<i data-ico="rabisco"></i></figcaption></figure>
-        <ul class="rh-pilares">
-          <li><i data-ico="barras"></i>Do básico<br>ao avançado</li>
-          <li><i data-ico="lampada"></i>Projetos reais</li>
-          <li><i data-ico="grupo"></i>Aprendizagem<br>na prática</li>
-          <li><i data-ico="foguete"></i>Desenvolva<br>o seu futuro</li>
-        </ul>
-      </div>
+        <button class="enter-button" type="submit" aria-label="Entrar"></button>
+
+        <input class="keep-checkbox" type="checkbox" id="lgLembrar" aria-label="Manter-me conectado">
+
+        <button class="forgot" type="button" data-acao="esqueci" aria-label="Esqueci minha senha"></button>
+
+        <button class="google" type="button" data-acao="google" aria-label="Entrar com o Google"></button>
+
+        <button class="institution" type="button" data-acao="conta" aria-label="Fale com sua instituição"></button>
+      </form>
     </div>
 
-    <footer class="rh-rodape">
-      <span></span>
-      <p class="rh-passos" aria-label="A jornada"><span>Ideias</span><i data-ico="seta_dir"></i><span>Código</span><i data-ico="seta_dir"></i><span>Robôs</span><i data-ico="seta_dir"></i><span>Grandes conquistas</span></p>
-      <div class="rh-patro" aria-label="Patrocinadores"><span>Patrocínio</span><div class="logos" id="logosPatrocinio"></div></div>
-    </footer>
+    <div class="toast" id="lgToast" role="status"></div>
   </section>
 
-  <!-- ---------- escolha do robô (identidade RoboHub) ---------- -->
-  <section class="tela rh" id="telaKits" aria-labelledby="tituloKits" hidden>
-    <div class="rh-fundo" aria-hidden="true"></div>
-    <header class="rh-topo">
-      <div class="rh-logo" data-logo></div>
-      <span class="rh-div" aria-hidden="true"></span>
-      <p class="rh-portal"><b>Portal da Robótica</b><span>CROCOBOTS</span></p>
-      <nav class="rh-nav" aria-label="Portal">
-        <button class="on" aria-current="page" data-acao="inicio"><i data-ico="casa"></i><span>Início</span></button>
-        <button data-acao="jornada"><i data-ico="barras"></i><span>Minha Jornada</span></button>
-        <button data-acao="conquistas"><i data-ico="trofeu"></i><span>Conquistas</span></button>
-        <button data-acao="ajuda"><i data-ico="ajuda"></i><span>Ajuda</span></button>
-      </nav>
-      <div class="rh-usuario">
-        <button class="rh-eu" id="btEu" aria-expanded="false" aria-haspopup="menu" aria-controls="menuEu">
-          <span class="rh-avatar" id="avatarKits" aria-hidden="true"></span>
-          <span class="rh-ola"><b id="olaKits"></b><small>Aluno</small></span><i data-ico="seta_baixo"></i></button>
-        <div class="rh-menu" id="menuEu" role="menu" hidden>
-          <button role="menuitem" data-acao="jornada">Minha jornada</button>
-          <button role="menuitem" data-acao="sair">Sair</button>
-        </div>
-      </div>
-    </header>
+  <!-- ---------- escolha do robô: modelo RoboHub (modelo/index2.html + modelo/robohub-plataformas.png, arte sem alteração) ---------- -->
+  <section class="tela rh-modelo" id="telaKits" aria-label="ROBOHUB — Escolha sua plataforma" hidden>
+    <div class="page">
+      <img class="art" src="ROBOHUB_PLATAFORMAS_DATA" alt="ROBOHUB — escolha sua plataforma">
 
-    <div class="rh-kits-miolo">
-      <div class="rh-hero">
-        <div>
-          <p class="rh-eyebrow">Escolha sua plataforma</p>
-          <h1 id="tituloKits" tabindex="-1">Com qual <em>robô</em> você vai treinar hoje?</h1>
-          <p class="rh-lead">A trilha é a mesma: aprender, criar, programar e evoluir.<br>Escolha a plataforma e continue sua jornada no mundo da robótica.</p>
-        </div>
-        <p class="rh-mao" aria-hidden="true">Grandes ideias<br>começam aqui!<i></i></p>
-        <p class="rh-verbos" aria-hidden="true">Aprender<br>Criar<br>Programar<br>Evoluir</p>
+      <button class="nav nav-home" aria-label="Início" data-acao="inicio"></button>
+      <button class="nav nav-journey" aria-label="Minha Jornada" data-acao="jornada"></button>
+      <button class="nav nav-achievements" aria-label="Conquistas" data-acao="conquistas"></button>
+      <button class="nav nav-help" aria-label="Ajuda" data-acao="ajuda"></button>
+      <button class="nav profile" id="btEu" aria-label="Perfil do aluno" aria-haspopup="menu" aria-expanded="false" aria-controls="menuEu"></button>
+      <div class="rh-menu" id="menuEu" role="menu" hidden>
+        <button role="menuitem" data-acao="jornada">Minha jornada</button>
+        <button role="menuitem" data-acao="sair">Sair</button>
       </div>
-      <p class="rh-aviso" id="avisoKits" role="status"></p>
-      <div class="rh-kits" id="listaKits"></div>
+
+      <button class="platform spike" aria-label="Selecionar SPIKE Prime" data-acao="kit" data-kit="spike"></button>
+      <button class="platform ev3" aria-label="Selecionar EV3" data-acao="kit" data-kit="ev3"></button>
+      <button class="platform arduino" aria-label="Selecionar Arduino" data-acao="kit" data-kit="arduino"></button>
+
+      <button class="button spike-btn" aria-label="Treinar com SPIKE Prime" data-acao="kit" data-kit="spike"></button>
+      <button class="button ev3-btn" aria-label="Treinar com EV3" data-acao="kit" data-kit="ev3"></button>
+      <button class="button arduino-btn" aria-label="Treinar com Arduino" data-acao="kit" data-kit="arduino"></button>
     </div>
 
-    <footer class="rh-rodape">
-      <p class="rh-frase"><b aria-hidden="true">“</b>Tecnologia hoje,<br>mais possibilidades amanhã.<i></i></p>
-      <p class="rh-passos" aria-label="A jornada"><i data-ico="lampada"></i><span>Ideias</span><i data-ico="seta_dir"></i><i data-ico="engrenagem"></i><span>Código</span><i data-ico="seta_dir"></i><i data-ico="robo"></i><span>Robôs</span><i data-ico="seta_dir"></i><i data-ico="trofeu"></i><span>Grandes conquistas</span></p>
-      <p class="rh-canto-dir">Ciência<br>de dados<br>e inovação<i></i></p>
-    </footer>
+    <div class="toast" id="kitsToast" role="status"></div>
   </section>
 
   <!-- ajuda do portal -->

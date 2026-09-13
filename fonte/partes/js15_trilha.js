@@ -432,7 +432,6 @@ function mostraPortal(tela) {
   document.querySelectorAll("#portal .tela").forEach(t => t.hidden = t.id !== { login: "telaLogin", kits: "telaKits", trilha: "telaTrilha" }[tela]);
   document.body.classList.add("no-portal");
   if (tela === "kits") desenhaKits();
-  if (tela === "login") preparaFotos();
   if (tela === "trilha") desenhaTrilha();
   SESSAO.tela = tela; gravaSessao(SESSAO);
   const foco = portal.querySelector("#" + { login: "lgUsuario", kits: "tituloKits", trilha: "tituloTrilha" }[tela]);
@@ -442,7 +441,7 @@ function escondePortal() { portal.hidden = true; document.body.classList.remove(
 
 /* patrocinadores */
 (function () {
-  const d = $("logosPatrocinio");
+  const d = $("logosPatrocinio"); if (!d) return;   /* a tela de entrada do modelo não tem faixa de patrocínio */
   if (PATROCINADORES.length) d.innerHTML = PATROCINADORES.map(p => '<a class="logo-p" href="' + esc(p.site || "#") + '" target="_blank" rel="noopener"><img src="' + esc(p.logo) + '" alt="' + esc(p.nome) + '"></a>').join("");
   else d.innerHTML = [1, 2, 3, 4].map(() => '<span class="slot-p">sua marca aqui</span>').join("");
 })();

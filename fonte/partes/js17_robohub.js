@@ -133,23 +133,8 @@ const INFO_KIT = {
     itens: [["engrenagem", "UNO + ponte H L298N + servo da pá"], ["sinal", "Sensores de linha TCRT5000 e de cor TCS3200"],
             ["chip", "HC-SR04 e MPU-6050"], ["codigo", "Arduino IDE · baixa <b>.ino</b> em C++ comentado"]] }
 };
-function desenhaKits() {
-  const u = SESSAO.usuario || "";
-  $("olaKits").textContent = "Olá, " + u + "!";
-  $("avatarKits").textContent = u.slice(0, 2).toUpperCase();
-  $("avisoKits").textContent = "";
-  $("listaKits").innerHTML = Object.keys(PLATAFORMAS).map(k => {
-    const P = PLATAFORMAS[k], I = INFO_KIT[k], atual = SESSAO.plataforma === k;
-    return '<article class="rh-kit ' + I.classe + (atual ? " atual" : "") + '" aria-labelledby="kn-' + k + '">' +
-      '<div class="rh-kit-cabeca"><p class="rh-kit-marca">' + esc(I.marca) + "</p>" +
-      '<h2 class="rh-kit-nome" id="kn-' + k + '">' + I.nome + '</h2><p class="rh-kit-lema">' + esc(I.lema) + "</p></div>" +
-      (atual ? '<span class="rh-atual">Kit atual</span>' : "") +
-      '<div class="rh-kit-foto"><img data-foto="' + k + '" alt="Robô ' + esc(P.nome) + ' da bancada de simulação"></div>' +
-      '<ul class="rh-kit-itens">' + I.itens.map(([i, t]) => "<li>" + ico(i) + "<span>" + t + "</span></li>").join("") + "</ul>" +
-      '<button class="rh-kit-bt" data-acao="kit" data-kit="' + k + '">' + (atual ? "Continuar com " : "Treinar com ") + esc(P.nome) + ico("seta") + "</button></article>";
-  }).join("");
-  preparaFotos();
-}
+/* a tela de kits é a arte do modelo: não há nada para desenhar, só encaixar o palco na janela */
+function desenhaKits() { fechaMenuEu(); ajustaModelo(); }
 function escolheKit(k) {
   if (!PLATAFORMAS[k]) return;
   const troca = k !== PLAT.id;
@@ -160,7 +145,22 @@ function escolheKit(k) {
 
 /* ---- entrada ---- */
 const CHAVE_ABERTA = "portalRobotica.aberta";
-function avisoLogin(t, info) { const m = $("lgErro"); m.textContent = t; m.classList.toggle("info", !!info); }
+/* aviso da entrada: o toast do modelo (aparece embaixo e some em 2,8 s) */
+function avisoLogin(t) {
+  const m = $("lgToast"); if (!t) return m.classList.remove("show");
+  m.textContent = t; m.classList.add("show");
+  clearTimeout(avisoLogin.tempo); avisoLogin.tempo = setTimeout(() => m.classList.remove("show"), 2800);
+}
+/* o palco do modelo (1536 × 1024) cabe inteiro na janela, sem cortar nem deformar a arte */
+function ajustaModelo() {
+  const s = Math.min(innerWidth / 1536, innerHeight / 1024);
+  document.querySelectorAll("#telaLogin .page, #telaKits .page").forEach(p => p.style.setProperty("--s", s));
+}
+/* aviso da escolha do robô: o toast do index2 do modelo (some em 2,2 s) */
+function avisoKits(t) {
+  const m = $("kitsToast"); m.textContent = t; m.classList.add("show");
+  clearTimeout(avisoKits.tempo); avisoKits.tempo = setTimeout(() => m.classList.remove("show"), 2200);
+}
 function fechaMenuEu() { $("menuEu").hidden = true; $("btEu").setAttribute("aria-expanded", "false"); }
 function abreAjuda(abre) {
   $("rhAjuda").hidden = !abre;
@@ -168,10 +168,12 @@ function abreAjuda(abre) {
 }
 (function () {
   montaLogos();
+  ajustaModelo(); addEventListener("resize", ajustaModelo);
   $("formLogin").onsubmit = e => {
     e.preventDefault();
     const u = $("lgUsuario").value.trim().toLowerCase(), s = $("lgSenha").value;
-    if (!USUARIOS[u] || USUARIOS[u] !== s) { avisoLogin("Usuário ou senha não conferem. Confira as letras e tente de novo."); $("lgSenha").select(); return; }
+    if (!u || !s) { avisoLogin("Informe seu usuário/e-mail e sua senha."); return; }
+    if (!USUARIOS[u] || USUARIOS[u] !== s) { avisoLogin("Usuário ou senha não conferem. Confira e tente de novo."); $("lgSenha").select(); return; }
     avisoLogin("");
     SESSAO.usuario = u; SESSAO.lembrar = $("lgLembrar").checked; gravaSessao(SESSAO);
     try { sessionStorage.setItem(CHAVE_ABERTA, "1"); } catch (e) {}
@@ -184,7 +186,7 @@ function abreAjuda(abre) {
     $("lgOlho").setAttribute("aria-label", ver ? "Esconder senha" : "Mostrar senha");
   };
   $("btEu").onclick = e => { e.stopPropagation(); const abre = $("menuEu").hidden; $("menuEu").hidden = !abre; $("btEu").setAttribute("aria-expanded", abre ? "true" : "false"); };
-  document.addEventListener("click", e => { if (!e.target.closest(".rh-usuario")) fechaMenuEu(); });
+  document.addEventListener("click", e => { if (!e.target.closest("#btEu, #menuEu")) fechaMenuEu(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape") { fechaMenuEu(); abreAjuda(false); } });
   $("portal").addEventListener("click", e => {
     const a = e.target.closest("[data-acao]"); if (!a) return;
@@ -194,13 +196,13 @@ function abreAjuda(abre) {
     if (acao === "jornada" || acao === "conquistas") {
       fechaMenuEu();
       if (SESSAO.plataforma) mostraPortal("trilha");
-      else $("avisoKits").textContent = "Escolha um robô primeiro: a sua jornada e as suas conquistas ficam guardadas separadas para cada kit.";
+      else avisoKits("Escolha um robô primeiro para abrir a sua jornada.");
     }
     if (acao === "ajuda") abreAjuda(true);
     if (acao === "fechaAjuda") abreAjuda(false);
-    if (acao === "esqueci") avisoLogin("Na demonstração a senha é 123456. Na escola, quem cria e troca as senhas é o professor responsável.", true);
-    if (acao === "google") avisoLogin("O login com Google chega na versão para instituições. Por enquanto, use o acesso da equipe.", true);
-    if (acao === "conta") avisoLogin("As contas são criadas pela escola ou pelo clube. Peça o seu acesso ao professor de robótica.", true);
+    if (acao === "esqueci") avisoLogin("Acesso de demonstração: usuário crocobots · senha 123456.");
+    if (acao === "google") avisoLogin("O login com Google chega na versão para instituições.");
+    if (acao === "conta") avisoLogin("Peça o seu acesso ao professor de robótica da sua escola.");
     if (acao === "livre") abreLivre();
     if (acao === "kit") escolheKit(a.dataset.kit);
     if (acao === "desafio") abreDesafio(a.dataset.id);

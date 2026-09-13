@@ -1,0 +1,234 @@
+/* ======================= ENTRADA: MODELO ROBOHUB =======================
+   CSS copiado de modelo/index.html. As regras do modelo estão iguais; só mudou:
+   - tudo fica dentro de #telaLogin, para não mexer na bancada;
+   - .page é um palco fixo de 1536 × 1024 (o tamanho da arte) que aumenta ou diminui
+     para caber na janela. Assim os campos transparentes ficam sempre em cima dos campos
+     desenhados, em qualquer proporção de tela;
+   - o toast fica fora do palco, para não ser escalado junto. */
+#portal .tela.rh-modelo{position:fixed;inset:0;overflow:hidden;min-height:0;display:block;background:#06121d;font-family:Arial, Helvetica, sans-serif}
+#telaLogin *, #telaKits * { box-sizing: border-box; }
+#portal #telaLogin :focus-visible, #portal #telaKits :focus-visible{outline:revert;outline-offset:revert}
+
+#telaLogin .page {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1536px;
+  height: 1024px;
+  transform: translate(-50%, -50%) scale(var(--s, 1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #06121d;
+}
+
+/*
+  A arte original tem 1536x1024.
+  O background-size: contain preserva exatamente a proporção,
+  sem cortar ou deformar a imagem.
+*/
+#telaLogin .art {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+/*
+  Camada de interação.
+  Os elementos são posicionados em porcentagem em relação à arte.
+  A aparência inicial permanece transparente para que a imagem
+  continue sendo visualmente idêntica à arte original.
+*/
+#telaLogin .hotspot {
+  position: absolute;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+#telaLogin .login-form {
+  position: absolute;
+  left: 35.5%;
+  top: 42.7%;
+  width: 29.2%;
+  height: 18.0%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#telaLogin .field {
+  width: 100%;
+  height: 58px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #f5f8fb;
+  font-size: 16px;
+  padding: 0 52px;
+  border-radius: 14px;
+}
+
+#telaLogin .field::placeholder { color: transparent; }
+
+#telaLogin .field:focus {
+  /* mantém a estética da arte; não adiciona borda */
+  box-shadow: none;
+}
+
+#telaLogin .password-wrap {
+  position: relative;
+  width: 100%;
+}
+
+#telaLogin .toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 0;
+  width: 48px;
+  height: 58px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+#telaLogin .enter-button {
+  position: absolute;
+  left: 35.5%;
+  top: 57.5%;
+  width: 29.2%;
+  height: 5.6%;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  cursor: pointer;
+}
+
+#telaLogin .keep-checkbox {
+  position: absolute;
+  left: 35.5%;
+  top: 65.3%;
+  width: 24px;
+  height: 24px;
+  opacity: 0;
+  cursor: pointer;
+}
+
+#telaLogin .forgot {
+  position: absolute;
+  left: 54.8%;
+  top: 65.0%;
+  width: 10%;
+  height: 3%;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+}
+
+#telaLogin .google {
+  position: absolute;
+  left: 35.5%;
+  top: 73.7%;
+  width: 29.2%;
+  height: 5.1%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 14px;
+}
+
+#telaLogin .institution {
+  position: absolute;
+  left: 49.5%;
+  top: 82.3%;
+  width: 13%;
+  height: 3%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+#telaLogin .toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(5, 18, 30, .95);
+  color: white;
+  border: 1px solid rgba(0,174,239,.7);
+  padding: 12px 18px;
+  border-radius: 10px;
+  opacity: 0;
+  pointer-events: none;
+  transition: .25s ease;
+  z-index: 10;
+  font-size: 14px;
+}
+#telaLogin .toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ======================= ESCOLHA DO ROBÔ: MODELO ROBOHUB =======================
+   CSS copiado de modelo/index2.html, dentro de #telaKits, com o mesmo palco de 1536 × 1024 da entrada. */
+#telaKits .page{position:absolute;left:50%;top:50%;width:1536px;height:1024px;transform:translate(-50%,-50%) scale(var(--s,1));background:#06121d;display:flex;align-items:center;justify-content:center}
+#telaKits .art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;pointer-events:none}
+
+/* Interactive layer positioned over the original artwork. */
+#telaKits .platform{
+  position:absolute;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  border-radius:18px;
+  transition:.2s ease;
+}
+#telaKits .platform:hover{
+  box-shadow:0 0 0 2px rgba(255,255,255,.18),0 0 28px rgba(0,174,239,.16);
+}
+#telaKits .spike{left:3.2%;top:33.2%;width:31.2%;height:51.2%}
+#telaKits .ev3{left:35.2%;top:33.2%;width:30.0%;height:51.2%}
+#telaKits .arduino{left:66.2%;top:33.2%;width:30.8%;height:51.2%}
+
+#telaKits .button{
+  position:absolute;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  border-radius:14px;
+  transition:.2s ease;
+}
+#telaKits .button:hover{filter:brightness(1.12);box-shadow:0 0 24px rgba(255,255,255,.12)}
+#telaKits .spike-btn{left:4.8%;top:77.3%;width:27.7%;height:5.6%}
+#telaKits .ev3-btn{left:36.9%;top:77.3%;width:27.5%;height:5.6%}
+#telaKits .arduino-btn{left:67.9%;top:77.3%;width:27.4%;height:5.6%}
+
+#telaKits .nav{
+  position:absolute;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+}
+#telaKits .nav-home{left:45.2%;top:1.5%;width:6.5%;height:6%}
+#telaKits .nav-journey{left:53%;top:1.5%;width:9%;height:6%}
+#telaKits .nav-achievements{left:63.5%;top:1.5%;width:9%;height:6%}
+#telaKits .nav-help{left:72.7%;top:1.5%;width:6%;height:6%}
+#telaKits .profile{right:1.7%;top:1.5%;width:15.8%;height:6.5%}
+
+#telaKits .toast{
+ position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);
+ background:rgba(5,18,30,.96);color:#fff;border:1px solid rgba(0,174,239,.7);
+ padding:12px 18px;border-radius:10px;opacity:0;pointer-events:none;
+ transition:.25s ease;z-index:10;font-size:14px
+}
+#telaKits .toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* menu do perfil (Minha jornada / Sair): abre embaixo do cartão "Olá, crocobots!" da arte */
+#telaKits .rh-menu{position:absolute;right:1.7%;top:8.6%;z-index:5;min-width:220px;display:grid;padding:6px;border-radius:12px;background:#0c1830;border:1px solid rgba(96,150,232,.35);box-shadow:0 20px 40px rgba(0,0,0,.5)}
+#telaKits .rh-menu button{border:0;background:none;color:#e9f0fb;text-align:left;padding:12px 14px;border-radius:8px;font-size:16px;font-family:Arial,Helvetica,sans-serif;cursor:pointer}
+#telaKits .rh-menu button:hover{background:rgba(43,140,255,.14)}

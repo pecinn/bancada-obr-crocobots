@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROBOHUB — Escolha sua plataforma</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06121d;font-family:Arial,Helvetica,sans-serif}
+.page{position:relative;width:100vw;height:100vh;background:#06121d;display:flex;align-items:center;justify-content:center}
+.art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;pointer-events:none}
+
+/* Interactive layer positioned over the original artwork. */
+.platform{
+  position:absolute;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  border-radius:18px;
+  transition:.2s ease;
+}
+.platform:hover{
+  box-shadow:0 0 0 2px rgba(255,255,255,.18),0 0 28px rgba(0,174,239,.16);
+}
+.spike{left:3.2%;top:33.2%;width:31.2%;height:51.2%}
+.ev3{left:35.2%;top:33.2%;width:30.0%;height:51.2%}
+.arduino{left:66.2%;top:33.2%;width:30.8%;height:51.2%}
+
+.button{
+  position:absolute;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  border-radius:14px;
+  transition:.2s ease;
+}
+.button:hover{filter:brightness(1.12);box-shadow:0 0 24px rgba(255,255,255,.12)}
+.spike-btn{left:4.8%;top:77.3%;width:27.7%;height:5.6%}
+.ev3-btn{left:36.9%;top:77.3%;width:27.5%;height:5.6%}
+.arduino-btn{left:67.9%;top:77.3%;width:27.4%;height:5.6%}
+
+.nav{
+  position:absolute;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+}
+.nav-home{left:45.2%;top:1.5%;width:6.5%;height:6%}
+.nav-journey{left:53%;top:1.5%;width:9%;height:6%}
+.nav-achievements{left:63.5%;top:1.5%;width:9%;height:6%}
+.nav-help{left:72.7%;top:1.5%;width:6%;height:6%}
+.profile{right:1.7%;top:1.5%;width:15.8%;height:6.5%}
+
+.toast{
+ position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);
+ background:rgba(5,18,30,.96);color:#fff;border:1px solid rgba(0,174,239,.7);
+ padding:12px 18px;border-radius:10px;opacity:0;pointer-events:none;
+ transition:.25s ease;z-index:10;font-size:14px
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-aspect-ratio:1/1){
+  .art{width:auto;height:100%}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <img class="art" src="robohub-plataformas.png" alt="ROBOHUB — escolha sua plataforma">
+
+  <button class="nav nav-home" aria-label="Início" data-msg="Início"></button>
+  <button class="nav nav-journey" aria-label="Minha Jornada" data-msg="Minha Jornada"></button>
+  <button class="nav nav-achievements" aria-label="Conquistas" data-msg="Conquistas"></button>
+  <button class="nav nav-help" aria-label="Ajuda" data-msg="Ajuda"></button>
+  <button class="nav profile" aria-label="Perfil do aluno" data-msg="Perfil do aluno"></button>
+
+  <button class="platform spike" aria-label="Selecionar SPIKE Prime" data-platform="SPIKE Prime"></button>
+  <button class="platform ev3" aria-label="Selecionar EV3" data-platform="EV3"></button>
+  <button class="platform arduino" aria-label="Selecionar Arduino" data-platform="Arduino"></button>
+
+  <button class="button spike-btn" aria-label="Treinar com SPIKE Prime" data-platform="SPIKE Prime"></button>
+  <button class="button ev3-btn" aria-label="Treinar com EV3" data-platform="EV3"></button>
+  <button class="button arduino-btn" aria-label="Treinar com Arduino" data-platform="Arduino"></button>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+const toast=document.getElementById('toast');
+function show(msg){
+ toast.textContent=msg;
+ toast.classList.add('show');
+ clearTimeout(window.__t);
+ window.__t=setTimeout(()=>toast.classList.remove('show'),2200);
+}
+document.querySelectorAll('[data-platform]').forEach(el=>{
+ el.addEventListener('click',()=>{
+   const p=el.dataset.platform;
+   // Conecte aqui a rota real da sua aplicação.
+   show('Plataforma selecionada: '+p);
+   // Exemplo:
+   // window.location.href = '/plataforma/' + p.toLowerCase().replace(' ','-');
+ });
+});
+document.querySelectorAll('[data-msg]').forEach(el=>{
+ el.addEventListener('click',()=>show(el.dataset.msg));
+});
+</script>
+</body>
+</html>
