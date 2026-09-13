@@ -336,9 +336,13 @@ function montaCarro3d() {
   const g = new THREE.Group();
   g.rotation.order = "YZX";
   const std = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: corL(c), roughness: 0.45 }, o || {}));
+  /* cores das peças de cada kit: SPIKE (branco, cinza e azul), EV3 (cinza claro, grafite e vermelho), Arduino (motor TT amarelo) */
+  const K = PLAT.id === "ev3" ? { branco: 0xc9ccd0, azul: 0xd0342c, cinza: 0x8d9299, grafite: 0x2e3136 }
+          : PLAT.id === "arduino" ? { branco: 0xf2c230, azul: 0xf2c230, cinza: 0xe9d9a0, grafite: 0x26292e }
+          : { branco: 0xf2f3f0, azul: 0x0aa3e0, cinza: 0xa9afb6, grafite: 0x3a3f46 };
   const M = {
-    chassi: std(EQUIPE.cor, { roughness: 0.38 }), branco: std(0xf2f3f0, { roughness: 0.35 }), cinza: std(0xa9afb6),
-    grafite: std(0x3a3f46, { roughness: .5 }), preto: std(0x1e2024, { roughness: .55 }), azul: std(0x0aa3e0, { roughness: .35 }),
+    chassi: std(EQUIPE.cor, { roughness: 0.38 }), branco: std(K.branco, { roughness: 0.35 }), cinza: std(K.cinza),
+    grafite: std(K.grafite, { roughness: .5 }), preto: std(0x1e2024, { roughness: .55 }), azul: std(K.azul, { roughness: .35 }),
     borracha: new THREE.MeshStandardMaterial({ map: texPneu(), roughness: .95 }),
     metal: new THREE.MeshStandardMaterial({ color: 0xdfe3e8, metalness: 1, roughness: .22 }),
     vidro: new THREE.MeshStandardMaterial({ color: 0x0b0d10, roughness: .12, metalness: .3 })
@@ -347,8 +351,10 @@ function montaCarro3d() {
   const rodaR = ROD_MM / 20;
 
   /* chassi: placa com as vigas de encaixe */
-  const placa = caixaR(19.5, 1.3, 11.8, 1.4, M.chassi); placa.position.set(-0.5, 4.6, 0); g.add(placa);
-  for (const z of [-5.3, 5.3]) {
+  const acrilico = new THREE.MeshPhysicalMaterial({ color: corL(EQUIPE.cor), transparent: true, opacity: 0.45, roughness: 0.08, metalness: 0, clearcoat: 1 });
+  const placa = caixaR(19.5, PLAT.id === "arduino" ? 0.5 : 1.3, 11.8, PLAT.id === "arduino" ? 0.25 : 1.4, PLAT.id === "arduino" ? acrilico : M.chassi);
+  placa.position.set(-0.5, 4.6, 0); g.add(placa);
+  if (PLAT.id !== "arduino") for (const z of [-5.3, 5.3]) {
     const viga = caixaR(19, 0.9, 1.1, 0.4, M.chassi); viga.position.set(-0.5, 5.6, z); g.add(viga);
     for (let i = -4; i <= 4; i++) {           /* furinhos das vigas */
       const f = cil(0.28, 0.2, M.grafite, 10); f.position.set(-0.5 + i * 2, 6.1, z); g.add(f);
@@ -356,6 +362,10 @@ function montaCarro3d() {
   }
   montaTracao(g, M, rodaR);
 
+  PECAS.leds = []; PECAS.botao = null; PECAS.status = null;
+  if (PLAT.id === "ev3") montaBlocoEv3(g, M);
+  else if (PLAT.id === "arduino") montaArduino(g, M);
+  else {
   /* hub SPIKE com a matriz de luzes */
   const hub = caixaR(9, 3.3, 6.0, 1.0, M.branco); hub.position.set(-3.4, 6.95, 0); g.add(hub);
   const tela = caixaR(6.4, 0.3, 5.0, 0.7, M.grafite); tela.position.set(-2.9, 8.62, 0); g.add(tela);
@@ -369,6 +379,7 @@ function montaCarro3d() {
   const botao = cil(0.62, 0.3, new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x33ff66, emissiveIntensity: 1 }), 20);
   botao.position.set(-6.1, 8.72, 0); g.add(botao); PECAS.botao = botao.material;
   for (const z of [-1.5, 1.5]) { const b = caixaR(0.9, 0.3, 0.9, 0.3, M.grafite); b.position.set(-6.1, 8.7, z); g.add(b); }
+  }
   /* adesivo com o nome da equipe, dos dois lados do hub */
   const tAd = texAdesivo();
   for (const lado of [-1, 1]) {
@@ -387,8 +398,13 @@ function montaCarro3d() {
   for (const p of cores) {
     const z = -ladoCm(p);
     const s = new THREE.Group(); s.position.set(FRENTE, 0, z);
-    const corpo = caixaR(2.2, 2.5, 2.2, 0.55, M.preto); corpo.position.y = 2.05; s.add(corpo);
-    const aro = cil(0.78, 0.18, M.branco, 20); aro.position.y = 0.74; s.add(aro);
+    if (PLAT.id === "arduino") {   /* módulo TCRT5000 + TCS3200: placa azul com o sensor embaixo */
+      const pcb = caixaR(2.6, 0.18, 3.0, 0.1, new THREE.MeshStandardMaterial({ color: corL("#1f5fbf"), roughness: .5 })); pcb.position.y = 1.4; s.add(pcb);
+      const chip = caixaR(1.2, 0.5, 1.2, 0.1, M.preto); chip.position.y = 1.0; s.add(chip);
+    } else {
+    const corpo = caixaR(2.2, 2.5, 2.2, 0.55, PLAT.id === "ev3" ? M.grafite : M.preto); corpo.position.y = 2.05; s.add(corpo);
+    }
+    const aro = cil(0.78, 0.18, PLAT.id === "ev3" ? M.azul : M.branco, 20); aro.position.y = 0.74; s.add(aro);
     const lente = cil(0.5, 0.2, new THREE.MeshBasicMaterial({ color: 0xffffff }), 16); lente.position.y = 0.7; s.add(lente);
     const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.45, MANCHA * 0.55, 0.62, 20, 1, true),
       new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
@@ -403,12 +419,14 @@ function montaCarro3d() {
   /* sensor de distancia com os dois "olhos" */
   PECAS.olhos = [];
   if (portasDe("dist").length) {
-    const ds = caixaR(2.2, 3.0, 6.2, 0.8, M.preto); ds.position.set(8.6, 8.2, 0); g.add(ds);
+    const ds = caixaR(PLAT.id === "arduino" ? 0.3 : 2.2, PLAT.id === "arduino" ? 2.1 : 3.0, PLAT.id === "arduino" ? 4.5 : 6.2, PLAT.id === "arduino" ? 0.1 : 0.8,
+      PLAT.id === "arduino" ? new THREE.MeshStandardMaterial({ color: corL("#1f5fbf"), roughness: .5 }) : PLAT.id === "ev3" ? M.grafite : M.preto);
+    ds.position.set(PLAT.id === "arduino" ? 9.0 : 8.6, 8.2, 0); g.add(ds);
     const pe = caixaR(1.2, 5.2, 1.2, 0.3, M.grafite); pe.position.set(7.9, 5.4, 0); g.add(pe);
     for (const z of [-1.45, 1.45]) {
-      const olho = cil(1.08, 0.5, M.vidro, 24); olho.rotation.z = Math.PI / 2; olho.position.set(9.75, 8.2, z); g.add(olho);
+      const olho = cil(1.08, PLAT.id === "arduino" ? 1.2 : 0.5, PLAT.id === "arduino" ? M.metal : M.vidro, 24); olho.rotation.z = Math.PI / 2; olho.position.set(9.75, 8.2, z); g.add(olho);
       const anel = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.16, 8, 28),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.6, roughness: .3 }));
+        new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: PLAT.id === "ev3" ? 0xff3b30 : 0xffffff, emissiveIntensity: 0.6, roughness: .3 }));
       anel.rotation.y = Math.PI / 2; anel.position.set(10.02, 8.2, z); g.add(anel);
       const brilho = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
       brilho.position.set(10.0, 8.6, z - 0.35); g.add(brilho);
@@ -418,7 +436,7 @@ function montaCarro3d() {
   }
   /* pá coletora da frente (motor C): gira em torno de um eixo alto; abaixada, a bandeja fica no chão */
   PECAS.pa = null;
-  if (CFG.C === "motor") {
+  if (CFG[PA_PORTA] === "motor") {
     const piv = new THREE.Group(); piv.position.set(PA_PIVO.x, PA_PIVO.h, 0);
     const fundo = caixaR(PA.x1 - PA.x0, 0.5, 2 * PA.meia + 0.6, 0.2, M.azul);
     fundo.position.set((PA.x0 + PA.x1) / 2 - PA_PIVO.x, 0.3 - PA_PIVO.h, 0); piv.add(fundo);
@@ -436,6 +454,47 @@ function montaCarro3d() {
   g.traverse(o => { if (o.isMesh && o.material && !o.material.transparent) o.castShadow = true; });
   MATRIZ_MUDOU = true;
   return g;
+}
+/* bloco EV3: corpo cinza claro, painel grafite, tela LCD e botões com a luz de status */
+function montaBlocoEv3(g, M) {
+  const corpo = caixaR(11.4, 4.0, 7.8, 0.9, M.branco); corpo.position.set(-3.2, 7.2, 0); g.add(corpo);
+  const painel = caixaR(10.2, 0.4, 6.8, 0.7, M.grafite); painel.position.set(-3.2, 9.3, 0); g.add(painel);
+  const tex = texCanvas(256, 160, (x, w, h) => {
+    x.fillStyle = "#a9b89c"; x.fillRect(0, 0, w, h);
+    x.fillStyle = "#2b3226"; x.font = "bold 34px monospace"; x.textAlign = "center"; x.fillText("EV3", w / 2, 66);
+    x.font = "bold 22px monospace"; x.fillText((EQUIPE.nome || "").toUpperCase().slice(0, 12), w / 2, 112);
+  });
+  const tela = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 3.4), new THREE.MeshStandardMaterial({ map: tex, roughness: .6 }));
+  tela.rotation.x = -Math.PI / 2; tela.rotation.z = -Math.PI / 2; tela.position.set(-1.2, 9.52, 0); g.add(tela);
+  PECAS.status = [];
+  const luz = new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0x33ff66, emissiveIntensity: 1.2, roughness: .4 });
+  const moldura = caixaR(3.6, 0.25, 3.6, 0.6, luz); moldura.position.set(-6.2, 9.55, 0); g.add(moldura); PECAS.status.push(luz);
+  const centro = caixaR(1.6, 0.4, 1.6, 0.3, M.cinza); centro.position.set(-6.2, 9.7, 0); g.add(centro);
+  for (const [dx, dz] of [[0, 1.3], [0, -1.3], [1.3, 0], [-1.3, 0]]) { const b = caixaR(0.8, 0.35, 0.8, 0.25, M.grafite); b.position.set(-6.2 + dx, 9.68, dz); g.add(b); }
+  for (const z of [-3.95, 3.95]) {
+    const ad = new THREE.Mesh(new THREE.PlaneGeometry(8, 2.5), new THREE.MeshStandardMaterial({ map: texAdesivo(), transparent: true, roughness: .4 }));
+    ad.position.set(-3.2, 7.2, z * 1.001); if (z < 0) ad.rotation.y = Math.PI; g.add(ad);
+  }
+  const giro = caixaR(2.2, 2.0, 2.2, 0.4, M.grafite); giro.position.set(3.2, 6.2, -3.2); g.add(giro);
+  const giroTopo = cil(0.6, 0.3, M.azul, 16); giroTopo.position.set(3.2, 7.3, -3.2); g.add(giroTopo);
+}
+/* Arduino UNO sobre placa de acrílico: UNO azul, ponte H vermelha, suporte de pilhas, protoboard e fios */
+function montaArduino(g, M) {
+  const std2 = c => new THREE.MeshStandardMaterial({ color: corL(c), roughness: .5 });
+  const uno = caixaR(6.9, 0.2, 5.3, 0.15, std2("#00979d")); uno.position.set(-4.2, 5.6, -1.4); g.add(uno);
+  for (const z of [-3.9, 1.1]) { const h = caixaR(5.2, 0.8, 0.5, 0.05, M.preto); h.position.set(-4.2, 6.1, z); g.add(h); }
+  const chip = caixaR(3.4, 0.4, 0.9, 0.1, M.preto); chip.position.set(-4.8, 5.9, -1.4); g.add(chip);
+  const usb = caixaR(1.6, 1.1, 1.2, 0.1, M.metal); usb.position.set(-7.6, 6.2, -2.8); g.add(usb);
+  const ponte = caixaR(4.3, 0.25, 4.3, 0.1, std2("#b3202a")); ponte.position.set(-4.2, 5.6, 3.6); g.add(ponte);
+  const dissip = caixaR(2.4, 2.2, 1.6, 0.1, M.preto); dissip.position.set(-4.2, 6.9, 3.6); g.add(dissip);
+  for (let i = -3; i <= 3; i++) { const a = caixaR(2.3, 2.0, 0.15, 0.02, M.preto); a.position.set(-4.2 + i * 0.35, 7.0, 3.6); g.add(a); }
+  const pilhas = caixaR(7.6, 2.0, 4.2, 0.3, M.preto); pilhas.position.set(3.6, 5.9, 0); g.add(pilhas);
+  for (const z of [-1, 1]) { const p = cil(0.9, 6.4, std2(z < 0 ? "#2d6fd1" : "#3aa655"), 16); p.rotation.z = Math.PI / 2; p.position.set(3.6, 7.2, z); g.add(p); }
+  const proto = caixaR(4.6, 0.9, 3.4, 0.2, std2("#f4f4f2")); proto.position.set(3.6, 8.6, 0); g.add(proto);
+  const buzzer = cil(0.6, 0.8, M.preto, 16); buzzer.position.set(2.2, 9.4, 1.0); g.add(buzzer);
+  const fios = ["#e63946", "#1d3557", "#f1c40f", "#2ecc71", "#ff7f11"];
+  fios.forEach((c, i) => g.add(cabo([[-2.4, 6.4, -3.6 + i * 0.5], [0.2, 8.0 + i * 0.1, -2.2 + i * 0.5], [2.2, 9.1, -1.2 + i * 0.4]], std2(c))));
+  fios.slice(0, 3).forEach((c, i) => g.add(cabo([[-2.2, 6.2, 3.2 + i * 0.3], [1.5, 7.2, 2.4], [FRENTE - 0.5, 3.6, (i - 1) * 1.2]], std2(c))));
 }
 function refazRobo() {
   if (!TRES) return;
@@ -528,14 +587,16 @@ function atualizaRobo3d() {
   if (MATRIZ_MUDOU) {
     MATRIZ_MUDOU = false;
     PECAS.leds.forEach((m, i) => { m.emissiveIntensity = MATRIZ[i] / 100 * 1.6; m.color.set(MATRIZ[i] > 0 ? 0xffffff : 0x2a2d31); });
-    PECAS.botao.emissive.set(HEX_SPIKE[BOTAO] || "#33ff66");
+    if (PECAS.botao) PECAS.botao.emissive.set(HEX_SPIKE[BOTAO] || "#33ff66");
+    if (PECAS.status) { const c = { "0": "#000000", "1": "#33ff66", "2": "#ff3030", "3": "#ff9a1a", "4": "#33ff66", "5": "#ff3030", "6": "#ff9a1a" }[LUZ_STATUS] || "#33ff66";
+      PECAS.status.forEach(m => { m.emissive.set(c); m.emissiveIntensity = LUZ_STATUS === "0" ? 0 : 1.2; }); }
   }
   for (const s of PECAS.sens) {
     const id = corDeSensorVisual(s.p), c = id === "0" ? "#6a6f78" : (HEX_SPIKE[id] || "#ffffff");
     s.mancha.color.set(c); s.cone.color.set(c);
   }
   const perto = ULT_DIST.d < 15;
-  for (const o of PECAS.olhos) { o.emissive.set(perto ? 0xff7a1a : 0xffffff); o.emissiveIntensity = perto ? 1.4 : 0.55; }
+  for (const o of PECAS.olhos) { o.emissive.set(perto ? 0xff7a1a : PLAT.id === "ev3" ? 0xff3b30 : 0xffffff); o.emissiveIntensity = perto ? 1.4 : 0.55; }
   if (PECAS.pa) PECAS.pa.rotation.z = paAngulo();
 }
 /* a cor que o sensor mostra na tela, sem o ruido */
@@ -623,10 +684,26 @@ function desenhaRoboTopo(cx, esc) {
       for (let a = -rodaR + off; a < rodaR; a += 1.2) cx.fillRect(xc + a, s * 7.1 - larg / 2, 0.5, larg);
     }
   }
-  /* motores e hub */
-  cx.fillStyle = "#f2f3f0";
+  /* motores e hub (cada kit com as suas peças) */
+  const corMotor = PLAT.id === "ev3" ? "#c9ccd0" : PLAT.id === "arduino" ? "#f2c230" : "#f2f3f0";
+  const corCubo = PLAT.id === "ev3" ? "#d0342c" : PLAT.id === "arduino" ? "#26292e" : "#0aa3e0";
+  cx.fillStyle = corMotor;
   rrect(cx, -5.7, -5.6, 9, 3, 1); cx.fill(); rrect(cx, -5.7, 2.6, 9, 3, 1); cx.fill();
-  cx.fillStyle = "#0aa3e0"; cx.beginPath(); cx.arc(0, 5.9, 0.9, 0, 7); cx.arc(0, -5.9, 0.9, 0, 7); cx.fill();
+  cx.fillStyle = corCubo; cx.beginPath(); cx.arc(0, 5.9, 0.9, 0, 7); cx.arc(0, -5.9, 0.9, 0, 7); cx.fill();
+  if (PLAT.id === "ev3") {
+    cx.fillStyle = "#c9ccd0"; rrect(cx, -9, -3.9, 11.4, 7.8, 1); cx.fill();
+    cx.fillStyle = "#2e3136"; rrect(cx, -8.4, -3.4, 10.2, 6.8, 0.8); cx.fill();
+    cx.fillStyle = "#a9b89c"; rrect(cx, -3, -2.2, 3.4, 4.4, 0.3); cx.fill();
+    const st = { "0": "#333", "1": "#33ff66", "2": "#ff3030", "3": "#ff9a1a", "4": "#33ff66", "5": "#ff3030", "6": "#ff9a1a" }[LUZ_STATUS] || "#33ff66";
+    cx.fillStyle = st; rrect(cx, -8, -1.8, 3.6, 3.6, 0.6); cx.fill();
+    cx.fillStyle = "#8d9299"; rrect(cx, -7, -0.8, 1.6, 1.6, 0.3); cx.fill();
+  } else if (PLAT.id === "arduino") {
+    cx.fillStyle = "#00979d"; rrect(cx, -7.6, -4, 6.9, 5.3, 0.3); cx.fill();
+    cx.fillStyle = "#1b1b1b"; cx.fillRect(-7.2, -3.8, 5.2, 0.5); cx.fillRect(-7.2, 0.6, 5.2, 0.5); cx.fillRect(-5.8, -1.9, 3.4, 0.9);
+    cx.fillStyle = "#b3202a"; rrect(cx, -6.4, 1.5, 4.3, 4.3, 0.3); cx.fill();
+    cx.fillStyle = "#1e2024"; rrect(cx, -0.2, -2.1, 7.6, 4.2, 0.4); cx.fill();
+    cx.fillStyle = "#f4f4f2"; rrect(cx, 1.3, -1.7, 4.6, 3.4, 0.3); cx.fill();
+  } else {
   cx.fillStyle = "#f7f7f5"; rrect(cx, -7.9, -3, 9, 6, 1); cx.fill();
   cx.strokeStyle = "rgba(0,0,0,.18)"; cx.stroke();
   cx.fillStyle = "#3a3f46"; rrect(cx, -6.1, -2.5, 6.4, 5, 0.7); cx.fill();
@@ -636,6 +713,7 @@ function desenhaRoboTopo(cx, esc) {
     cx.fillRect(-2.9 + (2 - yy) * 0.84 - 0.3, (2 - xx) * 0.84 - 0.3, 0.6, 0.6);
   }
   cx.fillStyle = HEX_SPIKE[BOTAO] || "#33ff66"; cx.beginPath(); cx.arc(-6.6, 0, 0.6, 0, 7); cx.fill();
+  }
   /* barra e sensores de cor */
   cx.fillStyle = "#1e2024"; cx.fillRect(FRENTE - 0.7, -(SEP + 1.5), 1.4, 2 * SEP + 3);
   for (const p of portasDe("cor")) {
@@ -653,14 +731,15 @@ function desenhaRoboTopo(cx, esc) {
     }
   }
   /* pá coletora, vista de cima (levantada ela fica quase em pé na frente do robô) */
-  if (CFG.C === "motor") {
-    const fr = paFracao(MOT.C.pos), ph = paAngulo();
+  if (CFG[PA_PORTA] === "motor") {
+    const fr = paFracao(MOT[PA_PORTA].pos), ph = paAngulo();
     const xa = PA_PIVO.x + (PA.x0 - PA_PIVO.x) * Math.cos(ph) + (PA_PIVO.h - 0.3) * Math.sin(ph);
     const xb = PA_PIVO.x + (PA.x1 - PA_PIVO.x) * Math.cos(ph) + (PA_PIVO.h - 0.3) * Math.sin(ph);
     const x0 = Math.min(xa, xb), x1 = Math.max(xa, xb);
-    cx.fillStyle = fr > 0.5 ? "rgba(10,163,224,.28)" : "rgba(10,163,224,.55)";
+    const rgbPa = PLAT.id === "ev3" ? "208,52,44" : PLAT.id === "arduino" ? "200,210,215" : "10,163,224";
+    cx.fillStyle = fr > 0.5 ? "rgba(" + rgbPa + ",.28)" : "rgba(" + rgbPa + ",.55)";
     cx.fillRect(x0, -PA.meia, x1 - x0, 2 * PA.meia);
-    cx.fillStyle = "#0aa3e0";
+    cx.fillStyle = "rgb(" + rgbPa + ")";
     cx.fillRect(x0, PA.meia - 0.3, x1 - x0, 0.6); cx.fillRect(x0, -PA.meia - 0.3, x1 - x0, 0.6);
     cx.fillStyle = "#3a3f46"; cx.fillRect(PA_PIVO.x - 0.5, -PA.meia - 1.1, 1, 2 * PA.meia + 2.2);
   }
@@ -806,14 +885,22 @@ function desenhaLente() {
   cx.beginPath(); cx.moveTo(0, -T / 2 + 8); cx.lineTo(-9, -T / 2 + 24); cx.lineTo(9, -T / 2 + 24); cx.fill();
   cx.restore();
 }
-function reflexoVisual(p) { const v = leitura(p); return Math.round((v[0] + v[1] + v[2]) / 3 / 255 * 100); }
+/* o número que o sensor mostraria, sem o ruído (na escala do kit) */
+function reflexoVisual(p) {
+  const v = leitura(p), l = luzDaSuperficie(v), q = v[3] || 0;
+  if (PLAT.id === "ev3") return Math.round(3 + l * 0.72 + q * 17);
+  if (PLAT.id === "arduino") return Math.round(1000 - l * 9 - q * 40);
+  return Math.round(l);
+}
+/* a mesma leitura em 0 a 100 (para o gráfico) */
+function reflexo100(p) { const v = reflexoVisual(p); return PLAT.id === "arduino" ? Math.round((1023 - v) / 10.23) : v; }
 
 /* ---------------------- grafico ao vivo ---------------------- */
 const AMOSTRAS = [], MAX_AM = 500;
 const CORES_LINHA = ["#ff8c1a", "#00b3d6", "#b35cff", "#2ec27e"];
 function gravaAmostra() {
   const cores = portasDe("cor");
-  AMOSTRAS.push({ t: R.t, rf: cores.map(reflexoVisual), cr: cores.map(corDeSensorVisual),
+  AMOSTRAS.push({ t: R.t, rf: cores.map(reflexo100), cr: cores.map(corDeSensorVisual),
     ve: MOT[PAR_MOV[0]] ? MOT[PAR_MOV[0]].real : 0, vd: MOT[PAR_MOV[1]] ? MOT[PAR_MOV[1]].real : 0 });
   if (AMOSTRAS.length > MAX_AM) AMOSTRAS.shift();
 }
@@ -850,7 +937,7 @@ function desenhaGrafico() {
 function montaLegenda() {
   const cores = portasDe("cor");
   document.getElementById("legenda").innerHTML =
-    cores.map((p, i) => '<span><i style="background:' + CORES_LINHA[i % 4] + '"></i>' + p + " reflexo (" +
+    cores.map((p, i) => '<span><i style="background:' + CORES_LINHA[i % 4] + '"></i>' + PLAT.rotulo(p) + " reflexo (" +
       (LADO[p] === "esq" ? "esq." : LADO[p] === "dir" ? "dir." : "centro") + ")</span>").join("") +
     '<span><i style="background:rgba(128,140,155,.7)"></i>motores (−100 a 100)</span>';
 }

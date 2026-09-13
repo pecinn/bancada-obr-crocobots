@@ -7,7 +7,7 @@ let PARADO_POR = "", TESTANDO = false;
 /* o que o hub mostra: matriz 5x5, cor do botao, balao de texto */
 const MATRIZ = new Array(25).fill(0);
 const CARINHA = [0,0,0,0,0, 0,1,0,1,0, 0,0,0,0,0, 1,0,0,0,1, 0,1,1,1,0];
-let BOTAO = "6", BALAO = null, MATRIZ_MUDOU = true;
+let BOTAO = "6", BALAO = null, MATRIZ_MUDOU = true, LUZ_STATUS = "1";
 function carinha() { for (let i = 0; i < 25; i++) MATRIZ[i] = CARINHA[i] * 100; MATRIZ_MUDOU = true; }
 
 const num = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
@@ -24,8 +24,9 @@ function avaliaBloco(b) {
     case "op_sub":  return num(A()) - num(Bv());
     case "op_mult": return num(A()) * num(Bv());
     case "op_div":  return num(Bv()) === 0 ? 0 : num(A()) / num(Bv());
-    case "op_mod":  return num(Bv()) === 0 ? 0 : num(A()) % num(Bv());
+    case "op_mod":  { const d = num(Bv()); return d === 0 ? 0 : ((num(A()) % d) + d) % d; }   /* como no Scratch: o resto tem o sinal do divisor */
     case "op_arred":return Math.round(num(A()));
+    case "op_abs":  return Math.abs(num(A()));
     case "op_aleatorio": return Math.floor(num(A()) + Math.random() * (num(Bv()) - num(A()) + 1));
     case "op_menor": return num(A()) < num(Bv());
     case "op_maior": return num(A()) > num(Bv());
@@ -48,9 +49,11 @@ function avaliaBloco(b) {
       if (u === "inches") d /= 2.54; else if (u === "%") d /= 2;
       return compara(d, aval(b.a.CMP), num(aval(b.a.VAL)));
     }
-    case "sen_forca":  return forcaAgora() > 0;
+    case "sen_forca":  return CFG[aval(b.a.P)] === "forca" && forcaAgora() > 0;
     case "sen_forcar": return forcaAgora();
     case "sen_angulo": {
+      /* EV3: giroscópio numa porta, ângulo acumulado (passa de 360); SPIKE e MPU-6050: -180 a 180 */
+      if (PLAT.id === "ev3") return CFG[aval(b.a.P) || PLAT.giro] === "giro" ? Math.round(R.yaw) : 0;
       const e = aval(b.a.EIXO);
       if (e === "pitch") return Math.round(R.pitch * 180 / Math.PI);
       if (e === "roll")  return Math.round(R.roll * 180 / Math.PI);
@@ -129,7 +132,7 @@ function* execBloco(b) {
   ATUAL = b.id;
   const A = n => aval(b.a[n]);
   switch (b.op) {
-    case "mov_par": PAR_MOV = String(A("PAR")).replace("+", "").toUpperCase(); break;
+    case "mov_par": PAR_MOV = lePar(A("PAR")); break;
     case "mov_vel": VEL_MOV = num(A("VAL")); break;
     case "mov_rot": break;
     case "mov_iniciar": { const [e, d] = velDeDirecao(A("DIR")); velPar(e, d); break; }
@@ -154,6 +157,8 @@ function* execBloco(b) {
       break;
     }
     case "mot_parar": { const m = MOT[A("P")]; if (m) m.vel = 0; break; }
+    case "mot_potencia": { const m = MOT[A("P")]; if (m) m.vel = Math.max(-100, Math.min(100, num(A("VAL")))); break; }
+    case "luz_status": LUZ_STATUS = String(A("COR")); MATRIZ_MUDOU = true; break;
     case "mot_zerar": { const m = MOT[A("P")]; if (m) m.pos = 0; break; }
     case "mot_girar": {
       const p = A("P"), m = MOT[p]; if (!m) break;
@@ -266,6 +271,12 @@ function umPasso() {
   if (avaliaCorrida() === "fim") {
     FIOS.forEach(x => x.vivo = false);
     PARADO_POR = CORRIDA.fimMotivo;
+  }
+  /* desafio da trilha: tempo máximo e "robô parado" encerram a corrida */
+  if (typeof DESAFIO !== "undefined" && DESAFIO && passoDesafio() === "fim") {
+    FIOS.forEach(x => x.vivo = false); paraPar();
+    PARADO_POR = DESAFIO.motivo; RODANDO = false;
+    return algum;
   }
   if (!FIOS.some(f => f.vivo)) {
     paraPar();

@@ -15,7 +15,14 @@ const DIV_ = (a, b) => f_("op_div", { A: a, B: b });
 const NAO_ = a => f_("op_nao", { A: a });
 const SOMAR_ = (v, x) => f_("var_muda", { VAR: L_(v), VAL: (x && x.op) ? x : L_(x) });
 const COR_ = (p, c) => f_("sen_ecor", { P: L_(p), COR: L_(c) });
-const PRATA_ = p => E_(MAIOR_(RF_(p), L_(58)), MENOR_(RF_(p), L_(84)));
+const CRU_ = (p, c) => f_("sen_cru", { P: L_(p), CANAL: L_(c) });
+/* fita prata da entrada. No SPIKE a luz refletida da prata é igual à do branco (as duas perto de 100), então quem separa
+   é o valor bruto do vermelho: ~430 na prata contra ~980 no branco. No EV3 a prata reflete mais que o branco (~90 contra ~71).
+   No Arduino a leitura analógica da prata fica abaixo da do branco (~80 contra ~150). */
+const PRATA_ = p => PLAT.id === "spike" ? E_(MAIOR_(RF_(p), L_(80)), MENOR_(CRU_(p, "r"), L_(650)))
+  : PLAT.id === "ev3" ? MAIOR_(f_("sen_reflexo", { P: L_(p) }), L_(82))
+  : MENOR_(f_("sen_reflexo", { P: L_(p) }), L_(110));
+const BRANCO_ = p => E_(MAIOR_(RF_(p), L_(86)), NAO_(PRATA_(p)));
 const NEG_ = x => MULT_(L_(-1), x);
 const VARS_RESGATE = ["resgateFeito", "contaPrata", "X", "Y", "rumo", "erroRumo", "giro", "dist", "andou", "sentido",
   "usaParede", "paredeMin", "olhaFita", "motivo", "vel", "cmPorSeg", "paredeO", "paredeL", "paredeN", "rumoFaixa",
@@ -78,7 +85,7 @@ function blocosResgate(x0, y0) {
     /* 1) passa a fita inteira: os dois sensores ficam no piso branco da sala (lá não tem linha preta atrapalhando) */
     f_("mov_parar"), f_("ctl_esperar", { SEG: L_(0.2) }),
     f_("sen_zerar_cron"),
-    ATE_(OU_(E_(MAIOR_(RF_("D"), L_(86)), MAIOR_(RF_("E"), L_(86))), MAIOR_(CRON_(), L_(2))), [DUAL_(10, 10)]),
+    ATE_(OU_(E_(BRANCO_("D"), BRANCO_("E")), MAIOR_(CRON_(), L_(2))), [DUAL_(10, 10)]),
     f_("sen_zerar_cron"), ATE_(MAIOR_(CRON_(), L_(0.35)), [DUAL_(10, 10)]),
     f_("mov_parar"), f_("ctl_esperar", { SEG: L_(0.2) }),
     /* 2) volta de ré devagar e marca quando cada sensor chega na fita: se um chega antes, o robô está torto.
@@ -111,11 +118,8 @@ function blocosResgate(x0, y0) {
   defineOuTroca("calcula_erro_rumo", [
     /* quanto falta girar para ficar no rumo (entre -180 e 180; positivo = virar à direita).
        "ajuste" corrige o quanto o robô entrou torto na sala */
-    DEF_("erroRumo", SUB_(SOMA_(V_("rumo"), V_("ajuste")), YAW_())),
-    SE_(MAIOR_(V_("erroRumo"), L_(180)), [SOMAR_("erroRumo", -360)]),
-    SE_(MENOR_(V_("erroRumo"), L_(-180)), [SOMAR_("erroRumo", 360)]),
-    SE_(MAIOR_(V_("erroRumo"), L_(180)), [SOMAR_("erroRumo", -360)]),
-    SE_(MENOR_(V_("erroRumo"), L_(-180)), [SOMAR_("erroRumo", 360)])
+    /* resto da divisão por 360: funciona com o giroscópio do EV3, que soma as voltas sem voltar para -180..180 */
+    DEF_("erroRumo", SUB_(f_("op_mod", { A: SOMA_(SUB_(SOMA_(V_("rumo"), V_("ajuste")), YAW_()), L_(540)), B: L_(360) }), L_(180)))
   ], ...col(1, 0));
 
   defineOuTroca("vira_para_rumo", [

@@ -1,0 +1,197 @@
+/* ======================= PORTAL DA ROBÓTICA ======================= */
+#portal{position:fixed;inset:0;z-index:500;overflow-y:auto;color:#eceef1;
+  background:
+    radial-gradient(70% 60% at 8% 0%, rgba(143,209,79,.13), transparent 60%),
+    radial-gradient(60% 50% at 100% 100%, rgba(0,151,157,.10), transparent 60%),
+    linear-gradient(180deg,#121418,#0c0e11);
+  font-family:Nunito,"Segoe UI",system-ui,sans-serif}
+#portal[hidden],#portal .tela[hidden],#portal [hidden]{display:none!important}
+body.no-portal{overflow:hidden}
+#portal::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3Cg fill='none' stroke='%231f242a' stroke-width='2'%3E%3Cpath d='M20 620V470l50-50h110M70 640V520l40-40M150 640V540l30-30h80M620 20H470l-50 50v90M640 90H520l-40 40M600 640V520l-40-40h-90'/%3E%3C/g%3E%3Cg fill='%231f242a'%3E%3Ccircle cx='180' cy='420' r='5'/%3E%3Ccircle cx='110' cy='480' r='5'/%3E%3Ccircle cx='260' cy='510' r='5'/%3E%3Ccircle cx='420' cy='160' r='5'/%3E%3Ccircle cx='480' cy='130' r='5'/%3E%3C/g%3E%3C/svg%3E") center/640px repeat}
+#portal .tela{position:relative;min-height:100%;display:flex;flex-direction:column}
+#portal h1,#portal h2,#portal h3{text-wrap:balance}
+#portal button{font-family:inherit;cursor:pointer}
+#portal :focus-visible{outline:2px solid #8fd14f;outline-offset:2px}
+.aco{background:linear-gradient(180deg,#f4f6f8 0%,#b9c0c8 45%,#6f7780 55%,#d6dbe0 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- entrada ---------- */
+.login-grade{flex:1;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,420px);gap:clamp(24px,5vw,72px);
+  align-items:center;max-width:1180px;width:100%;margin:0 auto;padding-block:clamp(28px,6vh,72px);padding-inline:clamp(16px,4vw,40px)}
+.login-logo{width:clamp(120px,16vw,190px);filter:drop-shadow(0 10px 22px rgba(0,0,0,.6));display:block;margin-bottom:10px}
+.login-hero .sobre{margin:0;color:#8fd14f;font-weight:900;font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+.login-hero h1{margin:6px 0 10px;font-family:"Black Ops One",Nunito,sans-serif;font-weight:400;font-size:clamp(38px,6.2vw,74px);line-height:.98;letter-spacing:.5px;
+  background:linear-gradient(180deg,#f4f6f8 0%,#b9c0c8 45%,#6f7780 55%,#d6dbe0 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.login-hero .lema{margin:0 0 26px;font-size:clamp(17px,1.8vw,21px);font-weight:700;color:#c7ced6;max-width:34ch;line-height:1.4}
+.degraus{list-style:none;margin:0 0 22px;padding:0;display:grid;gap:8px;counter-reset:d;max-width:520px}
+.degraus li{counter-increment:d;display:grid;grid-template-columns:34px 1fr;column-gap:12px;align-items:center;
+  background:rgba(255,255,255,.035);border:1px solid #262b31;border-radius:12px;padding:9px 12px}
+.degraus li::before{content:counter(d);grid-row:span 2;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  font-family:"Black Ops One",Nunito,sans-serif;font-size:17px;color:#10200a;background:linear-gradient(180deg,#b9e886,#8fd14f)}
+.degraus li:nth-child(2)::before{background:linear-gradient(180deg,#8ae0c7,#3fae8a)}
+.degraus li:nth-child(3)::before{background:linear-gradient(180deg,#ffe28a,#f0b429)}
+.degraus b{font-size:15px;color:#eef1f4}
+.degraus span{font-size:13px;color:#98a1ab;font-weight:600}
+.kits-mini{display:flex;flex-wrap:wrap;gap:8px}
+.kchip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 12px;font-weight:800;font-size:13px;border:1px solid #2c3137;background:#15181c}
+.kchip small{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#8d96a1;font-weight:700}
+.kchip.spike{box-shadow:inset 3px 0 0 #ffcf00}.kchip.ev3{box-shadow:inset 3px 0 0 #d0342c}.kchip.ard{box-shadow:inset 3px 0 0 #00979d}
+
+.login-cartao{display:grid;gap:6px;background:linear-gradient(180deg,#1b1e23,#15171b);border:1px solid #2e333a;border-radius:18px;
+  padding:clamp(20px,3vw,30px);box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.login-cartao h2{margin:0 0 10px;font-family:"Black Ops One",Nunito,sans-serif;font-weight:400;font-size:26px;letter-spacing:.5px;color:#eef1f4}
+.login-cartao label{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#9aa3ad;margin-top:6px}
+.login-cartao input{font:inherit;font-size:16px;padding:11px 12px;border-radius:10px;border:1px solid #3a4048;background:#0f1114;color:#f2f4f6}
+.login-cartao input:focus{outline:2px solid #8fd14f;outline-offset:1px}
+.login-cartao .erro{min-height:1.2em;margin:4px 0 0;color:#ff8b8f;font-size:13px;font-weight:700}
+.login-cartao .entrar{margin-top:6px;border:0;border-radius:12px;padding:13px;font-weight:900;font-size:16px;color:#10200a;
+  background:linear-gradient(180deg,#b9e886,#8fd14f);box-shadow:0 6px 18px rgba(143,209,79,.25)}
+.login-cartao .entrar:hover{filter:brightness(1.06)}
+.demo{margin-top:14px;display:grid;gap:3px;border:1px dashed #3a4048;border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.02)}
+.demo b{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8fd14f}
+.demo span{font-size:14px;color:#c7ced6;font-weight:700}
+.demo code{font-family:ui-monospace,Consolas,monospace;background:#0f1114;border:1px solid #30363e;border-radius:6px;padding:1px 6px;color:#eef1f4}
+
+.patrocinio{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px 22px;
+  border-top:1px solid #20252b;background:rgba(10,12,14,.6);padding-block:14px;padding-inline:clamp(16px,4vw,40px)}
+.patrocinio .rotulo{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#6f7883}
+.patrocinio .logos{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.slot-p{display:grid;place-items:center;width:132px;height:48px;border:1px dashed #343a42;border-radius:10px;color:#565f6a;font-size:11px;font-weight:800;letter-spacing:.04em}
+.logo-p{display:grid;place-items:center;height:52px;padding:6px 12px;background:#f4f5f6;border-radius:10px}
+.logo-p img{max-height:40px;max-width:150px;display:block}
+
+/* ---------- topo das telas internas ---------- */
+.portal-topo{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding-block:10px;padding-inline:clamp(16px,3vw,32px);background:linear-gradient(180deg,rgba(24,27,32,.97),rgba(17,19,23,.97));border-bottom:1px solid #262b31}
+.mini-logo{height:40px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))}
+.marca-portal{font-family:"Black Ops One",Nunito,sans-serif;font-size:19px;letter-spacing:.5px;
+  background:linear-gradient(180deg,#f4f6f8 0%,#b9c0c8 45%,#6f7780 55%,#d6dbe0 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.portal-topo .esp{flex:1}
+.portal-topo .ola{font-weight:800;color:#aab1ba;font-size:14px}
+.portal-topo .link{border:1px solid #3a4048;background:transparent;color:#dfe4ea;border-radius:9px;padding:6px 12px;font-weight:800}
+.portal-topo .link:hover{border-color:#8fd14f;color:#8fd14f}
+.kit-atual{display:inline-flex;align-items:center;gap:8px;border:1px solid #3a4048;background:#15181c;color:#eef1f4;border-radius:999px;padding:5px 12px;font-weight:900}
+.kit-atual small{color:#8fd14f;font-weight:800;font-size:11px;margin-left:2px}
+.bolinha{width:10px;height:10px;border-radius:50%}
+.bolinha.spike{background:#ffcf00}.bolinha.ev3{background:#d0342c}.bolinha.ard{background:#00979d}
+.segmento{display:inline-flex;border:1px solid #3a4048;border-radius:999px;padding:3px;background:#101215}
+.segmento button{border:0;background:transparent;color:#aab1ba;border-radius:999px;padding:6px 12px;font-weight:800;font-size:13px}
+.segmento button[aria-checked="true"]{background:linear-gradient(180deg,#b9e886,#8fd14f);color:#10200a}
+
+/* ---------- kits ---------- */
+.kits-miolo{max-width:1180px;width:100%;margin:0 auto;padding-block:clamp(24px,5vh,54px);padding-inline:clamp(16px,4vw,40px)}
+.kits-miolo h1,.trilha-cabeca h1{margin:0 0 6px;font-family:"Black Ops One",Nunito,sans-serif;font-weight:400;font-size:clamp(28px,4vw,44px);letter-spacing:.4px;color:#eef1f4}
+#portal .sub{margin:0 0 22px;color:#98a1ab;font-weight:700;max-width:70ch;line-height:1.5}
+.kits{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.kit{position:relative;display:flex;flex-direction:column;background:linear-gradient(180deg,#1b1e23,#15171b);border:1px solid #2c3137;border-radius:18px;overflow:hidden}
+.kit-arte{height:170px;display:grid;place-items:center;border-bottom:1px solid #262b31}
+.kit.spike .kit-arte{background:radial-gradient(80% 90% at 50% 100%,rgba(255,207,0,.22),transparent 70%),#17191d}
+.kit.ev3 .kit-arte{background:radial-gradient(80% 90% at 50% 100%,rgba(208,52,44,.22),transparent 70%),#17191d}
+.kit.ard .kit-arte{background:radial-gradient(80% 90% at 50% 100%,rgba(0,151,157,.25),transparent 70%),#17191d}
+.kit-arte svg{width:min(240px,80%);height:auto}
+.kit-texto{display:flex;flex-direction:column;flex:1;padding:16px 18px 18px}
+.kit-fab{margin:0;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#8d96a1}
+.kit-nome{margin:2px 0 10px;font-family:"Black Ops One",Nunito,sans-serif;font-weight:400;font-size:28px;letter-spacing:.4px}
+.kit.spike .kit-nome{color:#ffd84d}.kit.ev3 .kit-nome{color:#ff6b62}.kit.ard .kit-nome{color:#4fd1d6}
+.kit ul{margin:0 0 12px;padding-left:18px;color:#c7ced6;font-size:14px;font-weight:600;line-height:1.55}
+.kit-ext{margin:auto 0 14px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:#9aa3ad}
+.kit .escolher{border:0;border-radius:12px;padding:11px;font-weight:900;font-size:15px;color:#10131a}
+.kit.spike .escolher{background:linear-gradient(180deg,#ffe066,#ffcf00)}
+.kit.ev3 .escolher{background:linear-gradient(180deg,#ff8a82,#d0342c);color:#fff}
+.kit.ard .escolher{background:linear-gradient(180deg,#5fe0e4,#00979d);color:#04191a}
+.kit.atual::after{content:"kit atual";position:absolute;top:12px;right:12px;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
+  background:#8fd14f;color:#10200a;border-radius:999px;padding:3px 9px}
+
+/* ---------- trilha ---------- */
+.trilha-miolo{max-width:1240px;width:100%;margin:0 auto;padding-block:clamp(20px,4vh,40px);padding-inline:clamp(16px,4vw,40px)}
+.trilha-cabeca{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.bancada-livre{border:1px solid #3a4048;background:#15181c;color:#eef1f4;border-radius:12px;padding:10px 16px;font-weight:900;margin-bottom:22px}
+.bancada-livre:hover{border-color:#8fd14f}
+.desempenho{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.3fr) minmax(0,.9fr);gap:12px;margin-bottom:22px}
+.desempenho>div{background:linear-gradient(180deg,#1b1e23,#16181c);border:1px solid #2a2f35;border-radius:16px;padding:14px 16px}
+.desempenho h3{margin:0 0 10px;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#8d96a1}
+.desempenho h3 small{text-transform:none;letter-spacing:0;font-weight:700;color:#66707b}
+.numeros{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.numeros div{display:grid;align-content:center}
+.numeros b{font-family:"Black Ops One",Nunito,sans-serif;font-weight:400;font-size:34px;line-height:1;color:#eef1f4;font-variant-numeric:tabular-nums}
+.numeros b small{font-family:Nunito,sans-serif;font-size:15px;color:#6f7883;font-weight:800}
+.numeros span{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#8d96a1;margin-top:4px}
+.barra-comp{display:grid;grid-template-columns:minmax(120px,1.2fr) 2fr 30px;gap:8px;align-items:center;margin:5px 0;font-size:13px;font-weight:700;color:#c7ced6}
+.barra-comp i{height:8px;border-radius:9px;background:linear-gradient(90deg,#8fd14f var(--v),#2a2f35 var(--v))}
+.barra-comp b{text-align:right;font-variant-numeric:tabular-nums;color:#eef1f4}
+.proximo{display:flex;flex-direction:column}
+.proximo p{margin:0;color:#8fd14f;font-weight:900;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.proximo strong{font-size:18px;margin:4px 0 12px;color:#eef1f4;line-height:1.25}
+.proximo button{margin-top:auto;border:0;border-radius:11px;padding:10px;font-weight:900;color:#10200a;background:linear-gradient(180deg,#b9e886,#8fd14f)}
+.niveis{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #262b31;margin-bottom:12px}
+.niveis button{display:inline-flex;align-items:center;gap:10px;border:0;background:transparent;color:#98a1ab;font-weight:900;font-size:16px;
+  padding:10px 14px;border-bottom:3px solid transparent;margin-bottom:-1px}
+.niveis button[aria-selected="true"]{color:#eef1f4;border-bottom-color:#8fd14f}
+.niveis .pct{font-size:12px;font-weight:800;border-radius:999px;padding:2px 8px;color:#d8dde3;
+  background:linear-gradient(90deg,rgba(143,209,79,.45) var(--v),#23282e var(--v))}
+.nivel-intro{margin:0 0 14px;color:#98a1ab;font-weight:600;max-width:80ch;line-height:1.5}
+.nivel-intro b{color:#dfe4ea}
+.desafios{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;padding-bottom:40px}
+.desafio{display:flex;flex-direction:column;background:linear-gradient(180deg,#1b1e23,#15171b);border:1px solid #2a2f35;border-radius:16px;padding:14px 15px}
+.desafio.feito{border-color:#3d5a2a}
+.desafio.bloqueado{opacity:.55}
+.d-topo{display:flex;justify-content:space-between;align-items:center}
+.d-num{font-family:"Black Ops One",Nunito,sans-serif;font-size:22px;color:#4a525c}
+.desafio.feito .d-num{color:#8fd14f}
+.d-estrelas{color:#ffd23f;letter-spacing:2px;font-size:16px}
+.d-estrelas span{color:#3a4048}
+.d-titulo{margin:6px 0 6px;font-size:17px;line-height:1.25;color:#eef1f4}
+.d-resumo{margin:0 0 10px;color:#aab1ba;font-size:13.5px;font-weight:600;line-height:1.45}
+.d-conceitos{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.d-conceitos span{font-size:11px;font-weight:800;color:#b9c0c8;border:1px solid #30363e;border-radius:999px;padding:2px 8px}
+.d-rodape{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.d-pontos{font-size:12.5px;color:#8d96a1;font-weight:700}
+.d-pontos b{color:#eef1f4}
+.d-rodape button{border:0;border-radius:10px;padding:8px 12px;font-weight:900;color:#10200a;background:linear-gradient(180deg,#b9e886,#8fd14f);white-space:nowrap}
+
+@media (max-width:980px){
+  .login-grade{grid-template-columns:1fr}
+  .desempenho{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .portal-topo .marca-portal,.portal-topo .ola{display:none}
+  .segmento button{padding:6px 9px;font-size:12px}
+  .barra-comp{grid-template-columns:1fr 1.2fr 28px;font-size:12px}
+  .numeros b{font-size:28px}
+}
+
+/* ---------- dentro da bancada ---------- */
+#topo .bt.trilha{background:linear-gradient(180deg,#b9e886,#8fd14f);color:#10200a;border-color:transparent;font-weight:900}
+#topo .tag.kit{border-width:1px;color:#e8ecf0;text-transform:none;letter-spacing:.02em;font-weight:900}
+#topo .tag.kit.spike{border-color:#ffcf00}#topo .tag.kit.ev3{border-color:#d0342c}#topo .tag.kit.ard{border-color:#00979d}
+.dz h4{margin:6px 0 6px;font-size:17px;color:#eef1f4}
+.dz p{font-size:13px;color:#c3cad2;font-weight:600;line-height:1.5;margin:0 0 8px}
+.dz p b{color:#eef1f4}
+.dz h5{margin:12px 0 6px}
+.dz-chips{display:flex;flex-wrap:wrap;gap:5px}
+.dz-chips span{font-size:10.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:2px 8px;background:#23282e;color:#b9c0c8}
+.dz-chips span:first-child{background:#8fd14f;color:#10200a}
+.dz-crit{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.dz-crit li{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;font-weight:700;color:#c7ced6;background:#121417;border-radius:8px;padding:5px 8px}
+.dz-crit em{font-style:normal;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:#8fd14f;margin-left:4px}
+.dz-crit b{font-variant-numeric:tabular-nums;color:#eef1f4}
+.dz-dicas{margin:8px 0;font-size:13px;color:#c3cad2}
+.dz-dicas summary{cursor:pointer;font-weight:900;color:#8fd14f}
+.dz-dicas ol{margin:6px 0 0;padding-left:20px;line-height:1.5;font-weight:600}
+.dz-reg{font-size:12.5px;color:#aab1ba;font-weight:700;margin:8px 0}
+.dz-reg b{color:#eef1f4}
+.dz-hist{display:flex;gap:3px;align-items:flex-end;height:34px;margin-top:6px}
+.dz-hist i{flex:1;max-width:22px;border-radius:4px 4px 0 0;background:#8fd14f;height:max(3px,var(--v))}
+#resultado .res-desafio{min-width:min(340px,86vw)}
+#resultado .criterios{list-style:none;margin:8px 0;padding:0;display:grid;gap:4px;text-align:left}
+#resultado .criterios li{display:grid;grid-template-columns:18px 1fr auto;gap:6px;align-items:center;font-size:12.5px;font-weight:700;color:#d6dce3;
+  background:rgba(255,255,255,.06);border-radius:8px;padding:5px 8px}
+#resultado .criterios li span{font-weight:900}
+#resultado .criterios li.ok span{color:#8fd14f}#resultado .criterios li.meio span{color:#f0b429}#resultado .criterios li.nao span{color:#ff6b6b}
+#resultado .criterios li b{font-variant-numeric:tabular-nums;color:#fff}
+#resultado .medida{font-size:12px;color:#aab4bf}
+#resultado .recorde{color:#ffd23f;font-weight:900}
+#resultado .botoes{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
+
+/* atributo hidden sempre esconde (fora do artifact não existe esse reset) */
+[hidden]{display:none!important}

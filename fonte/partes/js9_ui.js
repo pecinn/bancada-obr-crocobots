@@ -14,13 +14,14 @@ function zeraPrograma() {
   R.cron = 0; R.t = 0; R.trilha = []; R.yaw0 = R.th; R.yaw = 0;
   PORTAS.forEach(p => { MOT[p].pos = 0; MOT[p].vel = 0; MOT[p].real = 0; MOT[p].alvo = undefined; });
   PA_BAIXA = false; for (const v of VITIMAS) { v.preso = null; v.salva = null; v.queda = 0; }
-  PAR_MOV = "AB"; VEL_MOV = 50; BALAO = null; BOTAO = "6"; carinha();
+  PAR_MOV = PLAT.par.slice(); VEL_MOV = 50; LUZ_STATUS = "1"; BALAO = null; BOTAO = "6"; carinha();
   CORRIDA = null; AMOSTRAS.length = 0;
   $("btPausa").textContent = "⏸"; $("fcPausa").textContent = "⏸ Pausar";
   prepara(); destaca(null);
 }
 function voltaLargada() {
   MOVIDO = false;
+  if (typeof sorteiaDesafio === "function") sorteiaDesafio();
   R.x = LARGADA.x; R.y = LARGADA.y; R.th = LARGADA.a * Math.PI / 180;
   R.alt = alturaEm(R.x, R.y); R.pitch = R.roll = 0; R.yaw = 0; R.yaw0 = R.th; R.trilha = [];
   tiltGangorra = tiltInicial(); precisaRelevo = true;
@@ -44,13 +45,13 @@ function painel() {
     cores.forEach(p => {
       const lado = LADO[p] === "esq" ? "esq." : LADO[p] === "dir" ? "dir." : "centro";
       const c = corDeSensorVisual(p);
-      h += cel(p + " cor · " + lado, '<i style="display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;border:1px solid rgba(0,0,0,.25);background:' + HEX_SPIKE[c] + '"></i>' + nomeCor(c));
-      h += cel(p + " reflexo", reflexoVisual(p));
+      h += cel(PLAT.rotulo(p) + " cor · " + lado, '<i style="display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;border:1px solid rgba(0,0,0,.25);background:' + HEX_SPIKE[c] + '"></i>' + nomeCor(c));
+      h += cel(PLAT.rotulo(p) + (PLAT.id === "arduino" ? " analógico" : " reflexo"), reflexoVisual(p));
       const v = leitura(p);
-      h += cel(p + " cru R G B", v.map(x => Math.round(x / 255 * 1024)).join(" "));
+      if (PLAT.temCru) h += cel(PLAT.rotulo(p) + " bruto R G B", [0, 1, 2].map(i => Math.round(v[i] / 255 * PLAT.cruMax * (1 - 0.4 * (v[3] || 0)))).join(" "));
     });
-    dists.forEach(p => h += cel(p + " distância", ULT_DIST.d >= 200 ? "—" : Math.round(ULT_DIST.d) + " cm"));
-    forcas.forEach(p => h += cel(p + " força", forcaAgora() + "%"));
+    dists.forEach(p => h += cel(PLAT.rotulo(p) + " distância", ULT_DIST.d >= 200 ? "—" : Math.round(ULT_DIST.d) + " cm"));
+    forcas.forEach(p => h += cel(PLAT.rotulo(p) + (PLAT.id === "spike" ? " força" : " toque"), forcaAgora() + "%"));
     h += cel("guinada", Math.round(((R.yaw % 360) + 540) % 360 - 180) + "°");
     h += cel("inclinação", Math.round(R.pitch * 180 / Math.PI) + "°");
     h += cel("cronômetro", R.cron.toFixed(1) + " s");
@@ -60,7 +61,7 @@ function painel() {
     e += cel("posição", R.x.toFixed(0) + ", " + R.y.toFixed(0) + " cm");
     e += cel("direção", Math.round(((R.th * 180 / Math.PI) % 360 + 360) % 360) + "°");
     e += cel("altura", R.alt.toFixed(1) + " cm");
-    e += cel("motores " + PAR_MOV, Math.round(MOT[em] ? MOT[em].real : 0) + " / " + Math.round(MOT[ed] ? MOT[ed].real : 0) + " %");
+    e += cel("motores " + PAR_MOV.join("+"), Math.round(MOT[em] ? MOT[em].real : 0) + " / " + Math.round(MOT[ed] ? MOT[ed].real : 0) + " %");
     e += cel("situação", RODANDO ? (PAUSADO ? "pausado" : "rodando") : (PARADO_POR || "parado"));
     e += cel("colisão", R.bateu ? "batendo" : "livre");
     $("estado").innerHTML = e;
@@ -73,7 +74,7 @@ function painel() {
   /* chips do HUD */
   $("sensChips").innerHTML = cores.map((p, i) => {
     const c = corDeSensorVisual(p);
-    return '<div class="schip"><span class="amostra" style="background:' + HEX_SPIKE[c] + '"></span><span>' + p +
+    return '<div class="schip"><span class="amostra" style="background:' + HEX_SPIKE[c] + '"></span><span>' + PLAT.rotulo(p) +
       " <small>" + nomeCor(c) + "</small></span><span class=rf>" + reflexoVisual(p) + "</span></div>";
   }).join("") + (dists.length ? '<div class="schip"><span>📏 <small>distância</small></span><span class=rf>' +
     (ULT_DIST.d >= 200 ? "—" : Math.round(ULT_DIST.d) + " cm") + "</span></div>" : "");
@@ -136,6 +137,7 @@ function explicaParada(C) {
 const HIST = [];
 function fimDeCorrida() {
   const C = CORRIDA; if (!C || R.t < 0.5) return;
+  if (typeof DESAFIO !== "undefined" && DESAFIO) { if (PARADO_POR !== "parado por você") terminaDesafio(); return; }
   const st = estrelasDe(C);
   const nome = PISTAS[PISTA_ATUAL].nome;
   HIST.unshift({ nome, pct: ROTA ? C.pct : null, t: C.tempoFim || R.t, st, saidas: C.saidas, motivo: (ROTA ? notaDe(C).txt + " · " : "") + (PARADO_POR || "interrompido") });
@@ -173,6 +175,7 @@ $("btRodar").onclick = () => {
   if (!MOVIDO) voltaLargada();
   MOVIDO = false;
   zeraPrograma();
+  if (typeof DESAFIO !== "undefined" && DESAFIO) novaTentativa();
   if (comeca("ev_inicio")) {
     RODANDO = true; PAUSADO = false; acumulado = 0; ESTAVA = true;
     registra("--- rodando em \"" + PISTAS[PISTA_ATUAL].nome + "\" de " + R.x.toFixed(0) + ", " + R.y.toFixed(0) + " cm ---");
@@ -243,10 +246,12 @@ function montaPortas() {
   d.innerHTML = "";
   for (const p of PORTAS) {
     const l = document.createElement("div"); l.className = "linha";
-    const lb = document.createElement("label"); lb.textContent = "Porta " + p;
+    const lb = document.createElement("label"); lb.textContent = (PLAT.id === "arduino" ? "" : "Porta ") + PLAT.rotulo(p);
+    if (PLAT.pinos && PLAT.pinos[p]) lb.title = PLAT.pinos[p];
     const s = document.createElement("select");
-    for (const [rot, v] of [["vazia","vazio"],["motor","motor"],["sensor de cor","cor"],
-                            ["sensor de distância","dist"],["sensor de força","forca"]]) {
+    const soMotor = PLAT.portasMotor.indexOf(p) >= 0 && PLAT.portasSensor.indexOf(p) < 0;
+    const soSensor = PLAT.portasSensor.indexOf(p) >= 0 && PLAT.portasMotor.indexOf(p) < 0;
+    for (const [rot, v] of PLAT.tipos.filter(t => soMotor ? (t[1] === "vazio" || t[1] === "motor") : soSensor ? t[1] !== "motor" : true)) {
       const o = document.createElement("option"); o.value = v; o.textContent = rot; s.appendChild(o);
     }
     s.value = CFG[p];
@@ -265,7 +270,7 @@ function montaPortas() {
     d.appendChild(l);
   }
   const nota = document.createElement("p"); nota.className = "nota";
-  nota.textContent = "Se o robô virar para o lado errado no quadrado verde, troque aqui qual sensor de cor é o da esquerda.";
+  nota.textContent = (PLAT.id === "arduino" ? "Passe o mouse no nome para ver os pinos. " : "") + "Se o robô virar para o lado errado no quadrado verde, troque aqui qual sensor de cor é o da esquerda.";
   d.appendChild(nota);
 }
 function marcaModelo() {
@@ -527,7 +532,11 @@ function vaiParaPista(i) {
   sel.value = i; montaPista(i); mostraDesc(); montaTabuleiro(); OBJSEL = null; mostraObjeto();
   salvaDepois();
 }
-sel.onchange = () => vaiParaPista(+sel.value);
+sel.onchange = () => {
+  /* trocar de pista no seletor sai do desafio e vai para a bancada livre */
+  if (typeof DESAFIO !== "undefined" && DESAFIO) { guardaProgramaDesafio(); DESAFIO = null; mundoReal(false); mostraAbaDesafio(); delete SESSAO.desafio; gravaSessao(SESSAO); }
+  vaiParaPista(+sel.value);
+};
 $("zArruma").onclick = () => { arrumaPilhas(); registra("Blocos arrumados em colunas."); };
 $("selNivel").onchange = () => {
   NIVEL_RESGATE = +$("selNivel").value;
@@ -560,7 +569,7 @@ async function testaTudo() {
   $("resultado").classList.remove("show");
   RODANDO = false; paraPar();
   const volta = PISTA_ATUAL;
-  const lista = PISTAS.map((p, i) => i).filter(i => PISTAS[i].tipo !== "img" && !PISTAS[i].livre);
+  const lista = PISTAS.map((p, i) => i).filter(i => PISTAS[i].tipo !== "img" && !PISTAS[i].livre && !PISTAS[i].oculta);
   TESTANDO = true;
   $("btTestar").disabled = $("btTestar2").disabled = true;
   $("resLista").innerHTML = ""; $("placar").innerHTML = "";
@@ -631,15 +640,16 @@ $("btTestar2").onclick = testaTudo;
 /* =======================================================================
    9d. SALVAR NESTE NAVEGADOR
    ======================================================================= */
-const CHAVE = "bancadaOBR.v2";
+const CHAVE = "bancadaOBR.v2" + (PLAT.id === "spike" ? "" : "." + PLAT.id);
 function lerSalvo() { try { return JSON.parse(localStorage.getItem(CHAVE) || "null"); } catch (e) { return null; } }
 let tmSalva = 0, ULT_JSON = "";
 function salvaDepois() { clearTimeout(tmSalva); tmSalva = setTimeout(salvaAgora, 600); }
 function salvaAgora() {
   const livre = PISTAS.find(p => p.livre);
+  if (typeof DESAFIO !== "undefined" && DESAFIO) { guardaProgramaDesafio(); return; }
   const dados = {
     prog: PROG, tag: $("tagProj").textContent, equipe: EQUIPE, cfg: CFG, lado: LADO,
-    robo: { SEP, FRENTE, MANCHA, RUIDO, DIF_MOTOR, INERCIA, ROD_MM, EIXO_CM }, som: SOM, pista: PISTA_ATUAL, portas: "D-dir", versao: 7, modelo: MODELO, nivel: NIVEL_RESGATE,
+    robo: { SEP, FRENTE, MANCHA, RUIDO, DIF_MOTOR, INERCIA, ROD_MM, EIXO_CM }, som: SOM, pista: PISTA_ATUAL, portas: "D-dir", versao: 8, modelo: MODELO, nivel: NIVEL_RESGATE,
     hub: $("hub").style.width || "",
     livre: livre && livre.estado ? { tapete: livre.estado.tapete, marcas: livre.estado.marcas, largada: livre.estado.largada } : null
   };
@@ -649,8 +659,8 @@ setInterval(salvaAgora, 5000);
 function aplicaSalvo(s) {
   if (!s) return false;
   if (s.equipe) EQUIPE = Object.assign(EQUIPE, s.equipe);
-  if (s.cfg) CFG = Object.assign(CFG, s.cfg);
-  if (s.lado) LADO = Object.assign(LADO, s.lado, { D: "dir", E: "esq" });
+  if (s.cfg) for (const p of PORTAS) if (s.cfg[p]) CFG[p] = s.cfg[p];
+  if (s.lado) { for (const p of PORTAS) if (s.lado[p]) LADO[p] = s.lado[p]; Object.assign(LADO, PLAT.lado); }
   if (s.robo) ({ SEP, FRENTE, MANCHA, RUIDO, DIF_MOTOR, INERCIA, ROD_MM, EIXO_CM } = Object.assign({ SEP, FRENTE, MANCHA, RUIDO, DIF_MOTOR, INERCIA, ROD_MM, EIXO_CM }, s.robo));
   if (s.modelo && MODELOS[s.modelo]) MODELO = s.modelo;
   if (s.nivel === 1 || s.nivel === 2) NIVEL_RESGATE = s.nivel;
@@ -677,7 +687,11 @@ function aplicaSalvo(s) {
 const f_ = (op, a, c) => { const b = criaBloco(op); if (a) for (const k in a) b.a[k] = a[k]; if (c) b.c = c; return b; };
 const L_ = v => ({ lit: String(v) });
 const V_ = n => f_("var_ler", { VAR: L_(n) });
-const RF_ = p => f_("sen_reflexo", { P: L_(p) });
+/* luz refletida na escala do SPIKE (0 a 100, branco ~95) em qualquer kit: assim os exemplos usam os mesmos limiares.
+   EV3: (leitura - 3) / 0,72.  Arduino: (1023 - leitura analógica) / 9,6 */
+const RF_ = p => PLAT.id === "ev3" ? f_("op_div", { A: f_("op_sub", { A: f_("sen_reflexo", { P: L_(p) }), B: L_(3) }), B: L_(0.72) })
+  : PLAT.id === "arduino" ? f_("op_div", { A: f_("op_sub", { A: L_(1023), B: f_("sen_reflexo", { P: L_(p) }) }), B: L_(9.6) })
+  : f_("sen_reflexo", { P: L_(p) });
 const SOMA_ = (a, b) => f_("op_soma", { A: a, B: b });
 const SUB_ = (a, b) => f_("op_sub", { A: a, B: b });
 const MULT_ = (a, b) => f_("op_mult", { A: a, B: b });
@@ -863,7 +877,7 @@ function exemploPD() {
   $("tagProj").textContent = "seguidor PD OBR";
 }
 /* ---- programas guardados neste navegador ---- */
-const CHAVE_PROGS = "bancadaOBR.progs";
+const CHAVE_PROGS = "bancadaOBR.progs" + (PLAT.id === "spike" ? "" : "." + PLAT.id);
 function lerProgs() { try { return JSON.parse(localStorage.getItem(CHAVE_PROGS) || "null"); } catch (e) { return null; } }
 function gravaProgs(l) { try { localStorage.setItem(CHAVE_PROGS, JSON.stringify(l)); return true; } catch (e) { return false; } }
 let MEUS = lerProgs() || [];
@@ -910,7 +924,29 @@ $("guardaBox").onsubmit = e => {
   $("guardaBox").hidden = true; registra("Programa guardado: \"" + n + "\". Ele fica em Programas… → Guardados.");
 };
 /* na primeira vez, deixa o PD ajustado já guardado */
-const NOME_SAMURAI = "Samurai OBR 2026 v11";
+const NOME_SAMURAI = "Samurai OBR 2026 v12";
+/* o Samurai da equipe (SPIKE). Na v12 a fita prata é achada pelo valor bruto do vermelho, como no robô de verdade:
+   a luz refletida da prata é igual à do branco. O resgate entra na versão atual do gerador. */
+function carregaSamurai() {
+  importaProjeto(EMBUTIDO, NOME_SAMURAI);
+  blocosResgate();
+  const s = PROG.scripts.find(q => q.pilha[0] && q.pilha[0].op === "meu_def" && q.pilha[0].a.NOME.lit === "checa_cinza");
+  let trocas = 0;
+  const ehRef = (x, cmp, v) => x && x.op === cmp && x.a.A && x.a.A.op === "sen_reflexo" && x.a.B && String(x.a.B.lit) === v;
+  (function varre(b) {
+    if (!b || typeof b !== "object") return;
+    for (const k in b.a) {
+      const v = b.a[k];
+      if (v && v.op === "op_e" && ehRef(v.a.A, "op_maior", "58") && ehRef(v.a.B, "op_menor", "84")) {
+        b.a[k] = PRATA_(v.a.A.a.A.a.P.lit); trocas++;
+      } else if (v && v.op) varre(v);
+    }
+    for (const sub of (b.c || [])) sub.forEach(varre);
+  })(s ? { a: {}, c: [s.pilha] } : null);
+  if (PROG.vars.indexOf("contaPrata") < 0) PROG.vars.push("contaPrata");
+  montaPaleta(); desenhaBlocos();
+  return trocas;
+}
 const NOME_PD_GUARDADO = "Seguidor PD OBR (cruzamentos, verdes, obstáculo e resgate)";
 const VERSAO_PD = 3;   /* sobe a cada mudança no PD de exemplo: o guardado é trocado pelo novo */
 function semeiaGuardados() {
@@ -920,7 +956,7 @@ function semeiaGuardados() {
     (/^Seguidor PD OBR \(cruzamentos/.test(m.nome) && m.versaoPD !== VERSAO_PD)) : -1;
   if (lista && velho < 0) return;
   const antes = PROG, tag = $("tagProj").textContent;
-  exemploPD();
+  exemploPD(); traduzPrograma(PROG);
   const item = { nome: NOME_PD_GUARDADO, prog: JSON.parse(JSON.stringify(PROG)), quando: Date.now(), versaoPD: VERSAO_PD };
   PROG = antes; $("tagProj").textContent = tag;
   if (lista) { lista[velho] = item; MEUS = lista; } else MEUS = [item];   /* troca o PD antigo pelo novo */
@@ -931,11 +967,11 @@ $("selExemplo").onchange = e => {
   if (!v || TESTANDO) return;
   if (v === "#guardar") { abreGuarda(); return; }
   RODANDO = false;
-  if (v === "samurai") { importaProjeto(EMBUTIDO, NOME_SAMURAI); arrumaPilhas(); salvaDepois(); return; }
+  if (v === "samurai") { if (PLAT.id !== "spike") return; carregaSamurai(); arrumaPilhas(); salvaDepois(); return; }
   if (v.startsWith("meu:")) {
     const m = MEUS[+v.slice(4)]; if (!m) return;
     usaPrograma(m.prog, m.nome);
-  } else ({ cor: exemploSeguidor, reflexo: exemploReflexo, borda: exemploBorda, pd: exemploPD })[v]();
+  } else { ({ cor: exemploSeguidor, reflexo: exemploReflexo, borda: exemploBorda, pd: exemploPD })[v](); traduzPrograma(PROG); }
   ZOOM = 1; PANX = 40; PANY = 40;
   montaPaleta(); arrumaPilhas(); reinicia(); salvaDepois();
   registra("Programa carregado: " + $("tagProj").textContent + ". Aperte Rodar.");

@@ -1,27 +1,20 @@
 "use strict";
 /* =======================================================================
-   1. CATALOGO DE BLOCOS  (estilo SPIKE Prime / palavras-bloco)
+   1. CATALOGO DE BLOCOS  (palavras-bloco do SPIKE Prime, do EV3 Classroom e da biblioteca Arduino da bancada)
+   Os blocos são os mesmos por dentro; cada plataforma troca o texto, as portas e o que aparece na paleta.
+   Menus e valores padrão podem ser funções: são calculados na hora, pela plataforma atual.
    ======================================================================= */
-const PORTAS = ["A","B","C","D","E","F"];
-const PARES = [];
-for (const a of PORTAS) for (const b of PORTAS) if (a !== b) PARES.push([a + "+" + b, a + b]);
-
-const CORES_SPIKE = [
-  ["preto","0"],["magenta","1"],["roxo","2"],["azul","3"],["azul-claro","4"],
-  ["turquesa","5"],["verde","6"],["amarelo","7"],["laranja","8"],["vermelho","9"],
-  ["branco","10"],["nenhuma","-1"]
-];
-const opPorta  = () => PORTAS.map(p => [p, p]);
 const opSentido= () => [["sentido horário","clockwise"],["sentido anti-horário","counterclockwise"]];
 
 /* construtores de pedacos de bloco */
 const T = t => ({ k:"t", t });
 const N = (nome, pad) => ({ k:"n", nome, pad: String(pad) });
 const S = (nome, pad) => ({ k:"s", nome, pad: String(pad) });
-const M = (nome, ops, pad) => ({ k:"m", nome, ops, pad: pad !== undefined ? pad : ops[0][1] });
+const M = (nome, ops, pad) => ({ k:"m", nome, ops, pad: pad !== undefined ? pad : (typeof ops === "function" ? () => ops()[0][1] : ops[0][1]) });
 const B = nome => ({ k:"b", nome });
 const VARM = nome => ({ k:"v", nome });
 const PROCM = nome => ({ k:"p", nome });
+const valorDe = v => typeof v === "function" ? v() : v;
 
 const CAT = [
   { id:"eventos",   nome:"Eventos",     cor:"var(--c-evento)" },
@@ -35,26 +28,40 @@ const CAT = [
   { id:"variaveis", nome:"Variáveis",   cor:"var(--c-variavel)" },
   { id:"meus",      nome:"Meus Blocos", cor:"var(--c-meus)" }
 ];
+const NOME_CAT = { ev3: { luz: "Tela" }, arduino: { luz: "Serial", motores: "Motores e servo" } };
+const nomeCat = c => (NOME_CAT[PLAT.id] && NOME_CAT[PLAT.id][c.id]) || c.nome;
 const CORCAT = {}; CAT.forEach(c => CORCAT[c.id] = c.cor);
 CORCAT.desconhecido = "var(--c-desconhecido)";
 
 const SPEC = {};
 function D(op, cat, forma, partes) { SPEC[op] = { op, cat, forma, partes }; }
+/* a mesma operação com outro texto numa plataforma */
+const VARIANTES = { ev3: {}, arduino: {} };
+function V(plat, op, partes) { VARIANTES[plat][op] = Object.assign({}, SPEC[op], { partes }); }
+function specDe(op) { const v = VARIANTES[PLAT.id] && VARIANTES[PLAT.id][op]; return v || SPEC[op] || SPEC.desconhecido; }
+
+const UN_MOV = () => PLAT.unidades;
+const UN_MOT = () => PLAT.id === "arduino" ? [["segundos","seconds"]] : [["rotações","rotations"],["graus","degrees"],["segundos","seconds"]];
+const UN_DIST = () => PLAT.id === "spike" ? [["cm","cm"],["polegadas","inches"],["%","%"]] : PLAT.id === "ev3" ? [["cm","cm"],["polegadas","inches"]] : [["cm","cm"]];
+const CMP = [["menor que","<"],["maior que",">"],["igual a","="]];
+const padPar = () => PLAT.id === "spike" ? "AB" : PLAT.par.join("+");
+const padPa = () => PLAT.pa;
+const padCorDir = () => portaDoTipo("cor", "dir");
+const padDist = () => portaDoTipo("dist");
+const padForca = () => PLAT.id === "spike" ? "B" : PLAT.portasSensor[0];
+const opCores = () => PLAT.cores;
+const padPreto = () => PLAT.cor.preto;
+const DIRS = [["para frente","forward"],["para trás","back"],["à esquerda","left"],["à direita","right"]];
 
 /* --- eventos --- */
 D("ev_inicio","eventos","chapeu",[T("quando o programa iniciar")]);
 D("ev_botao","eventos","chapeu",[T("quando o botão central for pressionado")]);
 
 /* --- movimento --- */
-D("mov_par","movimento","stack",[T("definir motores de movimento para"), M("PAR", PARES, "AB")]);
-D("mov_mover","movimento","stack",[T("mover"),
-  M("DIR",[["para frente","forward"],["para trás","back"],["à esquerda","left"],["à direita","right"]]),
-  T("por"), N("VAL","10"),
-  M("UN",[["cm","cm"],["polegadas","inches"],["rotações","rotations"],["graus","degrees"],["segundos","seconds"]])]);
-D("mov_iniciar","movimento","stack",[T("começar a mover"),
-  M("DIR",[["para frente","forward"],["para trás","back"],["à esquerda","left"],["à direita","right"]])]);
-D("mov_esterco","movimento","stack",[T("mover com direção"), N("DIR","0"), T("por"), N("VAL","10"),
-  M("UN",[["cm","cm"],["polegadas","inches"],["rotações","rotations"],["graus","degrees"],["segundos","seconds"]])]);
+D("mov_par","movimento","stack",[T("definir motores de movimento para"), M("PAR", paresDe, padPar)]);
+D("mov_mover","movimento","stack",[T("mover"), M("DIR", DIRS), T("por"), N("VAL","10"), M("UN", UN_MOV, () => PLAT.unidades[0][1])]);
+D("mov_iniciar","movimento","stack",[T("começar a mover"), M("DIR", DIRS)]);
+D("mov_esterco","movimento","stack",[T("mover com direção"), N("DIR","0"), T("por"), N("VAL","10"), M("UN", UN_MOV, () => PLAT.unidades[0][1])]);
 D("mov_iniciar_esterco","movimento","stack",[T("começar a mover com direção"), N("DIR","0")]);
 D("mov_dual","movimento","stack",[T("começar a mover: esquerda"), N("ESQ","50"), T("% direita"), N("DIR","50"), T("%")]);
 D("mov_parar","movimento","stack",[T("parar de mover")]);
@@ -62,41 +69,38 @@ D("mov_vel","movimento","stack",[T("definir velocidade de movimento para"), N("V
 D("mov_rot","movimento","stack",[T("definir rotação da roda para"), N("VAL","17.6"), T("cm")]);
 
 /* --- motores --- */
-D("mot_girar","motores","stack",[T("motor"), M("P", opPorta(), "C"), T("girar"), M("SENT", opSentido()),
-  T("por"), N("VAL","1"),
-  M("UN",[["rotações","rotations"],["graus","degrees"],["segundos","seconds"]])]);
-D("mot_iniciar","motores","stack",[T("motor"), M("P", opPorta(), "C"), T("começar a girar"), M("SENT", opSentido())]);
-D("mot_parar","motores","stack",[T("motor"), M("P", opPorta(), "C"), T("parar")]);
-D("mot_vel","motores","stack",[T("motor"), M("P", opPorta(), "C"), T("definir velocidade para"), N("VAL","75"), T("%")]);
-D("mot_ir","motores","stack",[T("motor"), M("P", opPorta(), "C"), T("ir para a posição"), N("VAL","0"), T("graus")]);
-D("mot_zerar","motores","stack",[T("motor"), M("P", opPorta(), "C"), T("zerar a contagem")]);
-D("mot_pos","motores","rep",[T("posição do motor"), M("P", opPorta(), "C")]);
-D("mot_velr","motores","rep",[T("velocidade do motor"), M("P", opPorta(), "C")]);
+D("mot_girar","motores","stack",[T("motor"), M("P", opMotor, padPa), T("girar"), M("SENT", opSentido()),
+  T("por"), N("VAL","1"), M("UN", UN_MOT, () => UN_MOT()[0][1])]);
+D("mot_iniciar","motores","stack",[T("motor"), M("P", opMotor, padPa), T("começar a girar"), M("SENT", opSentido())]);
+D("mot_potencia","motores","stack",[T("motor"), M("P", opMotor, padPa), T("começar a girar com"), N("VAL","50"), T("%")]);
+D("mot_parar","motores","stack",[T("motor"), M("P", opMotor, padPa), T("parar")]);
+D("mot_vel","motores","stack",[T("motor"), M("P", opMotor, padPa), T("definir velocidade para"), N("VAL","75"), T("%")]);
+D("mot_ir","motores","stack",[T("motor"), M("P", opMotor, padPa), T("ir para a posição"), N("VAL","0"), T("graus")]);
+D("mot_zerar","motores","stack",[T("motor"), M("P", opMotor, padPa), T("zerar a contagem")]);
+D("mot_pos","motores","rep",[T("posição do motor"), M("P", opMotor, padPa)]);
+D("mot_velr","motores","rep",[T("velocidade do motor"), M("P", opMotor, padPa)]);
 
 /* --- luz --- */
 D("luz_texto","luz","stack",[T("escrever"), S("TXT","Oi")]);
 D("luz_limpar","luz","stack",[T("apagar a tela")]);
 D("luz_pixel","luz","stack",[T("acender pixel x"), N("X","3"), T("y"), N("Y","3"), T("com"), N("B","100"), T("% de brilho")]);
 D("luz_cor","luz","stack",[T("definir a cor do hub para"), M("COR", CORES_SPIKE, "6")]);
+D("luz_status","luz","stack",[T("luz de status"), M("COR", [["apagada","0"],["verde","1"],["vermelha","2"],["laranja","3"],["verde piscando","4"],["vermelha piscando","5"],["laranja piscando","6"]], "1")]);
 
 /* --- som --- */
 D("som_bip","som","stack",[T("tocar o bipe"), N("NOTA","60"), T("por"), N("SEG","0.2"), T("segundos")]);
 
 /* --- sensores --- */
-D("sen_ecor","sensores","bool",[M("P", opPorta(), "D"), T("é a cor"), M("COR", CORES_SPIKE, "0"), T("?")]);
-D("sen_cor","sensores","rep",[T("cor em"), M("P", opPorta(), "D")]);
-D("sen_reflexo","sensores","rep",[T("luz refletida em"), M("P", opPorta(), "D")]);
-D("sen_ereflexo","sensores","bool",[M("P", opPorta(), "D"), T("luz refletida"),
-  M("CMP",[["menor que","<"],["maior que",">"],["igual a","="]],"<"), N("VAL","50"), T("%?")]);
+D("sen_ecor","sensores","bool",[M("P", opSensor, padCorDir), T("é a cor"), M("COR", opCores, padPreto), T("?")]);
+D("sen_cor","sensores","rep",[T("cor em"), M("P", opSensor, padCorDir)]);
+D("sen_reflexo","sensores","rep",[T("luz refletida em"), M("P", opSensor, padCorDir)]);
+D("sen_ereflexo","sensores","bool",[M("P", opSensor, padCorDir), T("luz refletida"), M("CMP", CMP, "<"), N("VAL","50"), T("%?")]);
 D("sen_cru","sensores","rep",[T("valor bruto"),
-  M("CANAL",[["vermelho","r"],["verde","g"],["azul","b"]],"r"), T("em"), M("P", opPorta(), "D")]);
-D("sen_edist","sensores","bool",[T("distância em"), M("P", opPorta(), "F"),
-  M("CMP",[["menor que","<"],["maior que",">"],["igual a","="]],"<"), N("VAL","10"),
-  M("UN",[["cm","cm"],["polegadas","inches"],["%","%"]],"cm"), T("?")]);
-D("sen_dist","sensores","rep",[T("distância em"), M("P", opPorta(), "F"),
-  M("UN",[["cm","cm"],["polegadas","inches"],["%","%"]],"cm")]);
-D("sen_forca","sensores","bool",[T("sensor de força"), M("P", opPorta(), "B"), T("pressionado?")]);
-D("sen_forcar","sensores","rep",[T("força em"), M("P", opPorta(), "B"), T("%")]);
+  M("CANAL",[["vermelho","r"],["verde","g"],["azul","b"]],"r"), T("em"), M("P", opSensor, padCorDir)]);
+D("sen_edist","sensores","bool",[T("distância em"), M("P", opSensor, padDist), M("CMP", CMP, "<"), N("VAL","10"), M("UN", UN_DIST, "cm"), T("?")]);
+D("sen_dist","sensores","rep",[T("distância em"), M("P", opSensor, padDist), M("UN", UN_DIST, "cm")]);
+D("sen_forca","sensores","bool",[T("sensor de força"), M("P", opSensor, padForca), T("pressionado?")]);
+D("sen_forcar","sensores","rep",[T("força em"), M("P", opSensor, padForca), T("%")]);
 D("sen_angulo","sensores","rep",[T("ângulo de"),
   M("EIXO",[["guinada","yaw"],["arfagem","pitch"],["rolagem","roll"]],"yaw")]);
 D("sen_zerar_ang","sensores","stack",[T("zerar o ângulo de guinada")]);
@@ -130,6 +134,7 @@ D("op_nao","operadores","bool",[T("não"), B("A")]);
 D("op_aleatorio","operadores","rep",[T("número aleatório entre"), N("A","1"), T("e"), N("B","10")]);
 D("op_arred","operadores","rep",[T("arredondar"), N("A","0")]);
 D("op_mod","operadores","rep",[N("A","0"), T("resto de"), N("B","2")]);
+D("op_abs","operadores","rep",[T("valor absoluto de"), N("A","0")]);
 
 /* --- variaveis --- */
 D("var_def","variaveis","stack",[T("definir"), VARM("VAR"), T("para"), N("VAL","0")]);
@@ -140,23 +145,82 @@ D("var_ler","variaveis","rep",[VARM("VAR")]);
 D("meu_def","meus","chapeu",[T("definir"), PROCM("NOME")]);
 D("meu_chama","meus","stack",[PROCM("NOME")]);
 
-/* bloco coringa para opcodes do SPIKE que a bancada ainda nao executa */
+/* bloco coringa para opcodes que a bancada ainda nao executa */
 D("desconhecido","desconhecido","stack",[T("?")]);
 
-/* o que a paleta mostra, por categoria */
-const PALETA = {
-  eventos:["ev_inicio","ev_botao"],
-  movimento:["mov_par","mov_mover","mov_iniciar","mov_esterco","mov_iniciar_esterco","mov_dual","mov_parar","mov_vel","mov_rot"],
-  motores:["mot_girar","mot_iniciar","mot_parar","mot_vel","mot_ir","mot_zerar","mot_pos","mot_velr"],
-  luz:["luz_texto","luz_limpar","luz_pixel","luz_cor"],
-  som:["som_bip"],
-  sensores:["sen_ecor","sen_cor","sen_reflexo","sen_ereflexo","sen_cru","sen_edist","sen_dist","sen_forca","sen_forcar",
-            "sen_angulo","sen_zerar_ang","sen_inclinado","sen_cron","sen_zerar_cron"],
+/* ---- EV3 Classroom: portas 1 a 4 para sensores, giroscópio numa porta, tela do bloco EV3 ---- */
+V("ev3", "ev_botao", [T("quando o botão central do bloco EV3 for pressionado")]);
+V("ev3", "luz_texto", [T("escrever"), S("TXT","EV3"), T("na linha"), N("LINHA","1")]);
+V("ev3", "luz_limpar", [T("limpar a tela")]);
+V("ev3", "sen_forca", [T("sensor de toque"), M("P", opSensor, "1"), T("pressionado?")]);
+V("ev3", "sen_angulo", [T("ângulo do giroscópio em"), M("P", opSensor, () => PLAT.giro)]);
+V("ev3", "sen_zerar_ang", [T("zerar o ângulo do giroscópio em"), M("P", opSensor, () => PLAT.giro)]);
+V("ev3", "sen_dist", [T("distância do ultrassônico em"), M("P", opSensor, padDist), M("UN", UN_DIST, "cm")]);
+V("ev3", "sen_edist", [T("ultrassônico em"), M("P", opSensor, padDist), M("CMP", CMP, "<"), N("VAL","10"), M("UN", UN_DIST, "cm"), T("?")]);
+V("ev3", "mov_dual", [T("começar a mover com velocidade esquerda"), N("ESQ","50"), T("% direita"), N("DIR","50"), T("%")]);
+V("ev3", "mot_potencia", [T("motor"), M("P", opMotor, padPa), T("começar a girar com velocidade"), N("VAL","50"), T("%")]);
+V("ev3", "mot_zerar", [T("motor"), M("P", opMotor, padPa), T("zerar o contador de rotação")]);
+
+/* ---- Arduino: funções da biblioteca da bancada (viram C++ ao baixar o .ino) ---- */
+V("arduino", "ev_inicio", [T("quando o Arduino ligar (setup)")]);
+V("arduino", "ev_botao", [T("quando o botão do pino 2 for apertado")]);
+V("arduino", "mov_par", [T("usar os motores"), M("PAR", paresDe, padPar), T("para andar")]);
+V("arduino", "mov_mover", [T("andar"), M("DIR", DIRS), T("por"), N("VAL","10"), M("UN", UN_MOV, "cm"), T("(pelo tempo calibrado)")]);
+V("arduino", "mov_dual", [T("motores: esquerdo"), N("ESQ","50"), T("% direito"), N("DIR","50"), T("%")]);
+V("arduino", "mov_parar", [T("parar os motores")]);
+V("arduino", "mov_vel", [T("velocidade para andar"), N("VAL","50"), T("%")]);
+V("arduino", "mot_potencia", [T("motor"), M("P", opMotor, "ME"), T("girar com"), N("VAL","50"), T("% (PWM)")]);
+V("arduino", "mot_parar", [T("motor"), M("P", opMotor, "ME"), T("parar")]);
+V("arduino", "mot_ir", [T("servo"), M("P", opMotor, padPa), T("ir para"), N("VAL","90"), T("graus")]);
+V("arduino", "luz_texto", [T("Serial.println("), S("TXT","Oi"), T(")")]);
+V("arduino", "som_bip", [T("buzzer (pino 4) nota"), N("NOTA","60"), T("por"), N("SEG","0.2"), T("s")]);
+V("arduino", "sen_reflexo", [T("leitura analógica do sensor de linha"), M("P", opSensor, padCorDir), T("(0–1023)")]);
+V("arduino", "sen_ereflexo", [T("sensor de linha"), M("P", opSensor, padCorDir), M("CMP", CMP, "<"), N("VAL","500"), T("?")]);
+V("arduino", "sen_cru", [T("TCS3200: canal"), M("CANAL",[["vermelho","r"],["verde","g"],["azul","b"]],"r"), T("em"), M("P", opSensor, padCorDir), T("(0–255)")]);
+V("arduino", "sen_cor", [T("cor detectada em"), M("P", opSensor, padCorDir)]);
+V("arduino", "sen_dist", [T("HC-SR04: distância em cm")]);
+V("arduino", "sen_edist", [T("HC-SR04: distância"), M("CMP", CMP, "<"), N("VAL","10"), T("cm?")]);
+V("arduino", "sen_forca", [T("botão"), M("P", opSensor, "US"), T("apertado?")]);
+V("arduino", "sen_angulo", [T("MPU-6050: ângulo de"), M("EIXO",[["guinada","yaw"],["arfagem","pitch"],["rolagem","roll"]],"yaw")]);
+V("arduino", "sen_zerar_ang", [T("MPU-6050: zerar a guinada")]);
+V("arduino", "sen_cron", [T("segundos desde o início (millis)")]);
+V("arduino", "sen_zerar_cron", [T("zerar o cronômetro")]);
+
+/* o que a paleta mostra, por plataforma e categoria */
+const COMUNS = {
   controle:["ctl_esperar","ctl_repetir","ctl_sempre","ctl_se","ctl_sesenao","ctl_esperar_ate","ctl_repetir_ate","ctl_parar"],
-  operadores:["op_soma","op_sub","op_mult","op_div","op_menor","op_igual","op_maior","op_e","op_ou","op_nao","op_aleatorio","op_arred","op_mod"],
+  operadores:["op_soma","op_sub","op_mult","op_div","op_menor","op_igual","op_maior","op_e","op_ou","op_nao","op_aleatorio","op_arred","op_mod","op_abs"],
   variaveis:["var_def","var_muda","var_ler"],
   meus:["meu_def","meu_chama"]
 };
+const PALETAS = {
+  spike: Object.assign({
+    eventos:["ev_inicio","ev_botao"],
+    movimento:["mov_par","mov_mover","mov_iniciar","mov_esterco","mov_iniciar_esterco","mov_dual","mov_parar","mov_vel","mov_rot"],
+    motores:["mot_girar","mot_iniciar","mot_potencia","mot_parar","mot_vel","mot_ir","mot_zerar","mot_pos","mot_velr"],
+    luz:["luz_texto","luz_limpar","luz_pixel","luz_cor"],
+    som:["som_bip"],
+    sensores:["sen_ecor","sen_cor","sen_reflexo","sen_ereflexo","sen_cru","sen_edist","sen_dist","sen_forca","sen_forcar",
+              "sen_angulo","sen_zerar_ang","sen_inclinado","sen_cron","sen_zerar_cron"]
+  }, COMUNS),
+  ev3: Object.assign({
+    eventos:["ev_inicio","ev_botao"],
+    movimento:["mov_par","mov_mover","mov_esterco","mov_iniciar_esterco","mov_dual","mov_parar","mov_vel"],
+    motores:["mot_girar","mot_iniciar","mot_potencia","mot_parar","mot_vel","mot_zerar","mot_pos","mot_velr"],
+    luz:["luz_texto","luz_limpar","luz_status"],
+    som:["som_bip"],
+    sensores:["sen_ecor","sen_cor","sen_reflexo","sen_ereflexo","sen_edist","sen_dist","sen_forca","sen_angulo","sen_zerar_ang","sen_cron","sen_zerar_cron"]
+  }, COMUNS),
+  arduino: Object.assign({
+    eventos:["ev_inicio"],
+    movimento:["mov_par","mov_mover","mov_dual","mov_parar","mov_vel"],
+    motores:["mot_potencia","mot_parar","mot_ir"],
+    luz:["luz_texto"],
+    som:["som_bip"],
+    sensores:["sen_ecor","sen_cor","sen_reflexo","sen_ereflexo","sen_cru","sen_edist","sen_dist","sen_angulo","sen_zerar_ang","sen_cron","sen_zerar_cron"]
+  }, COMUNS)
+};
+let PALETA = PALETAS[PLAT.id];
 
 /* =======================================================================
    2. MODELO DO PROGRAMA + EDITOR DE BLOCOS
@@ -167,11 +231,11 @@ const novoId = () => "b" + (SEQ++);
 let PROG = { scripts: [], vars: [], procs: [] };
 
 function criaBloco(op) {
-  const sp = SPEC[op] || SPEC.desconhecido;
+  const sp = specDe(op);
   const b = { id: novoId(), op, a: {}, c: [] };
   for (const p of sp.partes) {
     if (p.k === "n" || p.k === "s") b.a[p.nome] = { lit: p.pad };
-    else if (p.k === "m") b.a[p.nome] = { lit: p.pad };
+    else if (p.k === "m") b.a[p.nome] = { lit: String(valorDe(p.pad)) };
     else if (p.k === "b") b.a[p.nome] = null;
     else if (p.k === "v") b.a[p.nome] = { lit: PROG.vars[0] || "" };
     else if (p.k === "p") b.a[p.nome] = { lit: PROG.procs[0] || "" };
@@ -216,7 +280,7 @@ function aplicaTransf() {
 }
 
 function corDe(op) {
-  const sp = SPEC[op];
+  const sp = specDe(op);
   return CORCAT[sp ? sp.cat : "desconhecido"] || CORCAT.desconhecido;
 }
 
@@ -239,11 +303,11 @@ function elArg(b, p) {
   if (p.k === "m") {
     const s = document.createElement("select");
     s.className = "enc";
-    for (const [rot, v] of p.ops) {
+    for (const [rot, v] of valorDe(p.ops)) {
       const o = document.createElement("option");
       o.value = v; o.textContent = rot; s.appendChild(o);
     }
-    s.value = val ? val.lit : p.pad;
+    s.value = val ? val.lit : valorDe(p.pad);
     if (s.selectedIndex < 0) {                /* valor vindo de um arquivo */
       const o = document.createElement("option");
       o.value = val.lit; o.textContent = val.lit; s.appendChild(o); s.value = val.lit;
@@ -281,7 +345,7 @@ function elArg(b, p) {
 }
 
 function elBloco(b) {
-  const sp = SPEC[b.op] || SPEC.desconhecido;
+  const sp = specDe(b.op);
   const d = document.createElement("div");
   d.className = "bl " + (sp.forma === "chapeu" ? "chapeu" : sp.forma === "rep" ? "rep" : sp.forma === "bool" ? "bool" : "");
   d.dataset.id = b.id;
@@ -292,7 +356,7 @@ function elBloco(b) {
   cab.style.background = cor;
   cab.style.borderRadius = (sp.forma === "rep") ? "999px" : (sp.forma === "bool") ? "5px" : "";
   if (b.op === "desconhecido") {
-    cab.appendChild(txt("bloco do SPIKE: " + (b.origem || "?")));
+    cab.appendChild(txt("bloco do " + PLAT.nome + ": " + (b.origem || "?")));
   } else {
     for (const p of sp.partes) {
       if (p.k === "t") cab.appendChild(txt(p.t));
@@ -382,7 +446,7 @@ function montaTrilho() {
   t.innerHTML = "";
   for (const c of CAT) {
     const bt = document.createElement("button");
-    bt.innerHTML = '<span class="bola" style="background:' + c.cor + '"></span><span>' + c.nome + "</span>";
+    bt.innerHTML = '<span class="bola" style="background:' + c.cor + '"></span><span>' + nomeCat(c) + "</span>";
     if (c.id === CATATUAL) bt.className = "on";
     bt.onclick = () => { CATATUAL = c.id; montaTrilho(); montaPaleta(); };
     t.appendChild(bt);
@@ -392,7 +456,7 @@ function montaPaleta() {
   const p = document.getElementById("paleta");
   p.innerHTML = "";
   const h = document.createElement("h4");
-  h.textContent = (CAT.find(c => c.id === CATATUAL) || {}).nome || "";
+  h.textContent = nomeCat(CAT.find(c => c.id === CATATUAL) || { nome: "" });
   p.appendChild(h);
   if (CATATUAL === "variaveis") {
     p.appendChild(botaozinho("+ Nova variável", () => {
@@ -501,7 +565,7 @@ function comecaArraste(blocos, dx, dy, e, novo) {
   lousa.appendChild(el);
   lousa.appendChild(fantasma);
   ARR = { blocos, el, dx, dy, novo };
-  const sp = SPEC[blocos[0].op] || SPEC.desconhecido;
+  const sp = specDe(blocos[0].op);
   ARR.tipo = (sp.forma === "rep" || sp.forma === "bool") ? "rep" : "pilha";
   ARR.bool = sp.forma === "bool";
   calculaAlvos();
@@ -524,11 +588,11 @@ function calculaAlvos() {
         if (i < filhos.length) {
           const rr = filhos[i].getBoundingClientRect();
           cx = rr.left; cy = rr.top; w = rr.width;
-          const sp = SPEC[filhos[i].__b.op];
+          const sp = specDe(filhos[i].__b.op);
           if (sp && sp.forma === "chapeu") continue;   /* nada entra antes de um chapeu */
         } else if (filhos.length) {
           const rr = filhos[filhos.length - 1].getBoundingClientRect();
-          const spu = SPEC[filhos[filhos.length - 1].__b.op];
+          const spu = specDe(filhos[filhos.length - 1].__b.op);
           if (spu && (spu.forma === "cap")) continue;
           cx = rr.left; cy = rr.bottom; w = rr.width;
         } else {
@@ -622,257 +686,4 @@ function destaca(id) {
   ULTIMO = id;
   if (id) { const e = lousa.querySelector('[data-id="' + id + '"]'); if (e) e.classList.add("destacado"); }
 }
-
-/* =======================================================================
-   4. LEITURA DE ARQUIVOS .llsp3 / .sb3  ->  blocos da bancada
-   ======================================================================= */
-function campoUnico(b) {
-  for (const k in b.fields) return b.fields[k][0];
-  return "";
-}
-/* um seletor e um bloco-sombra sem entradas e com um unico campo: menus do SPIKE */
-function ehSeletor(b) {
-  return b.shadow && Object.keys(b.inputs || {}).length === 0 && Object.keys(b.fields || {}).length === 1;
-}
-
-function entradaSb(b, nome, BS) {
-  const inp = b.inputs && b.inputs[nome];
-  if (!inp) return null;
-  let v = inp[1];
-  if (v === null || v === undefined) v = inp[2];
-  if (v === null || v === undefined) return null;
-  if (Array.isArray(v)) {
-    if (v[0] === 12 || v[0] === 13) return { op: "var_ler", id: novoId(), a: { VAR: { lit: v[1] } }, c: [] };
-    return { lit: String(v[1]) };
-  }
-  const alvo = BS[v];
-  if (!alvo) return null;
-  if (ehSeletor(alvo)) return { lit: campoUnico(alvo) };
-  return convBloco(alvo, BS);
-}
-function campoSb(b, nome, pad) {
-  return { lit: (b.fields && b.fields[nome]) ? String(b.fields[nome][0]) : (pad === undefined ? "" : pad) };
-}
-function pilhaSb(b, nome, BS) {
-  const inp = b.inputs && b.inputs[nome];
-  if (!inp || !inp[1]) return [];
-  return correnteSb(inp[1], BS);
-}
-function correnteSb(id, BS) {
-  const out = [];
-  let cur = id, guarda = 0;
-  while (cur && BS[cur] && guarda++ < 4000) {
-    out.push(convBloco(BS[cur], BS));
-    cur = BS[cur].next;
-  }
-  return out;
-}
-
-const MAPA = {
-  flipperevents_whenProgramStarts: () => mk("ev_inicio"),
-  flipperevents_whenButton:        () => mk("ev_botao"),
-  flipperevents_whenTimer:         () => mk("ev_botao"),
-
-  flippermove_setMovementPair: (b, S) => mk("mov_par", { PAR: entradaSb(b, "PAIR", S) }),
-  flippermove_move:      (b, S) => mk("mov_mover", { DIR: entradaSb(b, "DIRECTION", S), VAL: entradaSb(b, "VALUE", S), UN: campoSb(b, "UNIT", "cm") }),
-  flippermove_startMove: (b, S) => mk("mov_iniciar", { DIR: entradaSb(b, "DIRECTION", S) }),
-  flippermove_steer:      (b, S) => mk("mov_esterco", { DIR: entradaSb(b, "STEERING", S), VAL: entradaSb(b, "VALUE", S), UN: campoSb(b, "UNIT", "cm") }),
-  flippermove_startSteer: (b, S) => mk("mov_iniciar_esterco", { DIR: entradaSb(b, "STEERING", S) }),
-  flippermove_stopMove:      () => mk("mov_parar"),
-  flippermove_movementSpeed: (b, S) => mk("mov_vel", { VAL: entradaSb(b, "SPEED", S) }),
-  flippermove_setDistance:   (b, S) => mk("mov_rot", { VAL: entradaSb(b, "DISTANCE", S) }),
-  flippermove_setMovementRotation: (b, S) => mk("mov_rot", { VAL: entradaSb(b, "ROTATION", S) }),
-  flippermoremove_startDualSpeed: (b, S) => mk("mov_dual", { ESQ: entradaSb(b, "LEFT", S), DIR: entradaSb(b, "RIGHT", S) }),
-
-  flippermotor_motorTurnForDirection: (b, S) => mk("mot_girar", { P: entradaSb(b, "PORT", S), SENT: campoSb(b, "DIRECTION", "clockwise"), VAL: entradaSb(b, "VALUE", S), UN: campoSb(b, "UNIT", "rotations") }),
-  flippermotor_motorStartDirection:   (b, S) => mk("mot_iniciar", { P: entradaSb(b, "PORT", S), SENT: campoSb(b, "DIRECTION", "clockwise") }),
-  flippermotor_motorStop:      (b, S) => mk("mot_parar", { P: entradaSb(b, "PORT", S) }),
-  flippermotor_motorSetSpeed:  (b, S) => mk("mot_vel", { P: entradaSb(b, "PORT", S), VAL: entradaSb(b, "SPEED", S) }),
-  flippermotor_motorGoDirectionToPosition: (b, S) => mk("mot_ir", { P: entradaSb(b, "PORT", S), VAL: entradaSb(b, "POSITION", S) }),
-  flippermotor_motorSetDegreeCounted:      (b, S) => mk("mot_zerar", { P: entradaSb(b, "PORT", S) }),
-  flippermotor_absolutePosition: (b, S) => mk("mot_pos", { P: entradaSb(b, "PORT", S) }),
-  flippermotor_position:         (b, S) => mk("mot_pos", { P: entradaSb(b, "PORT", S) }),
-  flippermotor_speed:            (b, S) => mk("mot_velr", { P: entradaSb(b, "PORT", S) }),
-
-  flipperdisplay_ledOn:   (b, S) => mk("luz_pixel", { X: entradaSb(b, "X", S), Y: entradaSb(b, "Y", S), B: entradaSb(b, "BRIGHTNESS", S) }),
-  flipperdisplay_ledText: (b, S) => mk("luz_texto", { TXT: entradaSb(b, "TEXT", S) }),
-  flipperdisplay_displayText: (b, S) => mk("luz_texto", { TXT: entradaSb(b, "TEXT", S) }),
-  flipperdisplay_displayOff:  () => mk("luz_limpar"),
-  flipperdisplay_centerButtonLight: (b, S) => mk("luz_cor", { COR: entradaSb(b, "COLOR", S) }),
-  flippersound_beep:     (b, S) => mk("som_bip", { NOTA: entradaSb(b, "NOTE", S), SEG: entradaSb(b, "DURATION", S) }),
-  flippersound_beepForTime: (b, S) => mk("som_bip", { NOTA: entradaSb(b, "NOTE", S), SEG: entradaSb(b, "DURATION", S) }),
-
-  flippersensors_isColor:   (b, S) => mk("sen_ecor", { P: entradaSb(b, "PORT", S), COR: entradaSb(b, "VALUE", S) }),
-  flippersensors_color:     (b, S) => mk("sen_cor", { P: entradaSb(b, "PORT", S) }),
-  flippersensors_reflectivity: (b, S) => mk("sen_reflexo", { P: entradaSb(b, "PORT", S) }),
-  flippersensors_rawColor: (b, S) => Object.assign(mk("sen_cru", { P: entradaSb(b, "PORT", S), CANAL: canalCru(b, S) }), { origem: b.opcode }),
-  flippersensors_rawValue: (b, S) => Object.assign(mk("sen_cru", { P: entradaSb(b, "PORT", S), CANAL: canalCru(b, S) }), { origem: b.opcode }),
-  flippersensors_isReflectivity: (b, S) => mk("sen_ereflexo", { P: entradaSb(b, "PORT", S), CMP: campoSb(b, "COMPARATOR", "<"), VAL: entradaSb(b, "VALUE", S) }),
-  flippersensors_isDistance: (b, S) => mk("sen_edist", { P: entradaSb(b, "PORT", S), CMP: campoSb(b, "COMPARATOR", "<"), VAL: entradaSb(b, "VALUE", S), UN: campoSb(b, "UNIT", "cm") }),
-  flippersensors_distance:  (b, S) => mk("sen_dist", { P: entradaSb(b, "PORT", S), UN: campoSb(b, "UNIT", "cm") }),
-  flippersensors_isPressed: (b, S) => mk("sen_forca", { P: entradaSb(b, "PORT", S) }),
-  flippersensors_force:     (b, S) => mk("sen_forcar", { P: entradaSb(b, "PORT", S) }),
-  flippersensors_orientationAxis: (b, S) => mk("sen_angulo", { EIXO: campoSb(b, "AXIS", "yaw") }),
-  flippersensors_resetYaw:  () => mk("sen_zerar_ang"),
-  flippersensors_timer:     () => mk("sen_cron"),
-  flippersensors_resetTimer:() => mk("sen_zerar_cron"),
-
-  control_wait:      (b, S) => mk("ctl_esperar", { SEG: entradaSb(b, "DURATION", S) }),
-  control_repeat:    (b, S) => mk("ctl_repetir", { N: entradaSb(b, "TIMES", S) }, [pilhaSb(b, "SUBSTACK", S)]),
-  control_forever:   (b, S) => mk("ctl_sempre", {}, [pilhaSb(b, "SUBSTACK", S)]),
-  control_if:        (b, S) => mk("ctl_se", { COND: entradaSb(b, "CONDITION", S) }, [pilhaSb(b, "SUBSTACK", S)]),
-  control_if_else:   (b, S) => mk("ctl_sesenao", { COND: entradaSb(b, "CONDITION", S) }, [pilhaSb(b, "SUBSTACK", S), pilhaSb(b, "SUBSTACK2", S)]),
-  control_wait_until:(b, S) => mk("ctl_esperar_ate", { COND: entradaSb(b, "CONDITION", S) }),
-  control_repeat_until: (b, S) => mk("ctl_repetir_ate", { COND: entradaSb(b, "CONDITION", S) }, [pilhaSb(b, "SUBSTACK", S)]),
-  control_stop:      (b) => mk("ctl_parar", { ALVO: campoSb(b, "STOP_OPTION", "all") }),
-  flippercontrol_stop: () => mk("ctl_parar", { ALVO: { lit: "all" } }),
-  flippercontrol_stopOtherStacks: () => mk("ctl_parar", { ALVO: { lit: "other scripts in sprite" } }),
-
-  operator_add:      (b, S) => mk("op_soma", { A: entradaSb(b, "NUM1", S), B: entradaSb(b, "NUM2", S) }),
-  operator_subtract: (b, S) => mk("op_sub",  { A: entradaSb(b, "NUM1", S), B: entradaSb(b, "NUM2", S) }),
-  operator_multiply: (b, S) => mk("op_mult", { A: entradaSb(b, "NUM1", S), B: entradaSb(b, "NUM2", S) }),
-  operator_divide:   (b, S) => mk("op_div",  { A: entradaSb(b, "NUM1", S), B: entradaSb(b, "NUM2", S) }),
-  operator_mod:      (b, S) => mk("op_mod",  { A: entradaSb(b, "NUM1", S), B: entradaSb(b, "NUM2", S) }),
-  operator_round:    (b, S) => mk("op_arred",{ A: entradaSb(b, "NUM", S) }),
-  operator_random:   (b, S) => mk("op_aleatorio", { A: entradaSb(b, "FROM", S), B: entradaSb(b, "TO", S) }),
-  operator_lt:       (b, S) => mk("op_menor", { A: entradaSb(b, "OPERAND1", S), B: entradaSb(b, "OPERAND2", S) }),
-  operator_gt:       (b, S) => mk("op_maior", { A: entradaSb(b, "OPERAND1", S), B: entradaSb(b, "OPERAND2", S) }),
-  operator_equals:   (b, S) => mk("op_igual", { A: entradaSb(b, "OPERAND1", S), B: entradaSb(b, "OPERAND2", S) }),
-  operator_and:      (b, S) => mk("op_e",  { A: entradaSb(b, "OPERAND1", S), B: entradaSb(b, "OPERAND2", S) }),
-  operator_or:       (b, S) => mk("op_ou", { A: entradaSb(b, "OPERAND1", S), B: entradaSb(b, "OPERAND2", S) }),
-  operator_not:      (b, S) => mk("op_nao", { A: entradaSb(b, "OPERAND", S) }),
-
-  data_setvariableto:   (b, S) => mk("var_def",  { VAR: campoSb(b, "VARIABLE"), VAL: entradaSb(b, "VALUE", S) }),
-  data_changevariableby:(b, S) => mk("var_muda", { VAR: campoSb(b, "VARIABLE"), VAL: entradaSb(b, "VALUE", S) }),
-  data_variable:        (b)    => mk("var_ler",  { VAR: campoSb(b, "VARIABLE") })
-};
-
-/* o bloco de valor bruto tem um menu de canal; aceitamos varias grafias */
-function canalCru(b, S) {
-  let v = entradaSb(b, "CHANNEL", S) || entradaSb(b, "COLOR", S) || entradaSb(b, "VALUE", S);
-  if (!v) for (const k in (b.fields || {})) v = { lit: b.fields[k][0] };
-  const s = String(v ? v.lit : "red").toLowerCase();
-  return { lit: /verd|green/.test(s) ? "g" : /azul|blue/.test(s) ? "b" : "r" };
-}
-function mk(op, a, c) {
-  const b = criaBloco(op);
-  if (a) for (const k in a) if (a[k] !== null && a[k] !== undefined) b.a[k] = a[k];
-  if (c) b.c = c;
-  return b;
-}
-
-function convBloco(b, BS) {
-  if (b.opcode === "procedures_definition") {
-    const proto = BS[b.inputs.custom_block[1]];
-    const nome = proto && proto.mutation ? proto.mutation.proccode : "bloco";
-    return mk("meu_def", { NOME: { lit: nome } });
-  }
-  if (b.opcode === "procedures_call") {
-    return mk("meu_chama", { NOME: { lit: b.mutation ? b.mutation.proccode : "bloco" } });
-  }
-  const f = MAPA[b.opcode];
-  if (f) return f(b, BS);
-  /* qualquer bloco de "valor bruto" do SPIKE, seja qual for o nome exato */
-  if (/raw/i.test(b.opcode) && b.inputs && b.inputs.PORT) {
-    const r = mk("sen_cru", { P: entradaSb(b, "PORT", BS), CANAL: canalCru(b, BS) });
-    r.origem = b.opcode;                 /* guarda o nome real, para devolver igual na hora de exportar */
-    return r;
-  }
-  const d = criaBloco("desconhecido");
-  d.origem = b.opcode;
-  return d;
-}
-
-function contaBlocos(arr, comArgs) {
-  let n = 0;
-  for (const b of arr) {
-    n++;
-    if (comArgs) for (const k in b.a) if (b.a[k] && b.a[k].op) n += contaBlocos([b.a[k]], true);
-    for (const s of b.c) n += contaBlocos(s, comArgs);
-  }
-  return n;
-}
-
-function importaProjeto(json, nome) {
-  const alvo = json.targets.find(t => !t.isStage) || json.targets[0];
-  const BS = alvo.blocks;
-  const vars = [];
-  for (const k in (alvo.variables || {})) vars.push(alvo.variables[k][0]);
-  for (const k in ((json.targets.find(t => t.isStage) || {}).variables || {})) {
-    const n = json.targets.find(t => t.isStage).variables[k][0];
-    if (vars.indexOf(n) < 0) vars.push(n);
-  }
-  PROG = { scripts: [], vars, procs: [] };
-
-  for (const k in BS) {
-    const b = BS[k];
-    if (b.opcode === "procedures_prototype" && b.mutation) {
-      if (PROG.procs.indexOf(b.mutation.proccode) < 0) PROG.procs.push(b.mutation.proccode);
-    }
-  }
-  const topos = [];
-  for (const k in BS) {
-    const b = BS[k];
-    if (b.topLevel && !b.shadow) topos.push([k, b]);
-  }
-  /* chapeus primeiro, depois o resto, na ordem do arquivo */
-  topos.sort((p, q) => {
-    const a = p[1].opcode === "flipperevents_whenProgramStarts" ? 0 : p[1].opcode === "procedures_definition" ? 1 : 2;
-    const b2 = q[1].opcode === "flipperevents_whenProgramStarts" ? 0 : q[1].opcode === "procedures_definition" ? 1 : 2;
-    return a - b2;
-  });
-  let x = 40, y = 40, colMax = 0;
-  for (const [k] of topos) {
-    const pilha = correnteSb(k, BS);
-    if (!pilha.length) continue;
-    const alt = contaBlocos(pilha) * 40 + 70;
-    if (y + alt > 2400 && y > 40) { x += colMax + 90; y = 40; colMax = 0; }
-    PROG.scripts.push({ id: novoId(), x, y, pilha });
-    y += alt;
-    colMax = Math.max(colMax, 360);
-  }
-  document.getElementById("tagProj").textContent = nome || "programa importado";
-  ZOOM = 0.8; PANX = 20; PANY = 20;
-  montaPaleta(); desenhaBlocos(); reinicia();
-  registra("Programa carregado: " + contaTudo() + " blocos, " +
-           PROG.scripts.length + " pilhas, " + PROG.procs.length + " meus blocos.");
-  const desc = {};
-  (function varre(arr) {
-    for (const b of arr) {
-      if (b.op === "desconhecido") desc[b.origem] = (desc[b.origem] || 0) + 1;
-      for (const k in b.a) if (b.a[k] && b.a[k].op) varre([b.a[k]]);
-      for (const s of b.c) varre(s);
-    }
-  })(PROG.scripts.flatMap(s => s.pilha));
-  const nd = Object.keys(desc);
-  if (nd.length) registra("Blocos que a bancada mostra mas nao executa: " + nd.join(", "));
-}
-function contaTudo() { let n = 0; for (const s of PROG.scripts) n += contaBlocos(s.pilha, true); return n; }
-
-async function abreArquivo(file) {
-  const nome = file.name.replace(/\.[^.]+$/, "");
-  try {
-    if (/\.json$/i.test(file.name)) { importaProjeto(JSON.parse(await file.text()), nome); return; }
-    const zip = await JSZip.loadAsync(file);
-    let alvo = zip.file("project.json");
-    if (!alvo) {
-      const sb3 = zip.file("scratch.sb3");
-      if (sb3) {
-        const z2 = await JSZip.loadAsync(await sb3.async("blob"));
-        alvo = z2.file("project.json");
-      }
-    }
-    if (!alvo) { registra("Nao achei project.json dentro do arquivo."); return; }
-    importaProjeto(JSON.parse(await alvo.async("string")), nome);
-  } catch (err) {
-    registra("Erro ao abrir: " + err.message);
-  }
-}
-document.getElementById("btAbrir").onclick = () => document.getElementById("arq").click();
-document.getElementById("arq").onchange = e => { if (e.target.files[0]) abreArquivo(e.target.files[0]); };
-document.getElementById("btLimpar").onclick = () => {
-  PROG = { scripts: [], vars: [], procs: [] };
-  document.getElementById("tagProj").textContent = "programa novo";
-  montaPaleta(); desenhaBlocos(); reinicia();
-};
 

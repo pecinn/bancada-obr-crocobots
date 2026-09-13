@@ -2,7 +2,7 @@
 /* =======================================================================
    6. O ROBO: portas, fisica, sensores
    ======================================================================= */
-let CFG = { A:"motor", B:"motor", C:"motor", D:"cor", E:"cor", F:"dist" };
+let CFG = Object.assign({}, PLAT.cfg);
 let ROD_MM = 56, EIXO_CM = 14;
 let SEP = 2.2, FRENTE = 5.5, MANCHA = 1.4;          /* cm; 2,2 = meia fita de 19 mm + meio verde de 2,5 cm */
 let RUIDO = 1, DIF_MOTOR = 0, INERCIA = 0;
@@ -11,7 +11,7 @@ PORTAS.forEach(p => MOT[p] = { pos:0, vel:0, real:0 });
 
 const R = { x:20, y:15, th:0, alt:0, pitch:0, roll:0, yaw:0, yaw0:0,
             cron:0, t:0, trilha:[], bateu:false };
-let PAR_MOV = "AB", VEL_MOV = 50;
+let PAR_MOV = PLAT.par.slice(), VEL_MOV = 50;
 const DT = 0.02;
 let PASSO = 0;                                   /* contador de passos, para o cache dos sensores */
 
@@ -24,8 +24,8 @@ function posSensor(dFrente, dLado) {
   const c = Math.cos(R.th), s = Math.sin(R.th);
   return { x: R.x + c * dFrente - s * dLado, y: R.y + s * dFrente + c * dLado };
 }
-/* padrão da equipe: porta D = sensor direito, porta E = sensor esquerdo */
-let LADO = { D:"dir", E:"esq" };
+/* padrão de cada kit: SPIKE D = sensor direito e E = esquerdo; EV3 3 = direito e 2 = esquerdo; Arduino SD e SE */
+let LADO = Object.assign({}, PLAT.lado);
 function arrumaLados() {
   const lista = portasDe("cor");
   lista.forEach((p, i) => { if (!LADO[p]) LADO[p] = i === 0 ? "esq" : i === 1 ? "dir" : "centro"; });
@@ -33,13 +33,16 @@ function arrumaLados() {
 const ladoCm = p => LADO[p] === "esq" ? SEP : LADO[p] === "dir" ? -SEP : 0;
 function pontoDoSensorCor(porta) { return posSensor(FRENTE, ladoCm(porta)); }
 
-/* ---- a leitura: media ponderada (gaussiana) dos pixels debaixo da mancha de luz ---- */
+/* ---- a leitura: media ponderada (gaussiana) dos pixels debaixo da mancha de luz ----
+   O quarto número é quanto da mancha está em cima da fita prata (0 a 1): ela é espelhada e devolve
+   a luz do próprio sensor, então a luz refletida fica igual ou maior que no branco, mas a cor dela é cinza. */
+const ehPrataPix = (r, g, b) => Math.abs(r - 174) < 10 && Math.abs(g - 179) < 10 && Math.abs(b - 186) < 10;
 const CACHE = {};
 function rgbEm(x, y) {
   const raio = MANCHA * 0.65, sig = MANCHA / 3.2;
   const cx = x * RES, cy = (ALT - y) * RES, rp = raio * RES;
   const i0 = Math.floor(cx - rp), i1 = Math.ceil(cx + rp), j0 = Math.floor(cy - rp), j1 = Math.ceil(cy + rp);
-  let r = 0, g = 0, b = 0, w = 0;
+  let r = 0, g = 0, b = 0, w = 0, pr_ = 0;
   const k2 = 1 / (2 * sig * sig * RES * RES);
   for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
     const dx = i + 0.5 - cx, dy = j + 0.5 - cy, d2 = dx * dx + dy * dy;
@@ -49,8 +52,9 @@ function rgbEm(x, y) {
     if (i < 0 || j < 0 || i >= NX || j >= NY) { pr = 150; pg = 108; pb = 70; }   /* madeira da mesa */
     else { const k = (j * NX + i) * 4; pr = PIX[k]; pg = PIX[k+1]; pb = PIX[k+2]; }
     r += pr * p; g += pg * p; b += pb * p; w += p;
+    if (ehPrataPix(pr, pg, pb)) pr_ += p;
   }
-  return w ? [r / w, g / w, b / w] : [244, 243, 238];
+  return w ? [r / w, g / w, b / w, pr_ / w] : [244, 243, 238, 0];
 }
 function leitura(porta) {
   const c = CACHE[porta];
@@ -60,12 +64,18 @@ function leitura(porta) {
   return v;
 }
 function gauss() { return (Math.random() + Math.random() + Math.random() - 1.5) * 1.15; }
-/* luz refletida: quanto da luz branca do sensor volta (0 a 100) */
+/* luz refletida: quanto da luz do sensor volta (0 a 100 na superfície); a fita prata espelha e volta quase tudo */
+function luzDaSuperficie(v) { const lum = (v[0] + v[1] + v[2]) / 3 / 255 * 100; return lum + (v[3] || 0) * (98 - lum); }
+/* cada kit mede de um jeito:
+   SPIKE: 0 a 100, o branco já fica perto do máximo, então branco e prata dão o mesmo número;
+   EV3: 0 a 100, branco ~71 e preto ~9, a prata passa do branco (~90);
+   Arduino: analogRead do TCRT5000, 0 a 1023 e invertido (mais luz = número menor) */
 function reflexoDe(porta) {
   if (CFG[porta] !== "cor") return 0;
-  const [r, g, b] = leitura(porta);
-  const v = (r + g + b) / 3 / 255 * 100 + gauss() * RUIDO;
-  return Math.max(0, Math.min(100, Math.round(v)));
+  const v = leitura(porta), l = luzDaSuperficie(v), p = v[3] || 0;
+  if (PLAT.id === "ev3") return Math.max(0, Math.min(100, Math.round(3 + l * 0.72 + p * 17 + gauss() * RUIDO * 0.8)));
+  if (PLAT.id === "arduino") return Math.max(0, Math.min(1023, Math.round(1000 - l * 9 - p * 40 + gauss() * RUIDO * 8)));
+  return Math.max(0, Math.min(100, Math.round(l + gauss() * RUIDO)));
 }
 /* cor reconhecida, com o mesmo codigo de cores do SPIKE */
 function classificaCor(r, g, b) {
@@ -87,17 +97,22 @@ function classificaCor(r, g, b) {
   if (h < 290) return "2";
   return "1";
 }
+/* número da cor no EV3 a partir do número do SPIKE */
+const COR_SPIKE_EV3 = { "0": "1", "1": "5", "2": "2", "3": "2", "4": "2", "5": "3", "6": "3", "7": "4", "8": "5", "9": "5", "10": "6", "-1": "0" };
 function corDeSensor(porta) {
-  if (CFG[porta] !== "cor") return "-1";
+  if (CFG[porta] !== "cor") return PLAT.cor.nenhuma;
   const [r, g, b] = leitura(porta);
   const n = RUIDO * 2.2;
-  return classificaCor(r + gauss() * n, g + gauss() * n, b + gauss() * n);
+  const c = classificaCor(r + gauss() * n, g + gauss() * n, b + gauss() * n);
+  return PLAT.id === "ev3" ? COR_SPIKE_EV3[c] : c;
 }
-/* valor bruto de um canal (0 a 1024), como o bloco do SPIKE */
+/* valor bruto de um canal: SPIKE 0 a 1024 (bloco "valor bruto"); Arduino 0 a 255 (TCS3200); o EV3 Classroom não tem.
+   Na fita prata o canal cai bastante (o SPIKE lê uns 430 de vermelho contra uns 980 no branco) */
 function cruDe(porta, canal) {
-  if (CFG[porta] !== "cor") return 0;
-  const v = leitura(porta)[canal === "g" ? 1 : canal === "b" ? 2 : 0];
-  return Math.max(0, Math.min(1024, Math.round(v / 255 * 1024 + gauss() * RUIDO * 4)));
+  if (CFG[porta] !== "cor" || !PLAT.temCru) return 0;
+  const L = leitura(porta), v = L[canal === "g" ? 1 : canal === "b" ? 2 : 0] * (1 - 0.4 * (L[3] || 0));
+  const max = PLAT.cruMax;
+  return Math.max(0, Math.min(max, Math.round(v / 255 * max + gauss() * RUIDO * max / 256)));
 }
 
 /* ---- sensor de distancia: tres raios estreitos, fica com o menor ---- */
@@ -133,11 +148,12 @@ const CORPO = { tras: -10, frente: 9, meia: 7.4 };
    para a frente, por cima da borda (elas caem uns 6 cm à frente da boca da pá). */
 const PA = { x0: 9, x1: 12, meia: 7.8, esp: 0.3 };        /* bandeja de 3 × 15,6 cm: a bola fica com a frente para fora */
 const RV = 2.5;                                        /* raio da vítima (esfera de 5 cm) */
-function paFracao(pos) { return CFG.C === "motor" ? Math.max(0, Math.min(1, pos / 90)) : 0; }
+const PA_PORTA = PLAT.pa;
+function paFracao(pos) { return CFG[PA_PORTA] === "motor" ? Math.max(0, Math.min(1, pos / 90)) : 0; }
 /* eixo da pá (cm à frente do eixo das rodas e altura); levantada ela gira 1,9 rad para cima */
 const PA_PIVO = { x: 4, h: 10 };
-function paAngulo() { return (1 - paFracao(MOT.C.pos)) * 1.9; }
-function paBaixa(pos) { return paFracao(pos === undefined ? MOT.C.pos : pos) > 0.5; }
+function paAngulo() { return (1 - paFracao(MOT[PA_PORTA].pos)) * 1.9; }
+function paBaixa(pos) { return paFracao(pos === undefined ? MOT[PA_PORTA].pos : pos) > 0.5; }
 function pontosDoCorpo(x, y, th, baixa) {
   const c = Math.cos(th), s = Math.sin(th), out = [];
   const add = (a, b) => out.push([x + c * a - s * b, y + s * a + c * b]);
@@ -376,8 +392,8 @@ function passoFisica() {
     } else m.pos += m.real * 2.5 * 360 / 100 * DT;
   } else if (CFG[p] === "motor") MOT[p].pos += MOT[p].real * 2.5 * 360 / 100 * DT;
   /* a pá não desce em cima de uma parede: o motor trava */
-  if (CFG.C === "motor" && !baixa && paBaixa() && bateEm(R.x, R.y, R.th, true)) {
-    MOT.C.pos = 44; MOT.C.alvo = undefined; MOT.C.travou = true;
+  if (CFG[PA_PORTA] === "motor" && !baixa && paBaixa() && bateEm(R.x, R.y, R.th, true)) {
+    MOT[PA_PORTA].pos = 44; MOT[PA_PORTA].alvo = undefined; MOT[PA_PORTA].travou = true;
   }
   atualizaPa(); sobeNaPa(); levaPresas();
   if (paBaixa() && !baixa) resolveVitimas(R.x, R.y, R.th, true);

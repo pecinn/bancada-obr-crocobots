@@ -1,0 +1,96 @@
+<!-- ======================= PORTAL DA ROBÓTICA: entrada, kits e trilha ======================= -->
+<div id="portal" data-tela="login">
+
+  <!-- ---------- entrada ---------- -->
+  <section class="tela" id="telaLogin" aria-labelledby="tituloPortal">
+    <div class="login-grade">
+      <div class="login-hero">
+        <img class="login-logo" src="LOGO_DATA" alt="CROCOBOTS">
+        <p class="sobre">CROCOBOTS · Clube de Robótica JGP</p>
+        <h1 id="tituloPortal">Portal da Robótica</h1>
+        <p class="lema">Do primeiro bloco ao pódio: aqui você sai do zero e chega a 100 como um robô campeão.</p>
+        <ol class="degraus" aria-label="A trilha">
+          <li><b>Iniciante</b><span>andar, girar, repetir e o primeiro sensor</span></li>
+          <li><b>Intermediário</b><span>seguir linha, verdes, obstáculo e a fita prata</span></li>
+          <li><b>Avançado</b><span>as pistas da OBR 2026, com resgate</span></li>
+        </ol>
+        <div class="kits-mini" aria-label="Kits">
+          <span class="kchip spike">SPIKE Prime <small>.llsp3</small></span>
+          <span class="kchip ev3">EV3 <small>.lmsp</small></span>
+          <span class="kchip ard">Arduino <small>.ino</small></span>
+        </div>
+      </div>
+
+      <form class="login-cartao" id="formLogin" autocomplete="on">
+        <h2>Entrar</h2>
+        <label for="lgUsuario">Usuário</label>
+        <input id="lgUsuario" name="usuario" autocomplete="username" required spellcheck="false">
+        <label for="lgSenha">Senha</label>
+        <input id="lgSenha" name="senha" type="password" autocomplete="current-password" required>
+        <p class="erro" id="lgErro" role="alert"></p>
+        <button type="submit" class="entrar">Entrar no portal</button>
+        <div class="demo">
+          <b>Acesso da equipe</b>
+          <span>login <code>crocobots</code> · senha <code>123456</code></span>
+        </div>
+      </form>
+    </div>
+
+    <footer class="patrocinio" aria-label="Patrocinadores">
+      <span class="rotulo">Patrocinadores</span>
+      <div class="logos" id="logosPatrocinio"></div>
+    </footer>
+  </section>
+
+  <!-- ---------- escolha do kit ---------- -->
+  <section class="tela" id="telaKits" aria-labelledby="tituloKits" hidden>
+    <header class="portal-topo">
+      <img class="mini-logo" src="LOGO_DATA" alt="">
+      <span class="marca-portal">Portal da Robótica</span>
+      <span class="esp"></span>
+      <span class="ola" id="olaKits"></span>
+      <button class="link" data-acao="sair">Sair</button>
+    </header>
+    <div class="kits-miolo">
+      <h1 id="tituloKits">Com qual robô você vai treinar?</h1>
+      <p class="sub">A trilha é a mesma; os blocos, as portas, os sensores e o arquivo que você baixa mudam para ficar igual ao kit da sua mesa.</p>
+      <div class="kits" id="listaKits"></div>
+    </div>
+  </section>
+
+  <!-- ---------- trilha ---------- -->
+  <section class="tela" id="telaTrilha" aria-labelledby="tituloTrilha" hidden>
+    <header class="portal-topo">
+      <img class="mini-logo" src="LOGO_DATA" alt="">
+      <span class="marca-portal">Portal da Robótica</span>
+      <button class="kit-atual" id="kitAtual" data-acao="kits" title="Trocar de kit"></button>
+      <span class="esp"></span>
+      <div class="segmento" role="radiogroup" aria-label="Segmento">
+        <button role="radio" data-seg="fund">Ensino Fundamental</button>
+        <button role="radio" data-seg="medio">Ensino Médio</button>
+      </div>
+      <span class="ola" id="olaTrilha"></span>
+      <button class="link" data-acao="sair">Sair</button>
+    </header>
+
+    <div class="trilha-miolo">
+      <div class="trilha-cabeca">
+        <div>
+          <h1 id="tituloTrilha">Trilha de conhecimento</h1>
+          <p class="sub" id="subTrilha"></p>
+        </div>
+        <button class="bancada-livre" data-acao="livre">Bancada livre ›</button>
+      </div>
+
+      <section class="desempenho" aria-label="Meu desempenho" id="painelDesempenho"></section>
+
+      <div class="niveis" role="tablist" aria-label="Níveis">
+        <button role="tab" data-nivel="ini">Iniciante</button>
+        <button role="tab" data-nivel="int">Intermediário</button>
+        <button role="tab" data-nivel="av">Avançado · OBR</button>
+      </div>
+      <p class="nivel-intro" id="introNivel"></p>
+      <div class="desafios" id="listaDesafios"></div>
+    </div>
+  </section>
+</div>

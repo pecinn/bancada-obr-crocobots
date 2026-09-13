@@ -2,8 +2,8 @@
 <div id="topo">
   <span class="marca"><img class="logo" id="logoTopo" src="LOGO_DATA" alt="CROCOBOTS"><span><span class="nome">Bancada OBR</span><span class="sub">CROCOBOTS · Clube de Robótica JGP</span></span></span>
   <span class="tag" id="tagProj">programa novo</span>
-  <button class="bt" id="btAbrir" title="Abrir um projeto do SPIKE">Abrir .llsp3</button>
-  <input type="file" id="arq" accept=".llsp3,.lms,.sb3,.zip,.json" style="display:none">
+  <button class="bt" id="btAbrir" title="Abrir um projeto">Abrir</button>
+  <input type="file" id="arq" accept=".llsp3,.lmsp,.sb3,.zip,.json,.ino" style="display:none">
   <select id="selExemplo" class="bt" title="Exemplos e programas guardados neste navegador">
     <option value="">Programas…</option>
     <optgroup label="Exemplos">
@@ -11,7 +11,7 @@
       <option value="reflexo">Seguidor por reflexo · P (2 sensores)</option>
       <option value="borda">Seguidor de borda · P (1 sensor)</option>
       <option value="pd">Seguidor PD + regras OBR + obstáculo + resgate</option>
-      <option value="samurai">Samurai OBR v11 (da equipe, com resgate)</option>
+      <option value="samurai" id="optSamurai">Samurai OBR v12 (da equipe, com resgate)</option>
     </optgroup>
     <optgroup label="Guardados neste navegador" id="grpMeus"></optgroup>
     <option value="#guardar">💾 Guardar o programa atual…</option>

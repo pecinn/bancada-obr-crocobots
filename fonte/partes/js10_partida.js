@@ -14,18 +14,18 @@ carinha(); marcaModelo();
 iniciaTres();
 ajustaLona(); trocaVista();
 {
-  const pi = SALVO && SALVO.pista >= 0 && SALVO.pista < PISTAS.length && PISTAS[SALVO.pista].tipo !== "img" ? SALVO.pista : 0;
+  const pi = SALVO && SALVO.pista >= 0 && SALVO.pista < PISTAS.length && PISTAS[SALVO.pista].tipo !== "img" && !PISTAS[SALVO.pista].oculta ? SALVO.pista : 0;
   sel.value = pi; montaPista(pi); mostraDesc(); montaTabuleiro();
 }
 semeiaGuardados(); listaMeus();
-if (!TEM_PROG) exemploSeguidor();
+if (!TEM_PROG) { exemploSeguidor(); traduzPrograma(PROG); }
 /* programas salvos por versões antigas: D = direito / E = esquerdo e os exemplos novos */
 let MIGROU = "";
 if (TEM_PROG && VERSAO_SALVA < 5) {
   const tag = $("tagProj").textContent;
   const ex = { "seguidor por cor": exemploSeguidor, "seguidor por reflexo (P)": exemploReflexo,
                "seguidor de borda (1 sensor)": exemploBorda, "seguidor PD": exemploPD, "seguidor PD OBR": exemploPD }[tag];
-  if (/^Samurai/.test(tag)) { importaProjeto(EMBUTIDO, NOME_SAMURAI); MIGROU = NOME_SAMURAI; }
+  if (/^Samurai/.test(tag)) { carregaSamurai(); MIGROU = NOME_SAMURAI; }
   else if (ex) { ex(); MIGROU = $("tagProj").textContent; }
   else if (SALVO.portas !== "D-dir") MIGROU = "?";
   salvaDepois();
@@ -34,9 +34,9 @@ if (TEM_PROG && VERSAO_SALVA < 5) {
    Se o programa aberto é um dos exemplos (sem mudanças da equipe no nome), ele é trocado pelo novo;
    se a equipe renomeou, o programa fica como está e só aparece um aviso */
 let AVISO_RESGATE = "";
-if (TEM_PROG && VERSAO_SALVA >= 5 && VERSAO_SALVA < 7) {
+if (TEM_PROG && VERSAO_SALVA >= 5 && VERSAO_SALVA < 8 && PLAT.id === "spike") {
   const tag = $("tagProj").textContent;
-  if (/^Samurai OBR 2026 v(6|7|8|9|10)$/.test(tag)) { importaProjeto(EMBUTIDO, NOME_SAMURAI); AVISO_RESGATE = "trocado"; }
+  if (/^Samurai OBR 2026 v(6|7|8|9|10|11)$/.test(tag)) { carregaSamurai(); AVISO_RESGATE = "trocado"; }
   else if (/^seguidor PD OBR$/.test(tag)) { exemploPD(); AVISO_RESGATE = "trocado"; }
   else AVISO_RESGATE = "aviso";
   salvaDepois();
@@ -51,3 +51,6 @@ else if (MIGROU) registra("Atualizei o programa salvo para a versão nova (D = s
 if (AVISO_SEP) { registra("Sensores agora a 2,2 cm do centro: com a fita de 19 mm cada sensor passa no meio do quadrado verde. Dá para mudar na aba Robô."); salvaDepois(); }
 if (AVISO_RESGATE === "trocado") registra("Resgate atualizado: a pá agora fica abaixada e prende a vítima apertando na parede, e o recipiente do Nível 2 (borda de 6 cm) está no simulador. Carreguei a versão nova do seu programa (" + $("tagProj").textContent + ").");
 else if (AVISO_RESGATE === "aviso") registra("Resgate atualizado (pá que fica abaixada, recipiente do Nível 2 e pistas completas novas). O seu programa não foi mexido: as versões novas estão em Programas… → " + NOME_SAMURAI + " e o PD com resgate.");
+/* arquivo aberto em outra plataforma (a página recarregou para trocar de kit) e o portal */
+importPendente();
+iniciaPortal();
