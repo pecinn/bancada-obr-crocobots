@@ -152,9 +152,26 @@ function avisoLogin(t) {
   clearTimeout(avisoLogin.tempo); avisoLogin.tempo = setTimeout(() => m.classList.remove("show"), 2800);
 }
 /* o palco do modelo (1536 × 1024) cabe inteiro na janela, sem cortar nem deformar a arte */
+/* a parte da tela que aparece de verdade: a janela, o visualViewport e o recorte que o
+   IntersectionObserver enxerga (quando a página está num painel ou iframe maior que a área visível) */
+const VISIVEL_POR = {};
+function caixaVisivel(sec) {
+  const r = sec.getBoundingClientRect();
+  let x0 = Math.max(r.left, 0), y0 = Math.max(r.top, 0), x1 = Math.min(r.right, innerWidth), y1 = Math.min(r.bottom, innerHeight);
+  const vv = window.visualViewport;
+  if (vv) { x0 = Math.max(x0, vv.offsetLeft); y0 = Math.max(y0, vv.offsetTop); x1 = Math.min(x1, vv.offsetLeft + vv.width); y1 = Math.min(y1, vv.offsetTop + vv.height); }
+  const io = VISIVEL_POR[sec.id];
+  if (io && io.w > 80 && io.h > 80) { x0 = Math.max(x0, io.x); y0 = Math.max(y0, io.y); x1 = Math.min(x1, io.x + io.w); y1 = Math.min(y1, io.y + io.h); }
+  return { r, x: x0, y: y0, w: Math.max(1, x1 - x0), h: Math.max(1, y1 - y0) };
+}
 function ajustaModelo() {
-  const s = Math.min(innerWidth / 1536, innerHeight / 1024);
-  document.querySelectorAll("#telaLogin .page, #telaKits .page").forEach(p => p.style.setProperty("--s", s));
+  for (const id of ["telaLogin", "telaKits"]) {
+    const sec = $(id); if (!sec || sec.hidden) continue;
+    const c = caixaVisivel(sec), p = sec.querySelector(".page");
+    p.style.setProperty("--s", Math.min(c.w / 1536, c.h / 1024));
+    p.style.left = (c.x - c.r.left + c.w / 2) + "px";
+    p.style.top = (c.y - c.r.top + c.h / 2) + "px";
+  }
 }
 /* aviso da escolha do robô: o toast do index2 do modelo (some em 2,2 s) */
 function avisoKits(t) {
@@ -168,7 +185,17 @@ function abreAjuda(abre) {
 }
 (function () {
   montaLogos();
-  ajustaModelo(); addEventListener("resize", ajustaModelo);
+  ajustaModelo(); addEventListener("resize", ajustaModelo); addEventListener("load", ajustaModelo);
+  if (window.visualViewport) { visualViewport.addEventListener("resize", ajustaModelo); visualViewport.addEventListener("scroll", ajustaModelo); }
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(ents => {
+      for (const e of ents) { const q = e.intersectionRect; VISIVEL_POR[e.target.id] = e.isIntersecting ? { x: q.left, y: q.top, w: q.width, h: q.height } : null; }
+      ajustaModelo();
+    }, { threshold: Array.from({ length: 101 }, (_, i) => i / 100) });
+    ["telaLogin", "telaKits"].forEach(id => io.observe($(id)));
+  }
+  /* placeholder invisível só para o CSS saber quando o campo tem texto (e cobrir o texto desenhado na arte) */
+  ["lgUsuario", "lgSenha"].forEach(id => $(id).placeholder = " ");
   $("formLogin").onsubmit = e => {
     e.preventDefault();
     const u = $("lgUsuario").value.trim().toLowerCase(), s = $("lgSenha").value;

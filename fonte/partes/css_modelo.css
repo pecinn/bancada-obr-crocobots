@@ -76,6 +76,17 @@
 
 #telaLogin .field::placeholder { color: transparent; }
 
+/* com texto digitado, o miolo do campo (cor #07111a, tirada da própria arte) cobre o
+   "Usuário ou e-mail" e o "Senha" desenhados; a borda, o ícone e o olho da arte continuam aparecendo */
+#telaLogin .field:not(:placeholder-shown) {
+  background: linear-gradient(#07111a, #07111a) 50% calc(50% - 2px) / calc(100% - 100px) 42px no-repeat;
+}
+#telaLogin .field:-webkit-autofill {
+  -webkit-text-fill-color: #f5f8fb;
+  caret-color: #f5f8fb;
+  transition: background-color 99999s 0s;
+}
+
 #telaLogin .field:focus {
   /* mantém a estética da arte; não adiciona borda */
   box-shadow: none;
