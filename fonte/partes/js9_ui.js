@@ -276,6 +276,22 @@ function montaPortas() {
 function marcaModelo() {
   document.querySelectorAll("#modelos button").forEach(b => b.setAttribute("aria-checked", b.dataset.modelo === MODELO ? "true" : "false"));
 }
+/* fotos dos modelos no SPIKE e no EV3: recortes de modelo/WhatsApp Image 2026-09-13 at 18.38.31.jpeg (partes/fotos) */
+const FOTOS_MODELO = FOTOS_MODELO_JSON;
+(function () {
+  const caixa = $("modelos");
+  if (!caixa || (PLAT.id !== "spike" && PLAT.id !== "ev3")) return;
+  const textos = { rodas4: ["4 rodas", "carregadeira, pneus largos"], esteira: ["Esteira", "carregadeira, sobe fácil"] };
+  caixa.classList.add("com-fotos");
+  for (const m of ["rodas4", "esteira"]) {
+    const b = caixa.querySelector('[data-modelo="' + m + '"]'), src = FOTOS_MODELO[PLAT.id + "_" + m];
+    if (!b || !src) continue;
+    const img = document.createElement("img");
+    img.src = src; img.alt = ""; img.className = "foto-modelo";
+    const svg = b.querySelector("svg"); if (svg) svg.replaceWith(img); else b.prepend(img);
+    b.querySelector("b").textContent = textos[m][0]; b.querySelector("small").textContent = textos[m][1];
+  }
+})();
 document.querySelectorAll("#modelos button").forEach(b => b.onclick = () => {
   if (MODELO === b.dataset.modelo) return;
   MODELO = b.dataset.modelo; marcaModelo(); refazRobo(); salvaDepois();

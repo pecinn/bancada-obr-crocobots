@@ -1,4 +1,4 @@
-import io, os, base64
+import io, os, base64, json
 P = 'partes/'
 orig = open('original.html', encoding='utf8').read().split('\n')
 css_orig = '\n'.join(orig[6:163])   # linhas 7..163
@@ -22,6 +22,10 @@ out = (head + css_orig + '\n' + r('css_novo.css') + '\n' + r('css_portal.css') +
        '\n<script>\n' + '\n'.join(r(f) for f in ordem) +
        '\n/* =======================================================================\n   10. PARTIDA\n   ======================================================================= */\n' +
        r('embutido.js') + '\n' + r('js10_partida.js') + '\n' + js11 + '\n</script>\n')
+# fotos dos modelos de robô (recortes da imagem da pasta modelo, guardados em partes/fotos)
+fotos = {os.path.splitext(f)[0]: 'data:image/jpeg;base64,' + base64.b64encode(open(P + 'fotos/' + f, 'rb').read()).decode()
+         for f in sorted(os.listdir(P + 'fotos')) if f.endswith('.jpg')}
+out = out.replace('FOTOS_MODELO_JSON', json.dumps(fotos))
 open('bancada-obr.html', 'w', encoding='utf8').write(out)
 # so o JS para checar a sintaxe
 i = out.index('<script>\n"use strict"'); j = out.rindex('</script>')

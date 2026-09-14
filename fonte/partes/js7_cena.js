@@ -257,7 +257,7 @@ function pontoTrilho(s, c) {
   s -= L;
   const t = Math.PI / 2 - s / TRILHO.r; return [TRILHO.cx + TRILHO.r * Math.cos(t), c + TRILHO.r * Math.sin(t), t - Math.PI / 2];
 }
-function montaTracao(g, M, rodaR) {
+function montaTracao(g, M, rodaR, L) {
   PECAS.rodas = []; PECAS.giram = []; PECAS.trilhos = [];
   if (MODELO === "rodas2") {
     for (const z of [-4.1, 4.1]) motorGrande(g, M, -1.2, rodaR + 0.2, z);
@@ -271,6 +271,17 @@ function montaTracao(g, M, rodaR) {
   }
   if (MODELO === "rodas4") {
     for (const z of [-3.9, 3.9]) motorGrande(g, M, -0.6, rodaR + 0.6, z);
+    if (L) {   /* carregadeira: pneus largos com aro na cor do kit, sem o trem de engrenagens aparente */
+      for (const z of [-7.1, 7.1]) {
+        const sg = Math.sign(z), lado = z < 0 ? "E" : "D";
+        for (const x of [4.6, -4.6]) {
+          const r = rodaCarregadeira(M, L, rodaR, 2.2); r.position.set(x, rodaR, z + sg * 0.15); g.add(r);
+          PECAS.rodas.push({ o: r, lado, raio: rodaR });
+          const eixo = cil(0.35, 2.4, L.preto, 10); eixo.rotation.x = Math.PI / 2; eixo.position.set(x, rodaR, sg * 5.2); g.add(eixo);
+        }
+      }
+      return;
+    }
     for (const z of [-7.1, 7.1]) {
       const sg = Math.sign(z), lado = z < 0 ? "E" : "D";
       /* viga lateral que segura os dois eixos, com o trem de engrenagens ligando as rodas */
@@ -292,19 +303,19 @@ function montaTracao(g, M, rodaR) {
   const c = TRILHO.r + 0.3;                        /* altura do centro das rodas dentadas */
   for (const z of [-3.9, 3.9]) motorGrande(g, M, -0.6, c + 1.0, z);
   const sapata = new THREE.BoxGeometry(0.74, 0.5, 2.5);
-  const matS = new THREE.MeshStandardMaterial({ color: corL("#202226"), roughness: 0.85 });
+  const matS = new THREE.MeshStandardMaterial({ color: corL(L ? "#131416" : "#202226"), roughness: 0.85 });
   for (const z of [-7.0, 7.0]) {
     const sg = Math.sign(z), lado = z < 0 ? "E" : "D";
     for (const x of [TRILHO.cx, -TRILHO.cx]) {
-      const e = engrenagem(M, TRILHO.r - 0.35, 12, 2.1); e.position.set(x, c, z); g.add(e);
+      const e = engrenagem(L ? { cinza: L.roda, azul: L.preto } : M, TRILHO.r - 0.35, 12, 2.1); e.position.set(x, c, z); g.add(e);
       PECAS.giram.push({ o: e, lado, raio: TRILHO.r });
     }
     for (const x of [-2.6, 0, 2.6]) {                /* rodinhas de apoio */
-      const rr = cil(1.25, 1.9, M.grafite, 20); rr.rotation.x = Math.PI / 2; rr.position.set(x, 1.55, z); g.add(rr);
-      const cb = cil(0.45, 2.0, M.azul, 10); cb.rotation.x = Math.PI / 2; cb.position.set(x, 1.55, z); g.add(cb);
+      const rr = cil(1.25, 1.9, L ? L.roda : M.grafite, 20); rr.rotation.x = Math.PI / 2; rr.position.set(x, 1.55, z); g.add(rr);
+      const cb = cil(0.45, 2.0, L ? (L.kit === "spike" ? L.acento : L.preto) : M.azul, 10); cb.rotation.x = Math.PI / 2; cb.position.set(x, 1.55, z); g.add(cb);
     }
     const placa = caixaR(13.2, 3.2, 0.5, 0.5, M.chassi); placa.position.set(0, c, z - sg * 1.55); g.add(placa);
-    const lama = caixaR(16.4, 0.45, 3.2, 0.5, M.chassi); lama.position.set(0, c + TRILHO.r + 0.95, z); g.add(lama);
+    if (!L) { const lama = caixaR(16.4, 0.45, 3.2, 0.5, M.chassi); lama.position.set(0, c + TRILHO.r + 0.95, z); g.add(lama); }
     const inst = new THREE.InstancedMesh(sapata, matS, TRILHO.n);
     inst.castShadow = true; inst.receiveShadow = true;
     inst.position.z = z; g.add(inst);
@@ -331,6 +342,221 @@ function animaTracao(posE, posD, rodaR) {
   }
 }
 
+/* ---------- carregadeira: SPIKE e EV3 com esteira ou 4 rodas (modelo/WhatsApp Image 2026-09-13 at 18.38.31.jpeg) ----------
+   hub (ou bloco EV3) em pé na frente, com o ultrassônico; braços e pistões dos dois lados; caçamba com dentes presa no eixo da pá */
+function estiloCarregadeira() {
+  if (MODELO === "rodas2" || PLAT.id === "arduino") return null;
+  const std = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: corL(c), roughness: 0.42 }, o || {}));
+  const comum = {
+    preto: std("#1b1c1f", { roughness: .55 }), cilindro: std("#e6e8eb", { roughness: .28 }),
+    haste: new THREE.MeshStandardMaterial({ color: 0xdfe3e8, metalness: 1, roughness: .16 }),
+    cacamba: std("#454a52", { roughness: .48, metalness: .12 }), dente: std("#3b3f46", { roughness: .5, metalness: .12 }),
+    pneu: std("#16171a", { roughness: .88 })
+  };
+  if (PLAT.id === "ev3") return Object.assign(comum, { kit: "ev3", corpo: std("#eceef0", { roughness: .35 }), cinza: std("#b9bdc2"),
+    braco: std("#c8141b", { roughness: .32 }), acento: std("#c8141b", { roughness: .32 }), pino: std("#2b4fa8"),
+    roda: std("#c8141b", { roughness: .32 }), aro: std("#c8141b", { roughness: .3 }), painel: std("#eceef0", { roughness: .35 }),
+    largBraco: 0.8, raioPistao: 0.72 });
+  return Object.assign(comum, { kit: "spike", corpo: std("#f3f3ef", { roughness: .35 }), cinza: std("#b9bec5"),
+    quadro: std("#1c9ad6", { roughness: .35 }), braco: std("#f2b400", { roughness: .32 }), acento: std("#f2b400", { roughness: .32 }), pino: std("#1f3d8a"),
+    roda: std("#8f959c", { roughness: .35, metalness: .2 }), aro: std("#1ea3dc", { roughness: .3 }), painel: std("#f3f3ef", { roughness: .35 }),
+    largBraco: 1.25, raioPistao: 0.55 });
+}
+/* barra (viga) e cilindro entre dois pontos (x, y) de um mesmo plano lateral, na profundidade z */
+function barraEntre(a, b, z, larg, esp, mat, r) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
+  const m = caixaR(larg, len, esp, r === undefined ? Math.min(larg, esp) * 0.4 : r, mat);
+  m.position.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, z); m.rotation.z = Math.atan2(-dx, dy);
+  return m;
+}
+function cilEntre(a, b, z, raio, mat) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
+  const m = cil(raio, len, mat, 18);
+  m.position.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, z); m.rotation.z = Math.atan2(-dx, dy);
+  return m;
+}
+/* furos das vigas: na face lateral (eixo z) ou na face da frente (eixo x) */
+function furos(g, a, b, n, z, mat, frente) {
+  for (let i = 0; i < n; i++) {
+    const t = n === 1 ? 0.5 : i / (n - 1), f = cil(0.24, 0.12, mat, 10);
+    if (frente) f.rotation.z = Math.PI / 2; else f.rotation.x = Math.PI / 2;
+    f.position.set(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, z); g.add(f);
+  }
+}
+/* pneu largo com flanco arredondado e aro na cor do kit (azul-claro no SPIKE, vermelho no EV3) */
+function rodaCarregadeira(M, L, rodaR, larg) {
+  const r = new THREE.Group();
+  const pneu = cil(rodaR, larg, M.borracha, 40); pneu.rotation.x = Math.PI / 2; r.add(pneu);
+  for (const s of [-1, 1]) {
+    const fl = new THREE.Mesh(new THREE.TorusGeometry(rodaR * 0.84, rodaR * 0.16, 10, 36), L.pneu);
+    fl.position.z = s * (larg / 2 - rodaR * 0.1); fl.castShadow = true; r.add(fl);
+  }
+  const aro = cil(rodaR * 0.62, larg + 0.1, L.aro, 32); aro.rotation.x = Math.PI / 2; r.add(aro);
+  for (const s of [-1, 1]) {
+    const borda = new THREE.Mesh(new THREE.TorusGeometry(rodaR * 0.62, 0.09, 8, 32), L.aro); borda.position.z = s * (larg / 2 + 0.05); r.add(borda);
+  }
+  const cubo = cil(rodaR * 0.2, larg + 0.24, L.preto, 16); cubo.rotation.x = Math.PI / 2; r.add(cubo);
+  const eixo = cil(0.12, larg + 0.3, L.haste, 8); eixo.rotation.x = Math.PI / 2; r.add(eixo);
+  return r;
+}
+/* frente do bloco EV3: tela com os olhos, botões em cruz e a faixa com "EV3" (50 px por cm) */
+function texFaceEv3() {
+  return texCanvas(315, 495, (x, w, h) => {
+    const rr = (px, py, pw, ph, r) => { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + pw, py, px + pw, py + ph, r);
+      x.arcTo(px + pw, py + ph, px, py + ph, r); x.arcTo(px, py + ph, px, py, r); x.arcTo(px, py, px + pw, py, r); x.closePath(); };
+    x.fillStyle = "#eceef0"; x.fillRect(0, 0, w, h);
+    x.strokeStyle = "#cfd3d7"; x.lineWidth = 3; x.beginPath(); x.moveTo(w / 2, 185); x.lineTo(w / 2, 345); x.stroke();
+    rr(26, 22, 263, 150, 14); x.fillStyle = "#34373c"; x.fill();
+    rr(40, 34, 235, 126, 6); x.fillStyle = "#b4c3b1"; x.fill();
+    for (const cx of [110, 205]) {
+      x.fillStyle = "#e4ebe1"; x.strokeStyle = "#1e2822"; x.lineWidth = 6;
+      x.beginPath(); x.ellipse(cx, 102, 34, 27, 0, 0, Math.PI * 2); x.fill(); x.stroke();
+      x.fillStyle = "#6d8581"; x.beginPath(); x.arc(cx, 104, 16, 0, Math.PI * 2); x.fill();
+      x.fillStyle = "#18201c"; x.beginPath(); x.arc(cx, 104, 8, 0, Math.PI * 2); x.fill();
+      x.fillStyle = "#ffffff"; x.beginPath(); x.arc(cx + 5, 98, 3.5, 0, Math.PI * 2); x.fill();
+      x.strokeStyle = "#1e2822"; x.lineWidth = 5; x.beginPath(); x.moveTo(cx - 30, 64); x.quadraticCurveTo(cx, 52, cx + 30, 64); x.stroke();
+    }
+    x.fillStyle = "#b7bbc0"; x.strokeStyle = "#9a9fa5"; x.lineWidth = 3;
+    rr(72, 222, 170, 56, 20); x.fill(); x.stroke();
+    rr(129, 190, 56, 120, 20); x.fill(); x.stroke();
+    rr(135, 228, 44, 44, 6); x.fillStyle = "#2a2d31"; x.fill();
+    rr(145, 238, 24, 22, 3); x.fillStyle = "#56635f"; x.fill();
+    x.fillStyle = "#c4c7cb"; x.fillRect(0, 345, w, 92);
+    x.fillStyle = "#f7f8f9"; x.font = "italic 900 58px Arial, sans-serif"; x.textBaseline = "middle"; x.fillText("EV3", 30, 393);
+    x.fillStyle = "#d3302a"; rr(236, 370, 50, 42, 4); x.fill();
+    x.fillStyle = "#ffffff"; x.fillRect(244, 386, 34, 9);
+    x.fillStyle = "#dfe2e5"; x.fillRect(0, 437, w, 58);
+    x.fillStyle = "#3a3d42"; for (let i = 0; i < 4; i++) x.fillRect(38 + i * 64, 458, 40, 16);
+  });
+}
+function montaCarregadeira(g, M, L) {
+  const lados = [-1, 1];
+  PECAS.olhos = []; PECAS.olhoBrilho = 0.12;   /* anéis metálicos, como na foto; acendem em laranja quando há obstáculo perto */
+  const temDist = portasDe("dist").length > 0;
+  /* olhos do ultrassônico, virados para a frente */
+  const olhos = (x, y, cor) => {
+    PECAS.olhoX = x + 0.4; PECAS.olhoH = y;
+    for (const z of [-1.35, 1.35]) {
+      const olho = cil(0.95, 0.5, M.vidro, 24); olho.rotation.z = Math.PI / 2; olho.position.set(x, y, z); g.add(olho);
+      const anel = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.15, 8, 28),
+        new THREE.MeshStandardMaterial({ color: 0x9aa0a8, emissive: cor, emissiveIntensity: 0.12, roughness: .25, metalness: .9 }));
+      anel.rotation.y = Math.PI / 2; anel.position.set(x + 0.27, y, z); g.add(anel); PECAS.olhos.push(anel.material);
+      const brilho = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      brilho.position.set(x + 0.3, y + 0.35, z - 0.3); g.add(brilho);
+    }
+  };
+  /* base escura por baixo do hub */
+  const base = caixaR(9.5, 1.6, 8.6, 0.5, L.preto); base.position.set(-0.2, 6.0, 0); g.add(base);
+
+  if (L.kit === "spike") {
+    /* hub em pé, com o botão de luz na frente e a matriz de luzes atrás */
+    const hub = caixaR(3.3, 8.8, 5.9, 1.0, L.corpo); hub.position.set(1.55, 11.3, 0); g.add(hub);
+    const aroB = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.13, 8, 28), L.cinza); aroB.rotation.y = Math.PI / 2; aroB.position.set(3.25, 9.4, 0); g.add(aroB);
+    const botao = cil(0.66, 0.3, new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x33ff66, emissiveIntensity: 1 }), 24);
+    botao.rotation.z = Math.PI / 2; botao.position.set(3.2, 9.4, 0); g.add(botao); PECAS.botao = botao.material;
+    const tela = caixaR(0.25, 5.0, 5.0, 0.5, M.grafite); tela.position.set(-0.18, 12.6, 0); g.add(tela);
+    PECAS.leds = [];
+    for (let yy = 0; yy < 5; yy++) for (let xx = 0; xx < 5; xx++) {
+      const mat = new THREE.MeshStandardMaterial({ color: 0x2a2d31, emissive: 0xffffff, emissiveIntensity: 0, roughness: .4 });
+      const led = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.62, 0.62), mat);
+      led.position.set(-0.36, 12.6 + (2 - yy) * 0.84, (xx - 2) * 0.84); g.add(led); PECAS.leds.push(mat);
+    }
+    /* ultrassônico preso na parte de cima da frente do hub */
+    if (temDist) {
+      const sup = caixaR(1.1, 3.0, 6.0, 0.45, L.corpo); sup.position.set(3.65, 13.5, 0); g.add(sup);
+      const caixaO = caixaR(0.7, 2.2, 5.0, 0.5, L.preto); caixaO.position.set(4.3, 13.5, 0); g.add(caixaO);
+      olhos(4.65, 13.5, 0xffffff);
+    }
+    for (const s of lados) {
+      /* orelhas brancas em cima e os cabos pretos */
+      const orelha = caixaR(1.2, 1.6, 1.1, 0.4, L.corpo); orelha.position.set(1.2, 16.2, s * 2.3); g.add(orelha);
+      g.add(cabo([[0.6, 16.6, s * 1.6], [-1.8, 18.4, s * 3.2], [-5.0, 13.0, s * 4.8], [-6.2, 8.0, s * 4.2]], L.preto));
+      /* torres amarelas ao lado do hub */
+      const torre = caixaR(1.1, 8.4, 1.0, 0.4, L.braco); torre.position.set(0.1, 11.0, s * 3.75); g.add(torre);
+      furos(g, [0.1, 14.6], [0.1, 7.4], 5, s * 4.27, L.pino);
+      const topo = caixaR(1.8, 1.2, 1.2, 0.4, L.braco); topo.position.set(0.6, 15.4, s * 3.75); g.add(topo);
+      /* quadro azul-claro atrás */
+      const v = caixaR(1.0, 7.0, 0.9, 0.4, L.quadro); v.position.set(-3.6, 9.8, s * 4.7); g.add(v);
+      furos(g, [-3.6, 12.8], [-3.6, 6.8], 5, s * 5.17, L.preto);
+      const hz = caixaR(7.5, 1.0, 0.9, 0.4, L.quadro); hz.position.set(-2.2, 9.8, s * 5.5); g.add(hz);
+      furos(g, [-5.6, 9.8], [1.2, 9.8], 7, s * 5.97, L.preto);
+      g.add(barraEntre([-6.2, 6.6], [-1.2, 13.6], s * 4.2, 0.9, 0.9, L.quadro));
+      /* placas amarelas da frente, embaixo do hub */
+      const placa = caixaR(1.0, 5.0, 1.4, 0.4, L.braco); placa.position.set(3.7, 5.5, s * 2.0); g.add(placa);
+      furos(g, [4.22, 7.4], [4.22, 3.6], 4, s * 2.0, L.pino, true);
+    }
+    const eixoF = caixaR(0.8, 0.8, 5.0, 0.3, L.preto); eixoF.position.set(4.0, 7.0, 0); g.add(eixoF);
+  } else {
+    /* bloco EV3 em pé: tela com olhos, botões e a luz de status em volta do botão do meio */
+    const bloco = caixaR(4.0, 11.0, 7.4, 1.0, L.corpo); bloco.position.set(1.2, 11.4, 0); g.add(bloco);
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(6.3, 9.9), new THREE.MeshStandardMaterial({ map: texFaceEv3(), roughness: .45 }));
+    face.rotation.y = Math.PI / 2; face.position.set(3.22, 11.4, 0); g.add(face);
+    const luz = new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0x33ff66, emissiveIntensity: 1.2, roughness: .4 });
+    PECAS.status = [luz];
+    const yb = 11.4 + 4.95 - 250 / 50;
+    for (const [dy, dz, hh, dd] of [[0.52, 0, 0.1, 1.14], [-0.52, 0, 0.1, 1.14], [0, 0.52, 1.14, 0.1], [0, -0.52, 1.14, 0.1]]) {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.08, hh, dd), luz); b.position.set(3.27, yb + dy, dz); g.add(b);
+    }
+    /* ultrassônico embaixo do bloco, com os anéis vermelhos */
+    if (temDist) {
+      const us = caixaR(1.2, 2.2, 5.2, 0.5, L.preto); us.position.set(3.9, 4.9, 0); g.add(us);
+      olhos(4.5, 4.9, 0xff3b30);
+    }
+    const travessa = caixaR(0.9, 0.9, 6.4, 0.3, L.preto); travessa.position.set(3.7, 7.0, 0); g.add(travessa);
+    furos(g, [4.17, 7.0], [4.17, 7.0], 1, 0, L.cinza, true);
+    for (const s of lados) {
+      const viga = caixaR(1.0, 9.0, 0.9, 0.4, L.preto); viga.position.set(-0.2, 11.2, s * 4.2); g.add(viga);
+      furos(g, [-0.2, 15.0], [-0.2, 7.4], 6, s * 4.67, L.cinza);
+      const painel = caixaR(5.2, 3.4, 0.7, 1.3, L.painel); painel.position.set(-0.6, 6.9, s * 5.3); g.add(painel);
+      const conector = caixaR(1.4, 1.0, 1.1, 0.35, L.acento); conector.position.set(1.4, 14.2, s * 4.25); g.add(conector);
+      const orelha = caixaR(1.2, 1.5, 1.1, 0.4, L.cinza); orelha.position.set(1.0, 17.4, s * 2.9); g.add(orelha);
+      const traseira = caixaR(3.0, 5.5, 1.0, 0.5, L.painel); traseira.position.set(-4.6, 9.4, s * 4.6); g.add(traseira);
+      const pe = caixaR(1.2, 1.4, 1.2, 0.35, L.acento); pe.position.set(3.6, 5.3, s * 3.3); g.add(pe);
+      g.add(cabo([[0.4, 17.0, s * 1.8], [-2.2, 18.6, s * 3.4], [-5.4, 13.4, s * 5.0], [-6.4, 8.2, s * 4.4]], L.preto));
+    }
+  }
+
+  /* caçamba, braços e pistões: tudo gira junto no eixo da pá (PA_PIVO); abaixada, o fundo fica no chão */
+  PECAS.pa = null;
+  if (CFG[PLAT.pa] !== "motor") return;
+  const P = PA_PIVO, rel = p => [p[0] - P.x, p[1] - P.h];
+  const piv = new THREE.Group(); piv.position.set(P.x, P.h, 0);
+  const W = 2 * PA.meia + 0.6, zl = W / 2;
+  const fundo = caixaR(4.2, 0.35, W, 0.12, L.cacamba); fundo.position.set(10.7 - P.x, 0.22 - P.h, 0); piv.add(fundo);
+  const costas = [[8.9, 0.25], [8.35, 1.6], [8.1, 3.1], [8.2, 4.5], [8.55, 5.6]];
+  for (let i = 0; i < costas.length - 1; i++) piv.add(barraEntre(rel(costas[i]), rel(costas[i + 1]), 0, 0.35, W, L.cacamba, 0.1));
+  const borda = caixaR(0.9, 0.45, W, 0.15, L.cacamba); borda.position.set(8.75 - P.x, 5.65 - P.h, 0); piv.add(borda);
+  const perfil = new THREE.Shape();
+  [[8.55, 5.6], [8.1, 3.1], [8.9, 0.1], [12.9, 0.1], [12.9, 0.9], [9.6, 5.6]].forEach(([x, y], i) => i ? perfil.lineTo(x - P.x, y - P.h) : perfil.moveTo(x - P.x, y - P.h));
+  const geoLado = new THREE.ExtrudeGeometry(perfil, { depth: 0.32, bevelEnabled: false });
+  for (const s of lados) { const m = new THREE.Mesh(geoLado, L.cacamba); m.position.z = s > 0 ? zl - 0.32 : -zl; m.castShadow = true; piv.add(m); }
+  const labio = caixaR(0.7, 0.4, W - 0.2, 0.15, L.cacamba); labio.position.set(12.55 - P.x, 0.3 - P.h, 0); piv.add(labio);
+  const dente = new THREE.Shape();
+  [[0, 0], [1.9, 0.05], [1.9, 0.28], [0.3, 0.8], [0, 0.8]].forEach(([x, y], i) => i ? dente.lineTo(x, y) : dente.moveTo(x, y));
+  const geoDente = new THREE.ExtrudeGeometry(dente, { depth: 1.0, bevelEnabled: true, bevelThickness: 0.08, bevelSize: 0.06, bevelSegments: 1 });
+  for (let i = 0; i < 8; i++) {
+    const zd = -zl + 0.4 + i * (W - 1.8) / 7;
+    const m = new THREE.Mesh(geoDente, L.dente); m.position.set(12.2 - P.x, 0.06 - P.h, zd); m.castShadow = true; piv.add(m);
+    const para = cil(0.16, 0.14, L.haste, 8); para.position.set(12.7 - P.x, 0.9 - P.h, zd + 0.5); piv.add(para);
+  }
+  const A = [1.7, 12.6], B = [8.9, 4.7], C0 = [3.4, 8.9], C1 = [8.7, 2.9];
+  const Cm = [C0[0] + (C1[0] - C0[0]) * 0.58, C0[1] + (C1[1] - C0[1]) * 0.58];
+  const ponto = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  for (const s of lados) {
+    const zb = s * 6.35, zp = s * 5.2;
+    piv.add(barraEntre(rel(A), rel(B), zb, L.largBraco, 1.0, L.braco));
+    furos(piv, rel(ponto(A, B, 0.12)), rel(ponto(A, B, 0.88)), 6, zb + s * 0.52, L.pino);
+    const ombro = caixaR(1.3, 1.3, 1.2, 0.4, L.acento); ombro.position.set(A[0] - P.x, A[1] - P.h, zb); piv.add(ombro);
+    const suporte = caixaR(1.1, 1.0, 1.1, 0.3, L.acento); suporte.position.set(B[0] - P.x, B[1] - P.h, zb); piv.add(suporte);
+    piv.add(cilEntre(rel(C0), rel(Cm), zp, L.raioPistao, L.cilindro));
+    piv.add(cilEntre(rel(Cm), rel(C1), zp, L.raioPistao * 0.45, L.haste));
+    const topoP = caixaR(1.1, 1.1, 1.3, 0.35, L.preto); topoP.position.set(C0[0] - P.x, C0[1] - P.h, zp); piv.add(topoP);
+    const peP = caixaR(1.1, 0.9, 1.2, 0.3, L.acento); peP.position.set(C1[0] - P.x, C1[1] - P.h, zp); piv.add(peP);
+    const eixo = cil(0.45, 2.4, L.preto, 12); eixo.rotation.x = Math.PI / 2; eixo.position.set(0, 0, s * 5.6); piv.add(eixo);
+  }
+  g.add(piv); PECAS.pa = piv;
+}
+
 let PECAS = {};
 function montaCarro3d() {
   const g = new THREE.Group();
@@ -349,21 +575,26 @@ function montaCarro3d() {
   };
   PECAS = { M };
   const rodaR = ROD_MM / 20;
+  /* SPIKE e EV3 (esteira ou 4 rodas) seguem o modelo da carregadeira, com o chassi escuro como na foto */
+  const L = estiloCarregadeira();
+  if (L) M.chassi = L.preto;
+  PECAS.olhoX = 10; PECAS.olhoH = 8.2;
 
   /* chassi: placa com as vigas de encaixe */
   const acrilico = new THREE.MeshPhysicalMaterial({ color: corL(EQUIPE.cor), transparent: true, opacity: 0.45, roughness: 0.08, metalness: 0, clearcoat: 1 });
   const placa = caixaR(19.5, PLAT.id === "arduino" ? 0.5 : 1.3, 11.8, PLAT.id === "arduino" ? 0.25 : 1.4, PLAT.id === "arduino" ? acrilico : M.chassi);
   placa.position.set(-0.5, 4.6, 0); g.add(placa);
-  if (PLAT.id !== "arduino") for (const z of [-5.3, 5.3]) {
+  if (PLAT.id !== "arduino" && !L) for (const z of [-5.3, 5.3]) {
     const viga = caixaR(19, 0.9, 1.1, 0.4, M.chassi); viga.position.set(-0.5, 5.6, z); g.add(viga);
     for (let i = -4; i <= 4; i++) {           /* furinhos das vigas */
       const f = cil(0.28, 0.2, M.grafite, 10); f.position.set(-0.5 + i * 2, 6.1, z); g.add(f);
     }
   }
-  montaTracao(g, M, rodaR);
+  montaTracao(g, M, rodaR, L);
 
   PECAS.leds = []; PECAS.botao = null; PECAS.status = null;
-  if (PLAT.id === "ev3") montaBlocoEv3(g, M);
+  if (L) montaCarregadeira(g, M, L);
+  else if (PLAT.id === "ev3") montaBlocoEv3(g, M);
   else if (PLAT.id === "arduino") montaArduino(g, M);
   else {
   /* hub SPIKE com a matriz de luzes */
@@ -382,7 +613,7 @@ function montaCarro3d() {
   }
   /* adesivo com o nome da equipe, dos dois lados do hub */
   const tAd = texAdesivo();
-  for (const lado of [-1, 1]) {
+  if (!L) for (const lado of [-1, 1]) {
     const ad = new THREE.Mesh(new THREE.PlaneGeometry(8, 2.5), new THREE.MeshStandardMaterial({ map: tAd, transparent: true, roughness: .4 }));
     ad.position.set(-3.4, 6.9, lado * 3.03);
     if (lado < 0) ad.rotation.y = Math.PI;
@@ -417,8 +648,8 @@ function montaCarro3d() {
     g.add(cabo([[-1.5, 8.4, z * 0.45], [2.5, 7.4, z * 0.9], [FRENTE - 0.2, 4.4, z]], M.preto));
   }
   /* sensor de distancia com os dois "olhos" */
-  PECAS.olhos = [];
-  if (portasDe("dist").length) {
+  if (!L) PECAS.olhos = [];
+  if (portasDe("dist").length && !L) {
     const ds = caixaR(PLAT.id === "arduino" ? 0.3 : 2.2, PLAT.id === "arduino" ? 2.1 : 3.0, PLAT.id === "arduino" ? 4.5 : 6.2, PLAT.id === "arduino" ? 0.1 : 0.8,
       PLAT.id === "arduino" ? new THREE.MeshStandardMaterial({ color: corL("#1f5fbf"), roughness: .5 }) : PLAT.id === "ev3" ? M.grafite : M.preto);
     ds.position.set(PLAT.id === "arduino" ? 9.0 : 8.6, 8.2, 0); g.add(ds);
@@ -435,8 +666,8 @@ function montaCarro3d() {
     g.add(cabo([[-1, 8.6, 0.6], [4, 9.4, 0.4], [7.6, 9.0, 0.2]], M.preto));
   }
   /* pá coletora da frente (motor C): gira em torno de um eixo alto; abaixada, a bandeja fica no chão */
-  PECAS.pa = null;
-  if (CFG[PLAT.pa] === "motor") {
+  if (!L) PECAS.pa = null;
+  if (CFG[PLAT.pa] === "motor" && !L) {
     const piv = new THREE.Group(); piv.position.set(PA_PIVO.x, PA_PIVO.h, 0);
     const fundo = caixaR(PA.x1 - PA.x0, 0.5, 2 * PA.meia + 0.6, 0.2, M.azul);
     fundo.position.set((PA.x0 + PA.x1) / 2 - PA_PIVO.x, 0.3 - PA_PIVO.h, 0); piv.add(fundo);
@@ -596,7 +827,7 @@ function atualizaRobo3d() {
     s.mancha.color.set(c); s.cone.color.set(c);
   }
   const perto = ULT_DIST.d < 15;
-  for (const o of PECAS.olhos) { o.emissive.set(perto ? 0xff7a1a : PLAT.id === "ev3" ? 0xff3b30 : 0xffffff); o.emissiveIntensity = perto ? 1.4 : 0.55; }
+  for (const o of PECAS.olhos) { o.emissive.set(perto ? 0xff7a1a : PLAT.id === "ev3" ? 0xff3b30 : 0xffffff); o.emissiveIntensity = perto ? 1.4 : (PECAS.olhoBrilho || 0.55); }
   if (PECAS.pa) PECAS.pa.rotation.z = paAngulo();
 }
 /* a cor que o sensor mostra na tela, sem o ruido */
@@ -628,8 +859,8 @@ function desenha3d() {
   const mostra = document.getElementById("chkRaio").checked && portasDe("dist").length > 0;
   raio3d.visible = alvo3d.visible = mostra;
   if (mostra) {
-    const o = posSensor(10, 0), d = Math.min(ULT_DIST.d, 200);
-    const ho = R.alt + 8.2, fim = { x: o.x + Math.cos(R.th) * d, y: o.y + Math.sin(R.th) * d };
+    const o = posSensor(PECAS.olhoX || 10, 0), d = Math.min(ULT_DIST.d, 200);
+    const ho = R.alt + (PECAS.olhoH || 8.2), fim = { x: o.x + Math.cos(R.th) * d, y: o.y + Math.sin(R.th) * d };
     const pa = raio3d.geometry.attributes.position;
     pa.setXYZ(0, o.x - LARG / 2, ho, -(o.y - ALT / 2)); pa.setXYZ(1, fim.x - LARG / 2, ho, -(fim.y - ALT / 2));
     pa.needsUpdate = true; raio3d.computeLineDistances();

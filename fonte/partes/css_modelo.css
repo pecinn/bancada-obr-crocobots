@@ -243,3 +243,12 @@
 #telaKits .rh-menu{position:absolute;right:1.7%;top:8.6%;z-index:5;min-width:220px;display:grid;padding:6px;border-radius:12px;background:#0c1830;border:1px solid rgba(96,150,232,.35);box-shadow:0 20px 40px rgba(0,0,0,.5)}
 #telaKits .rh-menu button{border:0;background:none;color:#e9f0fb;text-align:left;padding:12px 14px;border-radius:8px;font-size:16px;font-family:Arial,Helvetica,sans-serif;cursor:pointer}
 #telaKits .rh-menu button:hover{background:rgba(43,140,255,.14)}
+
+/* ======================= SIMULADOR: modelo do robô com as fotos da carregadeira (SPIKE e EV3) ======================= */
+.modelos.com-fotos{grid-template-columns:1fr 1fr}
+.modelos.com-fotos button{padding:6px 6px 8px;align-content:start}
+.modelos.com-fotos .foto-modelo{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:7px;margin-bottom:4px}
+.modelos.com-fotos button[aria-checked="true"] .foto-modelo{box-shadow:0 0 0 2px #8fd14f}
+.modelos.com-fotos button[data-modelo="rodas2"]{grid-column:1/-1;grid-template-columns:auto 1fr;justify-items:start;align-items:center;column-gap:10px;padding:8px 10px}
+.modelos.com-fotos button[data-modelo="rodas2"] svg{grid-row:span 2}
+.modelos.com-fotos button[data-modelo="rodas2"] small{text-align:left}
