@@ -4,6 +4,8 @@
    ======================================================================= */
 let VARS = {}, PROCS = {}, FIOS = [], RODANDO = false, PAUSADO = false, ATUAL = null;
 let PARADO_POR = "", TESTANDO = false;
+/* o fio em execução e os ajustes globais do par de movimento */
+let FIO_ATUAL = null, PARADA_MOV = "1", ACEL_MOV = "4000 4000";
 /* o que o hub mostra: matriz 5x5, cor do botao, balao de texto */
 const MATRIZ = new Array(25).fill(0);
 const CARINHA = [0,0,0,0,0, 0,1,0,1,0, 0,0,0,0,0, 1,0,0,0,1, 0,1,1,1,0];
@@ -67,7 +69,14 @@ function avaliaBloco(b) {
       return Math.abs(p) < 12 && Math.abs(rr) < 12;
     }
     case "sen_cron":  return +R.cron.toFixed(2);
-    case "mot_pos":   { const m = MOT[aval(b.a.P)]; return m ? Math.round(m.pos) % 360 : 0; }
+    case "mot_pos":   { const m = MOT[aval(b.a.P)]; return m ? ((Math.round(m.pos) % 360) + 360) % 360 : 0; }
+    case "mot_pos_rel": { const m = MOT[aval(b.a.P)]; return m ? Math.round(m.pos) : 0; }
+    case "mot_pot_r": { const m = MOT[aval(b.a.P)]; return m ? Math.round(m.real) : 0; }
+    case "op_entre":  { const v = num(A()), lo = num(Bv()), hi = num(aval(b.a.C)); return v >= Math.min(lo, hi) && v <= Math.max(lo, hi); }
+    case "op_junta":  return String(A()) + String(Bv());
+    case "op_letra":  { const s = String(Bv()), i = Math.round(num(A())); return i >= 1 && i <= s.length ? s[i - 1] : ""; }
+    case "op_tamanho":return String(A()).length;
+    case "op_contem": return String(A()).toLowerCase().indexOf(String(Bv()).toLowerCase()) >= 0;
     case "mot_velr":  { const m = MOT[aval(b.a.P)]; return m ? Math.round(m.real) : 0; }
     default: return 0;
   }
@@ -159,7 +168,20 @@ function* execBloco(b) {
     case "mot_parar": { const m = MOT[A("P")]; if (m) m.vel = 0; break; }
     case "mot_potencia": { const m = MOT[A("P")]; if (m) m.vel = Math.max(-100, Math.min(100, num(A("VAL")))); break; }
     case "luz_status": LUZ_STATUS = String(A("COR")); MATRIZ_MUDOU = true; break;
-    case "mot_zerar": { const m = MOT[A("P")]; if (m) m.pos = 0; break; }
+    case "mot_zerar": { const m = MOT[A("P")]; if (m) m.pos = num(A("VAL")) || 0; break; }
+    case "mot_parada": { const m = MOT[A("P")]; if (m) m.parada = String(A("STOP")); break; }
+    case "mot_acel":   { const m = MOT[A("P")]; if (m) m.acel = String(A("ACEL")); break; }
+    case "mov_parada": PARADA_MOV = String(A("STOP")); break;
+    case "mov_acel":   ACEL_MOV = String(A("ACEL")); break;
+    case "mot_ir_rel": {
+      const m = MOT[A("P")]; if (!m) break;
+      const guarda = m.cfg;
+      m.cfg = Math.max(1, Math.min(100, Math.abs(num(A("VEL")))));
+      m.alvo = num(A("VAL")); m.travou = false;
+      let t = 0;
+      while (m.alvo !== undefined && !m.travou && t < 4) { t += DT; yield; }
+      m.alvo = undefined; m.cfg = guarda; break;
+    }
     case "mot_girar": {
       const p = A("P"), m = MOT[p]; if (!m) break;
       const s = (A("SENT") === "clockwise" ? 1 : -1), v = (m.cfg === undefined ? 75 : m.cfg);
@@ -202,7 +224,11 @@ function* execBloco(b) {
     case "ctl_sesenao": if (aval(b.a.COND)) yield* execPilha(b.c[0]); else yield* execPilha(b.c[1]); break;
     case "ctl_esperar_ate": { let g = 0; while (!aval(b.a.COND) && g++ < 400000) yield; break; }
     case "ctl_repetir_ate": { let g = 0; while (!aval(b.a.COND) && g++ < 400000) { yield* execPilha(b.c[0]); yield; } break; }
+    case "ctl_parar_outras":
+      FIOS.forEach(f => { if (f !== FIO_ATUAL) f.vivo = false; });
+      break;
     case "ctl_parar":
+      if (A("ALVO") === "other scripts in sprite") { FIOS.forEach(f => { if (f !== FIO_ATUAL) f.vivo = false; }); break; }
       if (A("ALVO") === "this script") throw { fim: "script" };
       paraPar(); PARADO_POR = "bloco parar"; throw { fim: "tudo" };
     case "var_def": VARS[A("VAR")] = A("VAL"); break;
@@ -230,6 +256,7 @@ function mapeiaDono() {
 }
 function prepara() {
   VARS = {}; PROCS = {}; FIOS = []; ATUAL = null; PARADO_POR = ""; ULTDONO = "";
+  FIO_ATUAL = null; PARADA_MOV = "1"; ACEL_MOV = "4000 4000";
   for (const v of PROG.vars) VARS[v] = 0;
   for (const s of PROG.scripts) {
     const h = s.pilha[0]; if (!h) continue;
@@ -251,6 +278,7 @@ function umPasso() {
   let algum = false;
   for (const f of FIOS) {
     if (!f.vivo) continue;
+    FIO_ATUAL = f;
     try { const r = f.g.next(); if (r.done) f.vivo = false; else algum = true; }
     catch (err) {
       f.vivo = false;

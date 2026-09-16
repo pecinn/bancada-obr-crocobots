@@ -222,7 +222,7 @@ function abreAjuda(abre) {
     if (acao === "kits" || acao === "inicio") mostraPortal("kits");
     if (acao === "jornada" || acao === "conquistas") {
       fechaMenuEu();
-      if (SESSAO.plataforma) mostraPortal("trilha");
+      if (SESSAO.plataforma) { PAGINA = acao; SESSAO.pagina = acao; gravaSessao(SESSAO); mostraPortal("trilha"); }
       else avisoKits("Escolha um robô primeiro para abrir a sua jornada.");
     }
     if (acao === "ajuda") abreAjuda(true);
@@ -230,6 +230,8 @@ function abreAjuda(abre) {
     if (acao === "esqueci") avisoLogin("Acesso de demonstração: usuário crocobots · senha 123456.");
     if (acao === "google") avisoLogin("O login com Google chega na versão para instituições.");
     if (acao === "conta") avisoLogin("Peça o seu acesso ao professor de robótica da sua escola.");
+    if (acao === "pagina") vaiParaPagina(a.dataset.pag);
+    if (acao === "prog") abrePrograma(a.dataset.nome);
     if (acao === "livre") abreLivre();
     if (acao === "kit") escolheKit(a.dataset.kit);
     if (acao === "desafio") abreDesafio(a.dataset.id);

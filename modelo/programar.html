@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ROBOHUB — Programar e Simular</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<div class="app">
+<aside class="sidebar">
+ <div class="brand"><div class="brand-mark">🤖</div><div><strong>ROBO<span style="color:#2085ed">HUB</span></strong><small>CONHECIMENTO EM MOVIMENTO</small></div></div>
+ <div class="platform"><i class="dot"></i><span>SPIKE Prime</span><b style="margin-left:auto">⌄</b></div>
+ <nav class="nav">
+  <div class="nav-title">MENU</div>
+  <a href="trilha.html"><span class="nav-icon">⌂</span><span>Minha Jornada</span></a>
+  <a href="trilha.html"><span class="nav-icon">▦</span><span>Trilha de Conhecimento</span></a>
+  <a href="#" class="active"><span class="nav-icon">⌘</span><span>Bancada Livre</span></a>
+  <a href="#" class="active" style="background:#f1f5fa"><span class="nav-icon">&lt;/&gt;</span><span>Meus Programas</span></a>
+  <a href="#" data-nav="Conquistas"><span class="nav-icon">🏆</span><span>Conquistas</span></a>
+ </nav>
+ <div class="sidebar-foot"><b>Construa. Programe.<br>Crie sem limites.</b><br><span style="color:#6b7280">CROCOBOTS · JGP</span></div>
+</aside>
+<main class="main">
+<header class="topbar"><div class="crumb">Portal da Robótica &nbsp;›&nbsp; <b>SPIKE Prime</b> &nbsp;›&nbsp; Programar</div><div class="top-actions"><button class="top-btn">↶</button><button class="top-btn">↷</button><div class="avatar">C</div><b style="font-size:13px">Olá, crocobots!</b></div></header>
+
+<div class="program-layout">
+ <section class="panel palette">
+   <div class="panel-head"><span>Blocos</span><button class="top-btn" data-action="Paleta atualizada">⚙</button></div>
+   <div class="category">Movimento</div>
+   <div class="block move" data-code="mover <span class='field'>para frente</span> por <span class='field'>10 cm</span>">mover &nbsp; para frente &nbsp; por 10 cm</div>
+   <div class="block move" data-code="girar <span class='field'>direita</span> por <span class='field'>90°</span>">girar &nbsp; direita &nbsp; por 90°</div>
+   <div class="block move" data-code="iniciar movimento <span class='field'>50%</span>">iniciar movimento 50%</div>
+   <div class="block move" data-code="parar movimento">parar movimento</div>
+   <div class="category">Motores</div>
+   <div class="block motor" data-code="definir motor <span class='field'>A</span> para <span class='field'>50%</span>">definir motor A para 50%</div>
+   <div class="block motor" data-code="definir motores <span class='field'>A+B</span> para <span class='field'>50%</span>">definir motores A+B para 50%</div>
+   <div class="category">Controle</div>
+   <div class="block control" data-code="repetir <span class='field'>4</span> vezes">repetir 4 vezes</div>
+   <div class="block control" data-code="se ... então">se ... então</div>
+   <div class="category">Sensores</div>
+   <div class="block sensor" data-code="sensor de cor = <span class='field'>verde</span>">sensor de cor = verde</div>
+   <div class="block sensor" data-code="distância &lt; <span class='field'>20 cm</span>">distância &lt; 20 cm</div>
+   <div class="category">Eventos</div>
+   <div class="block event" data-code="quando o programa iniciar">quando o programa iniciar</div>
+   <div class="category">Som</div>
+   <div class="block sound" data-code="tocar som <span class='field'>Beep</span>">tocar som Beep</div>
+ </section>
+
+ <section class="panel workspace">
+  <div class="panel-head"><span>🧩 Meu Programa</span><div><button class="top-btn" data-action="Novo programa">＋</button></div></div>
+  <div class="grid-bg"></div>
+  <div class="code-area">
+    <div class="code-stack" id="codeStack">
+      <div class="code-block event" draggable="true">quando o programa iniciar</div>
+      <div class="code-block motor" draggable="true">definir velocidade para <span class="field">50%</span></div>
+      <div class="code-block move" draggable="true">mover <span class="field">para frente</span> por <span class="field">20 cm</span></div>
+      <div class="code-block move" draggable="true">girar <span class="field">direita</span> por <span class="field">90°</span></div>
+      <div class="code-block sensor" draggable="true">se sensor de cor é <span class="field">verde</span> então</div>
+      <div class="nested"><div class="code-block move" draggable="true">parar movimento</div></div>
+      <div class="dropzone">Clique em um bloco à esquerda para encaixar aqui</div>
+    </div>
+  </div>
+  <div class="workspace-tools"><button class="tool" data-action="Desfazer">↶</button><button class="tool" data-action="Refazer">↷</button><button class="tool" data-action="Aumentar zoom">＋</button><button class="tool" data-action="Limpar código">🗑</button></div>
+ </section>
+
+ <section class="panel simulator">
+   <div class="sim-tabs"><button class="sim-tab active">▣ Simulador</button><button class="sim-tab" data-action="Visualizando código">‹› Código</button><button class="sim-tab" data-action="Abrindo descrição">▤ Descrição</button><select class="arena-select"><option>Arena: Básica</option><option>Arena: OBR</option><option>Arena: Resgate</option></select></div>
+   <div class="scene">
+      <div class="track"></div><div class="track v"></div><div class="zone"></div><div class="zone red"></div>
+      <div class="robot" id="robot"><div class="robot-top"><i class="robot-eye a"></i><i class="robot-eye b"></i></div><div class="robot-body"></div><i class="sensor-dot"></i><div class="wheel l"></div><div class="wheel r"></div><div class="bucket"></div></div>
+      <div class="scene-controls"><button class="round play" id="runSim">▶</button><button class="round" id="stopSim">■</button><button class="round" id="resetSim">↻</button></div>
+      <div class="speed">Velocidade &nbsp; <input type="range" min="1" max="5" value="2"></div>
+   </div>
+   <div class="sensor-panel"><div class="sensor-tabs"><button class="sensor-tab active">▱ Sensores</button><button class="sensor-tab" data-action="Robô">⚙ Robô</button><button class="sensor-tab" data-action="Arena">⌂ Arena</button><button class="sensor-tab" data-action="Console">● Console</button></div>
+    <div class="sensor-grid">
+      <div class="sensor-card"><span>PORTA A</span><b class="sensor-value">0°</b><span>Motor</span></div>
+      <div class="sensor-card"><span>PORTA B</span><b class="sensor-value">0°</b><span>Motor</span></div>
+      <div class="sensor-card"><span>PORTA C</span><b class="sensor-value">🟢</b><span>Sensor de cor</span></div>
+      <div class="sensor-card"><span>PORTA D</span><b class="sensor-value">25 cm</b><span>Ultrassônico</span></div>
+    </div>
+   </div>
+   <div class="challenge-footer"><div class="target">🎯</div><div style="flex:1"><strong>Desafio atual · Curva de 90°: a garagem do lado</strong><p id="simState">Pronto · gire 90° e entre na garagem sem bater.</p></div><button class="green-btn" onclick="toast('Desafio enviado para o simulador')">Testar no simulador ▶</button></div>
+ </section>
+</div>
+</main>
+</div>
+<div id="toast" class="toast"></div><script src="app.js"></script>
+</body></html>

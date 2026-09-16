@@ -1,0 +1,13 @@
+
+<svg viewBox="0 0 180 110" xmlns="http://www.w3.org/2000/svg" aria-label="Robô SPIKE Prime">
+ <g stroke="#18283d" stroke-width="5" stroke-linejoin="round">
+  <rect x="31" y="30" width="118" height="54" rx="13" fill="#ffd21a"/>
+  <rect x="61" y="10" width="59" height="38" rx="9" fill="#fff"/>
+  <circle cx="78" cy="27" r="6" fill="#18283d"/><circle cx="103" cy="27" r="6" fill="#18283d"/>
+  <rect x="8" y="60" width="35" height="31" rx="12" fill="#202c3b" stroke="#20a9e9"/>
+  <rect x="137" y="60" width="35" height="31" rx="12" fill="#202c3b" stroke="#20a9e9"/>
+  <path d="M38 84 L15 105 L132 105 L145 84 Z" fill="#3d4857"/>
+  <path d="M46 44 L27 75 M134 44 L151 75" fill="none" stroke="#f0a800"/>
+  <circle cx="90" cy="51" r="5" fill="#12b7cf" stroke="#fff"/>
+ </g>
+</svg>

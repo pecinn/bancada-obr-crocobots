@@ -99,42 +99,114 @@
 #barraTeste i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c3aed,#4f46e5);transition:width .2s}
 @media (max-width:1180px){ #paleta{width:180px} #hub{width:44vw} }
 
-/* ============ identidade CROCOBOTS: preto metalico, garras e circuitos ============ */
+/* ============ identidade ROBOHUB: bancada clara (base: modelo/programar.html) ============
+   O SIMULADOR NÃO MUDA: tudo que fica dentro de #palco (cena 3D, HUD, lupa, chips dos sensores,
+   barra de vistas, cartão de resultado e contagem) continua com as cores de antes. */
 :root,:root[data-theme="light"],:root[data-theme="dark"]{
-  color-scheme:dark;
-  --fundo:#101215; --painel:#17191d; --painel2:#1e2126; --borda:#2c3036;
-  --tinta:#eceef1; --tinta2:#aab1ba; --tinta3:#737b86; --trilho:#131518;
-  --sombra:0 1px 2px rgba(0,0,0,.5), 0 6px 18px rgba(0,0,0,.35);
-  --marca:#8fd14f; --ok:#3fae5a; --erro:#e5484d;
-  --avfundo:#2b2314; --avborda:#5b4520; --avtinta:#ffd8a8;
-  --aco:linear-gradient(180deg,#f4f6f8 0%,#b9c0c8 45%,#6f7780 55%,#d6dbe0 100%);
+  color-scheme:light;
+  --fundo:#f5f8fc; --painel:#ffffff; --painel2:#f1f5fa; --borda:#e2e8f0;
+  --tinta:#17243a; --tinta2:#506078; --tinta3:#8a96a6; --trilho:#ffffff;
+  --sombra:0 1px 2px rgba(27,49,82,.06), 0 10px 28px rgba(27,49,82,.07);
+  --marca:#57c92f; --ok:#57c92f; --erro:#ef4960; --alerta:#e8590c;
+  --avfundo:#fff7e0; --avborda:#ffe1a8; --avtinta:#8a5b08;
+  --aco:linear-gradient(180deg,#26456f 0%,#15243d 55%,#2b4368 100%);
+  --aco-claro:linear-gradient(180deg,#f4f6f8 0%,#b9c0c8 45%,#6f7780 55%,#d6dbe0 100%);
+  /* cores das categorias como no LEGO Education SPIKE / Classroom */
+  --c-evento:#ffbf00;      /* eventos: amarelo */
+  --c-movimento:#f02a86;   /* movimento: rosa */
+  --c-motor:#0f8fd6;       /* motores: azul */
+  --c-luz:#8f4de8;         /* luz: roxo */
+  --c-som:#b34fd0;         /* som: roxo-magenta */
+  --c-sensor:#3fc2e8;      /* sensores: azul-claro */
+  --c-controle:#ffab19;    /* controle: laranja-ouro */
+  --c-operador:#4cbf56;    /* operadores: verde */
+  --c-variavel:#ff8c1a;    /* variáveis: laranja */
+  --c-meus:#ff4d6a;        /* meus blocos: vermelho-rosa */
+  --c-desconhecido:#8a96a6;
+  --mesa:#eef2f7;   /* fundo da área dos blocos: o recorte do topo dos blocos usa esta cor */
 }
+
+/* ---------- blocos com encaixe, como no SPIKE ----------
+   O dente sai embaixo do bloco e cobre a beirada do bloco de baixo: é o que dá o
+   efeito de peça encaixada. background:inherit copia a cor que o js pôs no elemento. */
+/* cada bloco tem a largura do seu conteúdo, como no SPIKE (antes esticavam até a borda) */
+.bl{border-radius:6px;box-shadow:none;width:max-content;max-width:100%}
+.bl>.cab{position:relative;border-radius:6px}
+.bl.chapeu>.cab{border-radius:18px 18px 6px 6px;padding-top:14px}
+.bl .fecho{position:relative;height:15px;border-radius:0 0 7px 7px;min-width:64px;width:max-content}
+/* corpo vazado: o braço da esquerda é a borda que o js pinta; nada de fundo atrás dos blocos de dentro */
+.bl .corpoc{margin-left:0;background:transparent;min-height:26px;padding:0;display:block}
+.bl.cbl{background:transparent}
+.bl.cbl>.cab{border-radius:6px 6px 0 0;width:max-content;min-width:96px}
+.bl.cbl>.cab~.cab{border-radius:0}   /* a barra "senão" */
+/* booleanos em forma de hexágono, como no SPIKE */
+.bl.bool,.slot.bool{clip-path:polygon(11px 0,calc(100% - 11px) 0,100% 50%,calc(100% - 11px) 100%,11px 100%,0 50%)}
+.bl.bool{border-radius:0}
+.bl.bool>.cab{border-radius:0;padding-left:14px;padding-right:14px}
+.slot.bool{border-radius:0;min-width:58px}
+/* contorno de leitura: separa um bloco do outro mesmo quando são da mesma cor */
+.bl>.cab,.bl .fecho{box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.14)}
+.bl.rep>.cab,.bl.bool>.cab{box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.18)}
+/* ---- o encaixe, com a mesma medida do SPIKE (scratch-blocks): 32 px de largura,
+   8 de profundidade, ombros inclinados e cantos arredondados ----
+   O dente sai embaixo do bloco (z-index 3, por cima do bloco seguinte) e o recorte
+   fica no topo, pintado com a cor do fundo — é o que deixa a peça com cara de peça. */
+.bl:not(.cbl):not(.rep):not(.bool)>.cab::after,
+.bl.cbl>.fecho::after{
+  content:"";position:absolute;left:12px;top:100%;width:32px;height:8px;background:inherit;
+  pointer-events:none;z-index:3;
+  clip-path:path("M0,0 c2,0 3,1 4,2 l4,4 c1,1 2,2 4,2 h8 c2,0 3,-1 4,-2 l4,-4 c1,-1 2,-2 4,-2 z")}
+.bl:not(.chapeu):not(.rep):not(.bool)>.cab::before{
+  content:"";position:absolute;left:12px;top:0;width:32px;height:8px;background:var(--mesa);
+  pointer-events:none;z-index:2;
+  clip-path:path("M0,0 c2,0 3,1 4,2 l4,4 c1,1 2,2 4,2 h8 c2,0 3,-1 4,-2 l4,-4 c1,-1 2,-2 4,-2 z")}
+/* na paleta o fundo é branco, então o recorte acompanha */
+#paleta .bl>.cab::before,#trilho .bl>.cab::before{background:var(--painel)}
+/* a boca do bloco em C também tem o recorte, no começo do braço */
+.bl.cbl>.cab::before{z-index:4}
+/* a barra "senão" e o cabeçalho de um bloco em C não podem ter dente */
+.bl.cbl>.cab::after{display:none}
+/* sombra suave na pilha inteira, seguindo o contorno dos dentes */
+.pilha,.pcard{filter:drop-shadow(0 1px 1px rgba(20,35,60,.3))}
+.pilha.flutua{filter:drop-shadow(0 10px 18px rgba(20,35,60,.35))}
+.bl.rep,.bl.bool{box-shadow:none}
+/* no SPIKE o menu do bloco tem a largura do texto: nada de "anti-horá..." cortado */
+select.enc{max-width:none;width:auto;text-overflow:clip}
 body{background:var(--fundo)}
-#topo{height:58px;background:
-  radial-gradient(120% 140% at 0% 0%, rgba(143,209,79,.10), transparent 45%),
-  linear-gradient(180deg,#1c1f24,#121418);border-bottom:1px solid #2e333a;box-shadow:0 2px 12px rgba(0,0,0,.4)}
-#topo .logo{width:auto;height:48px;border-radius:0;background:none;box-shadow:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+#topo{height:58px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--borda);box-shadow:0 1px 3px rgba(27,49,82,.05)}
+#topo .logo{width:auto;height:44px;border-radius:0;background:none;box-shadow:none;filter:none}
 #topo .nome{font-family:"Black Ops One","Nunito",sans-serif;font-weight:400;font-size:19px;letter-spacing:.5px;
   background:var(--aco);-webkit-background-clip:text;background-clip:text;color:transparent}
-#topo .sub{color:#8d96a1;font-size:9.5px;margin-top:2px}
-#topo .tag{border-color:#3a4048;color:#9aa3ad}
-.bt{background:linear-gradient(180deg,#2a2e34,#1f2227);border-color:#3a3f47;color:#e7eaee}
-.bt:hover{background:linear-gradient(180deg,#343941,#262a30)}
-.bt.primaria{background:linear-gradient(180deg,#55c46b,#2f9447);color:#fff}
-.bt.parar{background:linear-gradient(180deg,#f06a6e,#c93338);color:#fff}
-.bt.teste{background:linear-gradient(135deg,#8fd14f,#3fae5a);color:#0c1a06}
+#topo .sub{color:#8a96a6;font-size:9.5px;margin-top:2px}
+#topo .tag{border-color:var(--borda);color:#6c788a}
+.bt{background:#fff;border:1px solid #dbe3ec;color:#3d4c62;border-radius:11px;font-weight:800}
+.bt:hover{background:#f1f5fa;border-color:#c3cfdd}
+.bt.primaria{background:linear-gradient(180deg,#a8ee69,#7ee044);color:#11220b;border-color:transparent}
+.bt.parar{background:linear-gradient(180deg,#ff8b95,#ef4960);color:#fff;border-color:transparent}
+.bt.teste{background:linear-gradient(135deg,#8be34f,#57c92f);color:#11220b;border-color:transparent}
 #corpo{height:calc(100vh - 58px)}
-#mesa{background-color:#0f1114;background-image:
-  radial-gradient(circle at 1px 1px, #262a30 1px, transparent 0);background-size:24px 24px}
-#mesa::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;background:
-  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520'%3E%3Cg fill='none' stroke='%23262b31' stroke-width='2'%3E%3Cpath d='M20 500V380l40-40h80M60 520V420l30-30M120 520V440l20-20h60M500 20H380l-40 40v70M520 70H420l-30 30'/%3E%3C/g%3E%3Cg fill='%23262b31'%3E%3Ccircle cx='140' cy='340' r='4'/%3E%3Ccircle cx='90' cy='390' r='4'/%3E%3Ccircle cx='200' cy='420' r='4'/%3E%3Ccircle cx='340' cy='130' r='4'/%3E%3Ccircle cx='390' cy='100' r='4'/%3E%3C/g%3E%3C/svg%3E") right bottom/520px no-repeat}
-#paleta,#trilho{background:#141619}
-#hub{background:#15171b}
-.cartao{background:linear-gradient(180deg,#1d2025,#191b1f);border-color:#2c3036}
-.leitura{background:#121417}
-#console{background:#0e1012;color:#b7f28a}
-#abas{background:#15171b}
-#abas button.on{border-bottom-color:#8fd14f}
+/* área dos blocos: papel quadriculado claro */
+#mesa{background-color:var(--mesa);background-image:
+  radial-gradient(circle at 1px 1px, #d5dee9 1px, transparent 0);background-size:24px 24px}
+#mesa::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.6;background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520'%3E%3Cg fill='none' stroke='%23dde5ee' stroke-width='2'%3E%3Cpath d='M20 500V380l40-40h80M60 520V420l30-30M120 520V440l20-20h60M500 20H380l-40 40v70M520 70H420l-30 30'/%3E%3C/g%3E%3Cg fill='%23dde5ee'%3E%3Ccircle cx='140' cy='340' r='4'/%3E%3Ccircle cx='90' cy='390' r='4'/%3E%3Ccircle cx='200' cy='420' r='4'/%3E%3Ccircle cx='340' cy='130' r='4'/%3E%3Ccircle cx='390' cy='100' r='4'/%3E%3C/g%3E%3C/svg%3E") right bottom/520px no-repeat}
+#paleta,#trilho{background:#fff}
+#paleta{border-right:1px solid var(--borda)}
+#hub{background:#fff;border-left:1px solid var(--borda)}
+#divisor{background:var(--borda)}
+#divisor::after{background:rgba(27,49,82,.22)}
+.cartao{background:#fff;border:1px solid var(--borda);border-radius:16px;box-shadow:var(--sombra)}
+.leitura{background:#f4f7fa;border-radius:10px}
+#console{background:#0f1b2d;color:#b7f28a}
+#abas{background:#fff;border-bottom:1px solid var(--borda)}
+#abas button{font-weight:800;color:#6c788a}
+#abas button.on{color:#15243d;border-bottom-color:#57c92f;background:#f4faf0}
+#grafico,.faixa-cores{background:#f8fafc}
+.res{background:#f4f7fa}
+.placar div{background:#f4f7fa}
+#tab canvas{background:#f3f2ee}
+
+/* ---------- daqui para baixo é o simulador: continua igual ---------- */
 #palco{background:#0e1013}
 #marcaDagua{position:absolute;right:12px;top:48px;width:74px;opacity:.55;z-index:3;pointer-events:none;
   filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
@@ -142,23 +214,13 @@ body{background:var(--fundo)}
 #hudTopo .barra i{background:linear-gradient(90deg,#3fae5a,#8fd14f,#e9f7a6)}
 #vistaBar button.on{background:linear-gradient(180deg,#b9e886,#8fd14f);color:#10200a}
 #resultado h3{font-family:"Black Ops One","Nunito",sans-serif;font-weight:400;font-size:22px;letter-spacing:.5px;
-  background:var(--aco);-webkit-background-clip:text;background-clip:text;color:transparent}
+  background:var(--aco-claro);-webkit-background-clip:text;background-clip:text;color:transparent}
 #resultado .logoRes{width:92px;display:block;margin:-4px auto 2px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
-#grafico,.faixa-cores{background:#0f1114}
-#tab canvas{background:#f3f2ee}
-.res{background:#121417}
-.placar div{background:#121417}
 /* garras no canto do palco */
 #palco::after{content:"";position:absolute;left:-10px;bottom:-10px;width:170px;height:170px;pointer-events:none;z-index:2;opacity:.14;
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%23c9d0d8'%3E%3Cpath d='M8 92C30 60 52 34 88 8C60 38 38 64 14 96Z'/%3E%3Cpath d='M-4 78C18 52 38 30 70 6C46 34 28 56 2 84Z'/%3E%3Cpath d='M22 100C42 74 62 52 96 30C70 58 50 80 30 104Z'/%3E%3C/g%3E%3C/svg%3E") no-repeat center/contain}
 #palco.cheio #painelCheio{display:none}
-
-#topo .bt{white-space:nowrap;padding:7px 10px}
-#topo{overflow:hidden}
-@media (max-width:1560px){ #topo .tag{display:none} #topo .sub{display:none} }
-@media (max-width:1320px){ #btLimpar,#btBaixar{padding:7px 8px} #topo select.bt{max-width:170px} }
 #lente{width:112px;height:112px}
-
 #contagem{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;pointer-events:none;text-align:center;
   background:rgba(200,50,42,.88);color:#fff;border-radius:16px;padding:8px 20px;box-shadow:0 8px 26px rgba(0,0,0,.45)}
 #contagem b{display:block;font-family:"Black Ops One","Nunito",sans-serif;font-weight:400;font-size:40px;line-height:1.05}
@@ -169,8 +231,6 @@ body{background:var(--fundo)}
 #palco.baixo #resultado .nums{margin:6px 0}
 #sensHud{pointer-events:none;background:rgba(16,20,27,.62)}
 #marcaDagua{opacity:.32;width:64px}
-@media (prefers-reduced-motion: reduce){ *,*::before,*::after{transition:none!important;animation:none!important} }
-/* tela cheia: controles no canto esquerdo, livre para a pista */
 /* tela cheia: controles num menu vertical na esquerda, fora da pista */
 #palco.cheio #barraCheia{left:14px;top:50%;bottom:auto;transform:translateY(-50%);flex-direction:column;align-items:stretch;
   width:150px;box-sizing:border-box;gap:6px;padding:10px;max-height:calc(100% - 230px);overflow-y:auto;overflow-x:hidden}
@@ -179,28 +239,36 @@ body{background:var(--fundo)}
 #palco.cheio #barraCheia input[type=range]{width:100%!important;box-sizing:border-box;margin:0}
 #palco.cheio #barraCheia span{text-align:left;min-width:0}
 #palco.cheio #sensHud{bottom:14px;left:14px}
+/* ---------- fim do simulador ---------- */
+
+#topo .bt{white-space:nowrap;padding:7px 10px}
+#topo{overflow:hidden}
+@media (max-width:1560px){ #topo .tag{display:none} #topo .sub{display:none} }
+@media (max-width:1320px){ #btLimpar,#btBaixar{padding:7px 8px} #topo select.bt{max-width:170px} }
+@media (prefers-reduced-motion: reduce){ *,*::before,*::after{transition:none!important;animation:none!important} }
+
 /* guardar programa */
 #guardaBox{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:300;width:min(360px,92vw);display:grid;gap:8px;
-  background:#1a1e24;border:1px solid #3a4048;border-radius:12px;padding:14px;box-shadow:0 14px 40px rgba(0,0,0,.55);color:#e6eaef}
-#guardaBox label{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#9aa3ad}
-#guardaBox input{font:inherit;font-size:15px;padding:8px 10px;border-radius:8px;border:1px solid #454c56;background:#101215;color:#f2f4f6}
-#guardaBox input:focus{outline:2px solid #8fd14f;outline-offset:1px}
-#guardaBox small{min-height:1em;color:#c9a54a;font-size:12px}
+  background:#fff;border:1px solid var(--borda);border-radius:16px;padding:14px;box-shadow:0 18px 45px rgba(27,49,82,.22);color:#17243a}
+#guardaBox label{font-size:12px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#8a96a6}
+#guardaBox input{font:inherit;font-size:15px;padding:9px 11px;border-radius:10px;border:1px solid #d6dee8;background:#fff;color:#17243a}
+#guardaBox input:focus{outline:2px solid #57c92f;outline-offset:1px}
+#guardaBox small{min-height:1em;color:#9a6b00;font-size:12px}
 #guardaBox .acoes{display:flex;gap:8px;align-items:center}
 #guardaBox .esp{flex:1}
-#guardaBox .pri{background:linear-gradient(180deg,#b9e886,#8fd14f);color:#10200a;border-color:transparent;font-weight:800}
+#guardaBox .pri{background:linear-gradient(180deg,#a8ee69,#7ee044);color:#11220b;border-color:transparent;font-weight:900}
 
 /* nota da corrida */
 .pilula{display:inline-block;border-radius:999px;padding:1px 8px;font-size:10.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#10130f}
-.pilula.ok{background:#8fd14f} .pilula.meio{background:#f0b429} .pilula.ruim{background:#e5534b;color:#fff}
+.pilula.ok{background:#8be34f} .pilula.meio{background:#ffc61a} .pilula.ruim{background:#ef4960;color:#fff}
 
 /* escolha do modelo do robô */
 .modelos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.modelos button{display:grid;justify-items:center;gap:2px;padding:10px 6px 8px;border-radius:10px;border:1px solid #3a4048;
-  background:#121417;color:#c9d0d8;font:inherit;cursor:pointer}
+.modelos button{display:grid;justify-items:center;gap:2px;padding:10px 6px 8px;border-radius:12px;border:1px solid #dbe3ec;
+  background:#fff;color:#506078;font:inherit;cursor:pointer}
 .modelos button svg{width:58px;height:36px;fill:currentColor}
-.modelos button b{font-size:13px;color:#eef1f4}
-.modelos button small{font-size:10.5px;color:#8d96a1;font-weight:700;text-align:center;line-height:1.2}
-.modelos button:hover{border-color:#6b7380}
-.modelos button:focus-visible{outline:2px solid #8fd14f;outline-offset:2px}
-.modelos button[aria-checked="true"]{border-color:#8fd14f;background:linear-gradient(180deg,#1f2a17,#141a10);color:#8fd14f}
+.modelos button b{font-size:13px;color:#15243d}
+.modelos button small{font-size:10.5px;color:#8a96a6;font-weight:700;text-align:center;line-height:1.2}
+.modelos button:hover{border-color:#b9c8da}
+.modelos button:focus-visible{outline:2px solid #57c92f;outline-offset:2px}
+.modelos button[aria-checked="true"]{border-color:#7ee044;background:#f2fceb;color:#2e7d18}

@@ -87,39 +87,28 @@
     </div>
   </div>
 
-  <!-- ---------- trilha ---------- -->
-  <section class="tela" id="telaTrilha" aria-labelledby="tituloTrilha" hidden>
-    <header class="portal-topo">
-      <img class="mini-logo" src="LOGO_DATA" alt="">
-      <span class="marca-portal">Portal da Robótica</span>
-      <button class="kit-atual" id="kitAtual" data-acao="kits" title="Trocar de kit"></button>
-      <span class="esp"></span>
-      <div class="segmento" role="radiogroup" aria-label="Segmento">
-        <button role="radio" data-seg="fund">Ensino Fundamental</button>
-        <button role="radio" data-seg="medio">Ensino Médio</button>
-      </div>
-      <span class="ola" id="olaTrilha"></span>
-      <button class="link" data-acao="sair">Sair</button>
-    </header>
-
-    <div class="trilha-miolo">
-      <div class="trilha-cabeca">
-        <div>
-          <h1 id="tituloTrilha">Trilha de conhecimento</h1>
-          <p class="sub" id="subTrilha"></p>
+  <!-- ---------- portal interno: barra lateral + páginas (base: modelo/trilha.html) ---------- -->
+  <section class="tela pt-app" id="telaTrilha" aria-label="ROBOHUB — Portal" hidden>
+    <aside class="pt-sidebar" id="ladoPortal">
+      <div class="pt-brand" data-logo></div>
+      <button class="pt-plat" id="kitAtual" data-acao="kits" title="Trocar de kit"></button>
+      <nav class="pt-nav" id="menuPortal" aria-label="Menu do portal"></nav>
+      <div class="pt-foot"><b>“Do primeiro bloco ao pódio.”</b><span>CROCOBOTS · JGP</span></div>
+    </aside>
+    <main class="pt-main">
+      <header class="pt-topbar">
+        <button class="pt-menu-bt" id="btMenuPortal" aria-label="Abrir o menu">☰</button>
+        <div class="pt-crumb" id="crumbPortal"></div>
+        <span class="esp"></span>
+        <div class="segmento" role="radiogroup" aria-label="Segmento">
+          <button role="radio" data-seg="fund">Fundamental</button>
+          <button role="radio" data-seg="medio">Médio</button>
         </div>
-        <button class="bancada-livre" data-acao="livre">Bancada livre ›</button>
-      </div>
-
-      <section class="desempenho" aria-label="Meu desempenho" id="painelDesempenho"></section>
-
-      <div class="niveis" role="tablist" aria-label="Níveis">
-        <button role="tab" data-nivel="ini">Iniciante</button>
-        <button role="tab" data-nivel="int">Intermediário</button>
-        <button role="tab" data-nivel="av">Avançado · OBR</button>
-      </div>
-      <p class="nivel-intro" id="introNivel"></p>
-      <div class="desafios" id="listaDesafios"></div>
-    </div>
+        <div class="pt-avatar" id="avatarPortal" aria-hidden="true">C</div>
+        <span class="ola" id="olaTrilha"></span>
+        <button class="link" data-acao="sair">Sair</button>
+      </header>
+      <section class="pt-content" id="conteudoPortal" tabindex="-1"></section>
+    </main>
   </section>
 </div>

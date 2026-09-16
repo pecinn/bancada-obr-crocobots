@@ -262,42 +262,114 @@ select.enc{padding:3px 22px 3px 8px;border-radius:999px;-webkit-appearance:none;
 #barraTeste i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c3aed,#4f46e5);transition:width .2s}
 @media (max-width:1180px){ #paleta{width:180px} #hub{width:44vw} }
 
-/* ============ identidade CROCOBOTS: preto metalico, garras e circuitos ============ */
+/* ============ identidade ROBOHUB: bancada clara (base: modelo/programar.html) ============
+   O SIMULADOR NÃO MUDA: tudo que fica dentro de #palco (cena 3D, HUD, lupa, chips dos sensores,
+   barra de vistas, cartão de resultado e contagem) continua com as cores de antes. */
 :root,:root[data-theme="light"],:root[data-theme="dark"]{
-  color-scheme:dark;
-  --fundo:#101215; --painel:#17191d; --painel2:#1e2126; --borda:#2c3036;
-  --tinta:#eceef1; --tinta2:#aab1ba; --tinta3:#737b86; --trilho:#131518;
-  --sombra:0 1px 2px rgba(0,0,0,.5), 0 6px 18px rgba(0,0,0,.35);
-  --marca:#8fd14f; --ok:#3fae5a; --erro:#e5484d;
-  --avfundo:#2b2314; --avborda:#5b4520; --avtinta:#ffd8a8;
-  --aco:linear-gradient(180deg,#f4f6f8 0%,#b9c0c8 45%,#6f7780 55%,#d6dbe0 100%);
+  color-scheme:light;
+  --fundo:#f5f8fc; --painel:#ffffff; --painel2:#f1f5fa; --borda:#e2e8f0;
+  --tinta:#17243a; --tinta2:#506078; --tinta3:#8a96a6; --trilho:#ffffff;
+  --sombra:0 1px 2px rgba(27,49,82,.06), 0 10px 28px rgba(27,49,82,.07);
+  --marca:#57c92f; --ok:#57c92f; --erro:#ef4960; --alerta:#e8590c;
+  --avfundo:#fff7e0; --avborda:#ffe1a8; --avtinta:#8a5b08;
+  --aco:linear-gradient(180deg,#26456f 0%,#15243d 55%,#2b4368 100%);
+  --aco-claro:linear-gradient(180deg,#f4f6f8 0%,#b9c0c8 45%,#6f7780 55%,#d6dbe0 100%);
+  /* cores das categorias como no LEGO Education SPIKE / Classroom */
+  --c-evento:#ffbf00;      /* eventos: amarelo */
+  --c-movimento:#f02a86;   /* movimento: rosa */
+  --c-motor:#0f8fd6;       /* motores: azul */
+  --c-luz:#8f4de8;         /* luz: roxo */
+  --c-som:#b34fd0;         /* som: roxo-magenta */
+  --c-sensor:#3fc2e8;      /* sensores: azul-claro */
+  --c-controle:#ffab19;    /* controle: laranja-ouro */
+  --c-operador:#4cbf56;    /* operadores: verde */
+  --c-variavel:#ff8c1a;    /* variáveis: laranja */
+  --c-meus:#ff4d6a;        /* meus blocos: vermelho-rosa */
+  --c-desconhecido:#8a96a6;
+  --mesa:#eef2f7;   /* fundo da área dos blocos: o recorte do topo dos blocos usa esta cor */
 }
+
+/* ---------- blocos com encaixe, como no SPIKE ----------
+   O dente sai embaixo do bloco e cobre a beirada do bloco de baixo: é o que dá o
+   efeito de peça encaixada. background:inherit copia a cor que o js pôs no elemento. */
+/* cada bloco tem a largura do seu conteúdo, como no SPIKE (antes esticavam até a borda) */
+.bl{border-radius:6px;box-shadow:none;width:max-content;max-width:100%}
+.bl>.cab{position:relative;border-radius:6px}
+.bl.chapeu>.cab{border-radius:18px 18px 6px 6px;padding-top:14px}
+.bl .fecho{position:relative;height:15px;border-radius:0 0 7px 7px;min-width:64px;width:max-content}
+/* corpo vazado: o braço da esquerda é a borda que o js pinta; nada de fundo atrás dos blocos de dentro */
+.bl .corpoc{margin-left:0;background:transparent;min-height:26px;padding:0;display:block}
+.bl.cbl{background:transparent}
+.bl.cbl>.cab{border-radius:6px 6px 0 0;width:max-content;min-width:96px}
+.bl.cbl>.cab~.cab{border-radius:0}   /* a barra "senão" */
+/* booleanos em forma de hexágono, como no SPIKE */
+.bl.bool,.slot.bool{clip-path:polygon(11px 0,calc(100% - 11px) 0,100% 50%,calc(100% - 11px) 100%,11px 100%,0 50%)}
+.bl.bool{border-radius:0}
+.bl.bool>.cab{border-radius:0;padding-left:14px;padding-right:14px}
+.slot.bool{border-radius:0;min-width:58px}
+/* contorno de leitura: separa um bloco do outro mesmo quando são da mesma cor */
+.bl>.cab,.bl .fecho{box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.14)}
+.bl.rep>.cab,.bl.bool>.cab{box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.18)}
+/* ---- o encaixe, com a mesma medida do SPIKE (scratch-blocks): 32 px de largura,
+   8 de profundidade, ombros inclinados e cantos arredondados ----
+   O dente sai embaixo do bloco (z-index 3, por cima do bloco seguinte) e o recorte
+   fica no topo, pintado com a cor do fundo — é o que deixa a peça com cara de peça. */
+.bl:not(.cbl):not(.rep):not(.bool)>.cab::after,
+.bl.cbl>.fecho::after{
+  content:"";position:absolute;left:12px;top:100%;width:32px;height:8px;background:inherit;
+  pointer-events:none;z-index:3;
+  clip-path:path("M0,0 c2,0 3,1 4,2 l4,4 c1,1 2,2 4,2 h8 c2,0 3,-1 4,-2 l4,-4 c1,-1 2,-2 4,-2 z")}
+.bl:not(.chapeu):not(.rep):not(.bool)>.cab::before{
+  content:"";position:absolute;left:12px;top:0;width:32px;height:8px;background:var(--mesa);
+  pointer-events:none;z-index:2;
+  clip-path:path("M0,0 c2,0 3,1 4,2 l4,4 c1,1 2,2 4,2 h8 c2,0 3,-1 4,-2 l4,-4 c1,-1 2,-2 4,-2 z")}
+/* na paleta o fundo é branco, então o recorte acompanha */
+#paleta .bl>.cab::before,#trilho .bl>.cab::before{background:var(--painel)}
+/* a boca do bloco em C também tem o recorte, no começo do braço */
+.bl.cbl>.cab::before{z-index:4}
+/* a barra "senão" e o cabeçalho de um bloco em C não podem ter dente */
+.bl.cbl>.cab::after{display:none}
+/* sombra suave na pilha inteira, seguindo o contorno dos dentes */
+.pilha,.pcard{filter:drop-shadow(0 1px 1px rgba(20,35,60,.3))}
+.pilha.flutua{filter:drop-shadow(0 10px 18px rgba(20,35,60,.35))}
+.bl.rep,.bl.bool{box-shadow:none}
+/* no SPIKE o menu do bloco tem a largura do texto: nada de "anti-horá..." cortado */
+select.enc{max-width:none;width:auto;text-overflow:clip}
 body{background:var(--fundo)}
-#topo{height:58px;background:
-  radial-gradient(120% 140% at 0% 0%, rgba(143,209,79,.10), transparent 45%),
-  linear-gradient(180deg,#1c1f24,#121418);border-bottom:1px solid #2e333a;box-shadow:0 2px 12px rgba(0,0,0,.4)}
-#topo .logo{width:auto;height:48px;border-radius:0;background:none;box-shadow:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+#topo{height:58px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--borda);box-shadow:0 1px 3px rgba(27,49,82,.05)}
+#topo .logo{width:auto;height:44px;border-radius:0;background:none;box-shadow:none;filter:none}
 #topo .nome{font-family:"Black Ops One","Nunito",sans-serif;font-weight:400;font-size:19px;letter-spacing:.5px;
   background:var(--aco);-webkit-background-clip:text;background-clip:text;color:transparent}
-#topo .sub{color:#8d96a1;font-size:9.5px;margin-top:2px}
-#topo .tag{border-color:#3a4048;color:#9aa3ad}
-.bt{background:linear-gradient(180deg,#2a2e34,#1f2227);border-color:#3a3f47;color:#e7eaee}
-.bt:hover{background:linear-gradient(180deg,#343941,#262a30)}
-.bt.primaria{background:linear-gradient(180deg,#55c46b,#2f9447);color:#fff}
-.bt.parar{background:linear-gradient(180deg,#f06a6e,#c93338);color:#fff}
-.bt.teste{background:linear-gradient(135deg,#8fd14f,#3fae5a);color:#0c1a06}
+#topo .sub{color:#8a96a6;font-size:9.5px;margin-top:2px}
+#topo .tag{border-color:var(--borda);color:#6c788a}
+.bt{background:#fff;border:1px solid #dbe3ec;color:#3d4c62;border-radius:11px;font-weight:800}
+.bt:hover{background:#f1f5fa;border-color:#c3cfdd}
+.bt.primaria{background:linear-gradient(180deg,#a8ee69,#7ee044);color:#11220b;border-color:transparent}
+.bt.parar{background:linear-gradient(180deg,#ff8b95,#ef4960);color:#fff;border-color:transparent}
+.bt.teste{background:linear-gradient(135deg,#8be34f,#57c92f);color:#11220b;border-color:transparent}
 #corpo{height:calc(100vh - 58px)}
-#mesa{background-color:#0f1114;background-image:
-  radial-gradient(circle at 1px 1px, #262a30 1px, transparent 0);background-size:24px 24px}
-#mesa::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;background:
-  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520'%3E%3Cg fill='none' stroke='%23262b31' stroke-width='2'%3E%3Cpath d='M20 500V380l40-40h80M60 520V420l30-30M120 520V440l20-20h60M500 20H380l-40 40v70M520 70H420l-30 30'/%3E%3C/g%3E%3Cg fill='%23262b31'%3E%3Ccircle cx='140' cy='340' r='4'/%3E%3Ccircle cx='90' cy='390' r='4'/%3E%3Ccircle cx='200' cy='420' r='4'/%3E%3Ccircle cx='340' cy='130' r='4'/%3E%3Ccircle cx='390' cy='100' r='4'/%3E%3C/g%3E%3C/svg%3E") right bottom/520px no-repeat}
-#paleta,#trilho{background:#141619}
-#hub{background:#15171b}
-.cartao{background:linear-gradient(180deg,#1d2025,#191b1f);border-color:#2c3036}
-.leitura{background:#121417}
-#console{background:#0e1012;color:#b7f28a}
-#abas{background:#15171b}
-#abas button.on{border-bottom-color:#8fd14f}
+/* área dos blocos: papel quadriculado claro */
+#mesa{background-color:var(--mesa);background-image:
+  radial-gradient(circle at 1px 1px, #d5dee9 1px, transparent 0);background-size:24px 24px}
+#mesa::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.6;background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520'%3E%3Cg fill='none' stroke='%23dde5ee' stroke-width='2'%3E%3Cpath d='M20 500V380l40-40h80M60 520V420l30-30M120 520V440l20-20h60M500 20H380l-40 40v70M520 70H420l-30 30'/%3E%3C/g%3E%3Cg fill='%23dde5ee'%3E%3Ccircle cx='140' cy='340' r='4'/%3E%3Ccircle cx='90' cy='390' r='4'/%3E%3Ccircle cx='200' cy='420' r='4'/%3E%3Ccircle cx='340' cy='130' r='4'/%3E%3Ccircle cx='390' cy='100' r='4'/%3E%3C/g%3E%3C/svg%3E") right bottom/520px no-repeat}
+#paleta,#trilho{background:#fff}
+#paleta{border-right:1px solid var(--borda)}
+#hub{background:#fff;border-left:1px solid var(--borda)}
+#divisor{background:var(--borda)}
+#divisor::after{background:rgba(27,49,82,.22)}
+.cartao{background:#fff;border:1px solid var(--borda);border-radius:16px;box-shadow:var(--sombra)}
+.leitura{background:#f4f7fa;border-radius:10px}
+#console{background:#0f1b2d;color:#b7f28a}
+#abas{background:#fff;border-bottom:1px solid var(--borda)}
+#abas button{font-weight:800;color:#6c788a}
+#abas button.on{color:#15243d;border-bottom-color:#57c92f;background:#f4faf0}
+#grafico,.faixa-cores{background:#f8fafc}
+.res{background:#f4f7fa}
+.placar div{background:#f4f7fa}
+#tab canvas{background:#f3f2ee}
+
+/* ---------- daqui para baixo é o simulador: continua igual ---------- */
 #palco{background:#0e1013}
 #marcaDagua{position:absolute;right:12px;top:48px;width:74px;opacity:.55;z-index:3;pointer-events:none;
   filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
@@ -305,23 +377,13 @@ body{background:var(--fundo)}
 #hudTopo .barra i{background:linear-gradient(90deg,#3fae5a,#8fd14f,#e9f7a6)}
 #vistaBar button.on{background:linear-gradient(180deg,#b9e886,#8fd14f);color:#10200a}
 #resultado h3{font-family:"Black Ops One","Nunito",sans-serif;font-weight:400;font-size:22px;letter-spacing:.5px;
-  background:var(--aco);-webkit-background-clip:text;background-clip:text;color:transparent}
+  background:var(--aco-claro);-webkit-background-clip:text;background-clip:text;color:transparent}
 #resultado .logoRes{width:92px;display:block;margin:-4px auto 2px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
-#grafico,.faixa-cores{background:#0f1114}
-#tab canvas{background:#f3f2ee}
-.res{background:#121417}
-.placar div{background:#121417}
 /* garras no canto do palco */
 #palco::after{content:"";position:absolute;left:-10px;bottom:-10px;width:170px;height:170px;pointer-events:none;z-index:2;opacity:.14;
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%23c9d0d8'%3E%3Cpath d='M8 92C30 60 52 34 88 8C60 38 38 64 14 96Z'/%3E%3Cpath d='M-4 78C18 52 38 30 70 6C46 34 28 56 2 84Z'/%3E%3Cpath d='M22 100C42 74 62 52 96 30C70 58 50 80 30 104Z'/%3E%3C/g%3E%3C/svg%3E") no-repeat center/contain}
 #palco.cheio #painelCheio{display:none}
-
-#topo .bt{white-space:nowrap;padding:7px 10px}
-#topo{overflow:hidden}
-@media (max-width:1560px){ #topo .tag{display:none} #topo .sub{display:none} }
-@media (max-width:1320px){ #btLimpar,#btBaixar{padding:7px 8px} #topo select.bt{max-width:170px} }
 #lente{width:112px;height:112px}
-
 #contagem{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;pointer-events:none;text-align:center;
   background:rgba(200,50,42,.88);color:#fff;border-radius:16px;padding:8px 20px;box-shadow:0 8px 26px rgba(0,0,0,.45)}
 #contagem b{display:block;font-family:"Black Ops One","Nunito",sans-serif;font-weight:400;font-size:40px;line-height:1.05}
@@ -332,8 +394,6 @@ body{background:var(--fundo)}
 #palco.baixo #resultado .nums{margin:6px 0}
 #sensHud{pointer-events:none;background:rgba(16,20,27,.62)}
 #marcaDagua{opacity:.32;width:64px}
-@media (prefers-reduced-motion: reduce){ *,*::before,*::after{transition:none!important;animation:none!important} }
-/* tela cheia: controles no canto esquerdo, livre para a pista */
 /* tela cheia: controles num menu vertical na esquerda, fora da pista */
 #palco.cheio #barraCheia{left:14px;top:50%;bottom:auto;transform:translateY(-50%);flex-direction:column;align-items:stretch;
   width:150px;box-sizing:border-box;gap:6px;padding:10px;max-height:calc(100% - 230px);overflow-y:auto;overflow-x:hidden}
@@ -342,31 +402,39 @@ body{background:var(--fundo)}
 #palco.cheio #barraCheia input[type=range]{width:100%!important;box-sizing:border-box;margin:0}
 #palco.cheio #barraCheia span{text-align:left;min-width:0}
 #palco.cheio #sensHud{bottom:14px;left:14px}
+/* ---------- fim do simulador ---------- */
+
+#topo .bt{white-space:nowrap;padding:7px 10px}
+#topo{overflow:hidden}
+@media (max-width:1560px){ #topo .tag{display:none} #topo .sub{display:none} }
+@media (max-width:1320px){ #btLimpar,#btBaixar{padding:7px 8px} #topo select.bt{max-width:170px} }
+@media (prefers-reduced-motion: reduce){ *,*::before,*::after{transition:none!important;animation:none!important} }
+
 /* guardar programa */
 #guardaBox{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:300;width:min(360px,92vw);display:grid;gap:8px;
-  background:#1a1e24;border:1px solid #3a4048;border-radius:12px;padding:14px;box-shadow:0 14px 40px rgba(0,0,0,.55);color:#e6eaef}
-#guardaBox label{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#9aa3ad}
-#guardaBox input{font:inherit;font-size:15px;padding:8px 10px;border-radius:8px;border:1px solid #454c56;background:#101215;color:#f2f4f6}
-#guardaBox input:focus{outline:2px solid #8fd14f;outline-offset:1px}
-#guardaBox small{min-height:1em;color:#c9a54a;font-size:12px}
+  background:#fff;border:1px solid var(--borda);border-radius:16px;padding:14px;box-shadow:0 18px 45px rgba(27,49,82,.22);color:#17243a}
+#guardaBox label{font-size:12px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#8a96a6}
+#guardaBox input{font:inherit;font-size:15px;padding:9px 11px;border-radius:10px;border:1px solid #d6dee8;background:#fff;color:#17243a}
+#guardaBox input:focus{outline:2px solid #57c92f;outline-offset:1px}
+#guardaBox small{min-height:1em;color:#9a6b00;font-size:12px}
 #guardaBox .acoes{display:flex;gap:8px;align-items:center}
 #guardaBox .esp{flex:1}
-#guardaBox .pri{background:linear-gradient(180deg,#b9e886,#8fd14f);color:#10200a;border-color:transparent;font-weight:800}
+#guardaBox .pri{background:linear-gradient(180deg,#a8ee69,#7ee044);color:#11220b;border-color:transparent;font-weight:900}
 
 /* nota da corrida */
 .pilula{display:inline-block;border-radius:999px;padding:1px 8px;font-size:10.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#10130f}
-.pilula.ok{background:#8fd14f} .pilula.meio{background:#f0b429} .pilula.ruim{background:#e5534b;color:#fff}
+.pilula.ok{background:#8be34f} .pilula.meio{background:#ffc61a} .pilula.ruim{background:#ef4960;color:#fff}
 
 /* escolha do modelo do robô */
 .modelos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.modelos button{display:grid;justify-items:center;gap:2px;padding:10px 6px 8px;border-radius:10px;border:1px solid #3a4048;
-  background:#121417;color:#c9d0d8;font:inherit;cursor:pointer}
+.modelos button{display:grid;justify-items:center;gap:2px;padding:10px 6px 8px;border-radius:12px;border:1px solid #dbe3ec;
+  background:#fff;color:#506078;font:inherit;cursor:pointer}
 .modelos button svg{width:58px;height:36px;fill:currentColor}
-.modelos button b{font-size:13px;color:#eef1f4}
-.modelos button small{font-size:10.5px;color:#8d96a1;font-weight:700;text-align:center;line-height:1.2}
-.modelos button:hover{border-color:#6b7380}
-.modelos button:focus-visible{outline:2px solid #8fd14f;outline-offset:2px}
-.modelos button[aria-checked="true"]{border-color:#8fd14f;background:linear-gradient(180deg,#1f2a17,#141a10);color:#8fd14f}
+.modelos button b{font-size:13px;color:#15243d}
+.modelos button small{font-size:10.5px;color:#8a96a6;font-weight:700;text-align:center;line-height:1.2}
+.modelos button:hover{border-color:#b9c8da}
+.modelos button:focus-visible{outline:2px solid #57c92f;outline-offset:2px}
+.modelos button[aria-checked="true"]{border-color:#7ee044;background:#f2fceb;color:#2e7d18}
 
 /* ======================= PORTAL DA ROBÓTICA ======================= */
 #portal{position:fixed;inset:0;z-index:500;overflow-y:auto;color:#eceef1;
@@ -472,86 +540,41 @@ body.no-portal{overflow:hidden}
 .kit.atual::after{content:"kit atual";position:absolute;top:12px;right:12px;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
   background:#8fd14f;color:#10200a;border-radius:999px;padding:3px 9px}
 
-/* ---------- trilha ---------- */
-.trilha-miolo{max-width:1240px;width:100%;margin:0 auto;padding-block:clamp(20px,4vh,40px);padding-inline:clamp(16px,4vw,40px)}
-.trilha-cabeca{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.bancada-livre{border:1px solid #3a4048;background:#15181c;color:#eef1f4;border-radius:12px;padding:10px 16px;font-weight:900;margin-bottom:22px}
-.bancada-livre:hover{border-color:#8fd14f}
-.desempenho{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.3fr) minmax(0,.9fr);gap:12px;margin-bottom:22px}
-.desempenho>div{background:linear-gradient(180deg,#1b1e23,#16181c);border:1px solid #2a2f35;border-radius:16px;padding:14px 16px}
-.desempenho h3{margin:0 0 10px;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#8d96a1}
-.desempenho h3 small{text-transform:none;letter-spacing:0;font-weight:700;color:#66707b}
-.numeros{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.numeros div{display:grid;align-content:center}
-.numeros b{font-family:"Black Ops One",Nunito,sans-serif;font-weight:400;font-size:34px;line-height:1;color:#eef1f4;font-variant-numeric:tabular-nums}
-.numeros b small{font-family:Nunito,sans-serif;font-size:15px;color:#6f7883;font-weight:800}
-.numeros span{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#8d96a1;margin-top:4px}
-.barra-comp{display:grid;grid-template-columns:minmax(120px,1.2fr) 2fr 30px;gap:8px;align-items:center;margin:5px 0;font-size:13px;font-weight:700;color:#c7ced6}
-.barra-comp i{height:8px;border-radius:9px;background:linear-gradient(90deg,#8fd14f var(--v),#2a2f35 var(--v))}
-.barra-comp b{text-align:right;font-variant-numeric:tabular-nums;color:#eef1f4}
-.proximo{display:flex;flex-direction:column}
-.proximo p{margin:0;color:#8fd14f;font-weight:900;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
-.proximo strong{font-size:18px;margin:4px 0 12px;color:#eef1f4;line-height:1.25}
-.proximo button{margin-top:auto;border:0;border-radius:11px;padding:10px;font-weight:900;color:#10200a;background:linear-gradient(180deg,#b9e886,#8fd14f)}
-.niveis{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #262b31;margin-bottom:12px}
-.niveis button{display:inline-flex;align-items:center;gap:10px;border:0;background:transparent;color:#98a1ab;font-weight:900;font-size:16px;
-  padding:10px 14px;border-bottom:3px solid transparent;margin-bottom:-1px}
-.niveis button[aria-selected="true"]{color:#eef1f4;border-bottom-color:#8fd14f}
-.niveis .pct{font-size:12px;font-weight:800;border-radius:999px;padding:2px 8px;color:#d8dde3;
-  background:linear-gradient(90deg,rgba(143,209,79,.45) var(--v),#23282e var(--v))}
-.nivel-intro{margin:0 0 14px;color:#98a1ab;font-weight:600;max-width:80ch;line-height:1.5}
-.nivel-intro b{color:#dfe4ea}
-.desafios{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;padding-bottom:40px}
-.desafio{display:flex;flex-direction:column;background:linear-gradient(180deg,#1b1e23,#15171b);border:1px solid #2a2f35;border-radius:16px;padding:14px 15px}
-.desafio.feito{border-color:#3d5a2a}
-.desafio.bloqueado{opacity:.55}
-.d-topo{display:flex;justify-content:space-between;align-items:center}
-.d-num{font-family:"Black Ops One",Nunito,sans-serif;font-size:22px;color:#4a525c}
-.desafio.feito .d-num{color:#8fd14f}
-.d-estrelas{color:#ffd23f;letter-spacing:2px;font-size:16px}
-.d-estrelas span{color:#3a4048}
-.d-titulo{margin:6px 0 6px;font-size:17px;line-height:1.25;color:#eef1f4}
-.d-resumo{margin:0 0 10px;color:#aab1ba;font-size:13.5px;font-weight:600;line-height:1.45}
-.d-conceitos{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
-.d-conceitos span{font-size:11px;font-weight:800;color:#b9c0c8;border:1px solid #30363e;border-radius:999px;padding:2px 8px}
-.d-rodape{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.d-pontos{font-size:12.5px;color:#8d96a1;font-weight:700}
-.d-pontos b{color:#eef1f4}
-.d-rodape button{border:0;border-radius:10px;padding:8px 12px;font-weight:900;color:#10200a;background:linear-gradient(180deg,#b9e886,#8fd14f);white-space:nowrap}
+/* (a trilha agora é a tela clara do modelo: css_trilha.css) */
+@media (max-width:980px){ .login-grade{grid-template-columns:1fr} }
 
-@media (max-width:980px){
-  .login-grade{grid-template-columns:1fr}
-  .desempenho{grid-template-columns:1fr}
-}
-@media (max-width:560px){
-  .portal-topo .marca-portal,.portal-topo .ola{display:none}
-  .segmento button{padding:6px 9px;font-size:12px}
-  .barra-comp{grid-template-columns:1fr 1.2fr 28px;font-size:12px}
-  .numeros b{font-size:28px}
-}
-
-/* ---------- dentro da bancada ---------- */
-#topo .bt.trilha{background:linear-gradient(180deg,#b9e886,#8fd14f);color:#10200a;border-color:transparent;font-weight:900}
-#topo .tag.kit{border-width:1px;color:#e8ecf0;text-transform:none;letter-spacing:.02em;font-weight:900}
+/* ---------- dentro da bancada (tema claro; o cartão de resultado fica sobre o palco e continua escuro) ---------- */
+#topo .bt.trilha{background:linear-gradient(180deg,#a8ee69,#7ee044);color:#11220b;border-color:transparent;font-weight:900}
+#topo .tag.kit{border-width:1px;color:#3d4c62;background:#fff;text-transform:none;letter-spacing:.02em;font-weight:900}
 #topo .tag.kit.spike{border-color:#ffcf00}#topo .tag.kit.ev3{border-color:#d0342c}#topo .tag.kit.ard{border-color:#00979d}
-.dz h4{margin:6px 0 6px;font-size:17px;color:#eef1f4}
-.dz p{font-size:13px;color:#c3cad2;font-weight:600;line-height:1.5;margin:0 0 8px}
-.dz p b{color:#eef1f4}
-.dz h5{margin:12px 0 6px}
+.dz h4{margin:6px 0 6px;font-size:17px;color:#15243d}
+.dz p{font-size:13px;color:#506078;font-weight:600;line-height:1.5;margin:0 0 8px}
+.dz p b{color:#15243d}
+.dz h5{margin:12px 0 6px;color:#536278}
 .dz-chips{display:flex;flex-wrap:wrap;gap:5px}
-.dz-chips span{font-size:10.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:2px 8px;background:#23282e;color:#b9c0c8}
-.dz-chips span:first-child{background:#8fd14f;color:#10200a}
+.dz-chips span{font-size:10.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:3px 9px;background:#eef2f7;color:#5b6a7f}
+.dz-chips span:first-child{background:#e8f9df;color:#2e7d18}
+.dz-chips span.f-g{background:#f2fcec;color:#2e7d18}
+.dz-chips span.f-p{background:#fffaeb;color:#9a6b00}
+.dz-chips span.f-a{background:#fff2f4;color:#c0304a}
 .dz-crit{list-style:none;margin:0;padding:0;display:grid;gap:4px}
-.dz-crit li{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;font-weight:700;color:#c7ced6;background:#121417;border-radius:8px;padding:5px 8px}
-.dz-crit em{font-style:normal;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:#8fd14f;margin-left:4px}
-.dz-crit b{font-variant-numeric:tabular-nums;color:#eef1f4}
-.dz-dicas{margin:8px 0;font-size:13px;color:#c3cad2}
-.dz-dicas summary{cursor:pointer;font-weight:900;color:#8fd14f}
+.dz-crit li{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;font-weight:700;color:#3d4c62;background:#f4f7fa;border-radius:9px;padding:6px 9px}
+.dz-crit em{font-style:normal;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:#3f9c1e;margin-left:4px}
+.dz-crit b{font-variant-numeric:tabular-nums;color:#15243d}
+.dz-dicas{margin:8px 0;font-size:13px;color:#506078}
+.dz-dicas summary{cursor:pointer;font-weight:900;color:#3f9c1e}
 .dz-dicas ol{margin:6px 0 0;padding-left:20px;line-height:1.5;font-weight:600}
-.dz-reg{font-size:12.5px;color:#aab1ba;font-weight:700;margin:8px 0}
-.dz-reg b{color:#eef1f4}
+.dz-dicas.problema h5{margin:0 0 4px;font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#9a6b00}
+.dz-dicas.problema h5 em{font-style:normal;color:#c0304a}
+.dz-dicas.problema li{margin:5px 0}
+.bt.dica{padding:5px 10px;font-size:12px;font-weight:800;color:#9a6b00;border-color:#f2dd9e;background:#fffaeb}
+.dz-arena{border:1px dashed #f4c3cc;border-radius:12px;padding:9px 11px;background:#fff4f6;margin:8px 0 !important}
+.dz-arena b{color:#c0304a}
+.dz-reg{font-size:12.5px;color:#6c788a;font-weight:700;margin:8px 0}
+.dz-reg b{color:#15243d}
 .dz-hist{display:flex;gap:3px;align-items:flex-end;height:34px;margin-top:6px}
-.dz-hist i{flex:1;max-width:22px;border-radius:4px 4px 0 0;background:#8fd14f;height:max(3px,var(--v))}
+.dz-hist i{flex:1;max-width:22px;border-radius:4px 4px 0 0;background:#7ee044;height:max(3px,var(--v))}
+/* o resultado aparece por cima da pista: segue escuro, como o resto do simulador */
 #resultado .res-desafio{min-width:min(340px,86vw)}
 #resultado .criterios{list-style:none;margin:8px 0;padding:0;display:grid;gap:4px;text-align:left}
 #resultado .criterios li{display:grid;grid-template-columns:18px 1fr auto;gap:6px;align-items:center;font-size:12.5px;font-weight:700;color:#d6dce3;
@@ -565,6 +588,194 @@ body.no-portal{overflow:hidden}
 
 /* atributo hidden sempre esconde (fora do artifact não existe esse reset) */
 [hidden]{display:none!important}
+
+/* ======================= PORTAL INTERNO: MODELO ROBOHUB (claro) =======================
+   Vale só para a tela #telaTrilha (barra lateral + páginas). A bancada e o simulador
+   continuam escuros e sem nenhuma mudança; o login e a escolha de kits continuam com a arte.
+   Base: modelo/trilha.html + modelo/styles.css. */
+#portal[data-tela="trilha"]{background:#f5f8fc;color:#17243a}
+#portal[data-tela="trilha"]::before{display:none}
+#portal .tela.pt-app{display:flex;flex-direction:row;align-items:stretch;min-height:100%;
+  font-family:Nunito,Inter,"Segoe UI",system-ui,sans-serif;color:#17243a}
+#portal .tela.pt-app :focus-visible{outline:2px solid #57c92f;outline-offset:2px}
+.pt-app{--linha:#e2e8f0;--musgo:#6c788a;--verde:#8be34f;--verde2:#57c92f;--azul:#2085ed;
+  --sombra:0 12px 35px rgba(27,49,82,.10);--raio:18px}
+
+/* ---------- barra lateral ---------- */
+.pt-sidebar{width:246px;flex:none;background:#fff;border-right:1px solid var(--linha);padding:16px 14px 18px;
+  position:sticky;top:0;align-self:flex-start;height:100vh;display:flex;flex-direction:column;gap:4px}
+.pt-brand{display:flex;align-items:center;gap:10px;padding:2px 6px 16px;border-bottom:1px solid #edf1f5}
+.pt-brand .rh-simbolo{width:42px;height:auto;flex:none}
+.pt-brand .rh-palavra b{display:block;font-family:"Black Ops One",Nunito,sans-serif;font-weight:400;font-size:21px;letter-spacing:-.2px;color:#15243d}
+.pt-brand .rh-palavra b em{font-style:normal;color:var(--azul)}
+.pt-brand .rh-palavra small{display:block;font-size:8px;font-weight:800;letter-spacing:1.1px;color:#5f728d;text-transform:uppercase}
+.pt-plat{display:flex;align-items:center;gap:9px;width:100%;margin:16px 2px 8px;background:#fff7cc;border:1px solid #ffe36a;
+  border-radius:14px;padding:12px;font-weight:900;font-size:14px;color:#17243a;text-align:left}
+.pt-plat .bolinha{width:12px;height:12px;flex:none}
+.pt-plat small{margin-left:auto;font-size:11px;font-weight:800;color:#8a7a2a}
+.pt-nav{display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.pt-nav .titulo{font-size:11px;font-weight:900;color:#9aa5b4;letter-spacing:1px;padding:12px 12px 6px}
+.pt-nav button{display:flex;align-items:center;gap:11px;width:100%;padding:11px 12px;border:0;border-radius:12px;background:transparent;
+  color:#506078;font-weight:800;font-size:14px;text-align:left}
+.pt-nav button:hover{background:#f1f5fa}
+.pt-nav button[aria-current="page"]{background:#e9f9df;color:#17243a}
+.pt-nav .ic{width:24px;text-align:center;font-size:17px;flex:none}
+.pt-nav .breve{margin-left:auto;font-size:9px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
+  color:#8a96a6;background:#f1f5fa;border:1px solid var(--linha);border-radius:999px;padding:2px 7px}
+.pt-foot{margin-top:auto;border-radius:16px;background:linear-gradient(145deg,#f5f9ff,#fff);border:1px solid var(--linha);
+  padding:13px;color:#40516a;font-size:12px;font-weight:700;line-height:1.4}
+.pt-foot span{display:block;color:#6b7280;font-weight:800;margin-top:3px}
+
+/* ---------- topo e miolo ---------- */
+.pt-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.pt-topbar{position:sticky;top:0;z-index:15;min-height:66px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--linha);padding:8px 22px}
+.pt-crumb{font-size:13px;color:#748196;font-weight:700}
+.pt-crumb b{color:#20334f}
+.pt-topbar .esp{flex:1}
+.pt-topbar .ola{font-size:13px;font-weight:900;color:#3d4c62}
+.pt-topbar .link{border:1px solid var(--linha);background:#fff;color:#506078;border-radius:12px;padding:9px 13px;font-weight:800}
+.pt-topbar .link:hover{border-color:#c3cfdd;color:#17243a}
+.pt-avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#17304f;color:#fff;font-weight:900}
+.pt-menu-bt{display:none;border:1px solid var(--linha);background:#fff;border-radius:12px;padding:8px 12px;font-weight:900;color:#506078}
+.pt-app .segmento{display:inline-flex;border:1px solid var(--linha);border-radius:999px;padding:3px;background:#fff}
+.pt-app .segmento button{border:0;background:transparent;color:#617086;border-radius:999px;padding:7px 13px;font-weight:800;font-size:13px}
+.pt-app .segmento button[aria-checked="true"]{background:#e8f9df;color:#19330f;box-shadow:inset 0 0 0 1px #83d65a}
+.pt-content{padding:26px;max-width:1480px;width:100%;margin:0 auto}
+
+/* ---------- cabeçalho da página ---------- */
+.pt-hero{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:20px;flex-wrap:wrap}
+.pt-hero h1{font-size:clamp(28px,3.4vw,42px);line-height:1.05;margin:0 0 8px;letter-spacing:-1.2px;color:#15243d;
+  font-family:"Black Ops One",Nunito,sans-serif;font-weight:400}
+.pt-hero p{margin:0;color:#718097;font-weight:700}
+.pt-btn{border:0;background:linear-gradient(180deg,#a8ee69,#7ee044);color:#11220b;border-radius:13px;padding:13px 20px;
+  font-weight:900;box-shadow:0 8px 20px rgba(107,203,54,.22)}
+.pt-btn:hover{filter:brightness(1.05)}
+.pt-btn.linha{background:#fff;border:1px solid #d6dee8;color:#3d4c62;box-shadow:none}
+.pt-card{background:#fff;border:1px solid var(--linha);border-radius:var(--raio);box-shadow:var(--sombra)}
+.pt-card-tit{font-size:12px;font-weight:900;letter-spacing:.8px;color:#536278;text-transform:uppercase;margin-bottom:13px}
+.pt-card-tit small{text-transform:none;letter-spacing:0;font-weight:700;color:#9aa5b4}
+
+/* ---------- números, competências, próximo passo ---------- */
+.pt-grade3{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.2fr) minmax(0,1fr);gap:16px;margin-bottom:20px}
+.pt-nums{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pt-num{display:flex;gap:12px;align-items:center}
+.pt-num .ic{width:40px;height:40px;border-radius:12px;background:#fff5bd;display:grid;place-items:center;font-size:20px;flex:none}
+.pt-num .ic.verde{background:#e8f9df}.pt-num .ic.azul{background:#edf4ff}
+.pt-num b{font-size:25px;display:block;line-height:1;color:#15243d}
+.pt-num b small{font-size:13px;color:#9aa5b4}
+.pt-num span{font-size:11px;text-transform:uppercase;color:#8a96a6;font-weight:900;letter-spacing:.7px}
+.pt-comp{padding:18px 20px}
+.pt-skill{display:grid;grid-template-columns:150px 1fr 34px;align-items:center;gap:9px;font-size:12px;font-weight:800;margin:9px 0;color:#3d4c62}
+.pt-skill em{display:block;font-style:normal;font-size:9.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#57c92f}
+.pt-barra{height:8px;background:#e9eef4;border-radius:10px;overflow:hidden}
+.pt-barra i{display:block;height:100%;width:var(--v);background:linear-gradient(90deg,#8be34f,#5dcc36);border-radius:10px}
+.pt-skill b{text-align:right;font-variant-numeric:tabular-nums;color:#15243d}
+.pt-prox{padding:18px 20px;display:flex;flex-direction:column;justify-content:space-between;gap:10px}
+.pt-prox .tag{font-size:11px;font-weight:900;color:#51ae2e;letter-spacing:.06em;text-transform:uppercase}
+.pt-prox h3{font-size:19px;margin:5px 0 8px;line-height:1.2;color:#15243d}
+.pt-prox p{margin:0;color:#718097;font-size:12.5px;font-weight:700}
+
+/* ---------- abas dos níveis ---------- */
+.pt-tabs{display:flex;gap:8px;margin:10px 0 18px;flex-wrap:wrap}
+.pt-tabs button{display:inline-flex;align-items:center;gap:9px;padding:10px 17px;border-radius:999px;border:1px solid #dce4ed;
+  background:#fff;font-weight:900;color:#617086;font-size:14px}
+.pt-tabs button i{font-style:normal;font-family:"Black Ops One",Nunito,sans-serif;font-weight:400;font-size:13px;width:22px;height:22px;
+  border-radius:50%;display:grid;place-items:center;background:#eef2f7;color:#7b8899}
+.pt-tabs button small{font-weight:800;color:#8a96a6}
+.pt-tabs button[aria-selected="true"]{background:#e8f9df;border-color:#83d65a;color:#19330f}
+.pt-tabs button[aria-selected="true"] i{background:#72d93e;color:#10200a}
+.pt-tabs button[aria-selected="true"] small{color:#3f6b26}
+
+/* ---------- trilha do nível ---------- */
+.pt-nivel{padding:20px}
+.pt-nivel-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:12px;flex-wrap:wrap}
+.pt-nivel-cab h2{margin:0;font-size:20px;color:#15243d;font-family:"Black Ops One",Nunito,sans-serif;font-weight:400;letter-spacing:.3px}
+.pt-nivel-cab p{margin:4px 0 0;color:#718097;font-size:12.5px;font-weight:700;max-width:95ch;line-height:1.5}
+.pt-nivel-cab p b{color:#3d4c62}
+.pt-passos{display:grid;gap:0;margin:14px 0 20px;position:relative;overflow-x:auto;padding-bottom:4px}
+.pt-passos:before{content:"";position:absolute;top:17px;left:4%;right:4%;height:3px;background:#dfe7ef;z-index:0}
+.pt-passo{z-index:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:10.5px;font-weight:900;color:#77859a;text-align:center;
+  border:0;background:transparent;padding:0 2px;min-width:74px}
+.pt-passo span{width:36px;height:36px;border-radius:50%;background:#fff;border:2px solid #d9e2eb;display:grid;place-items:center;
+  font-family:"Black Ops One",Nunito,sans-serif;font-weight:400;font-size:13px;color:#8a96a6}
+.pt-passo small{display:block;max-width:9ch;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt-passo.feito span{border-color:#72d93e;background:#effce8;color:#1d6610}
+.pt-passo.agora span{border-color:#72d93e;background:#effce8;color:#1d6610;box-shadow:0 0 0 5px #e7f8dc}
+.pt-passo.travado span{background:#f4f7fa;color:#b3bdc9}
+.pt-passo .est{font-size:10px;color:#f0b429;letter-spacing:1px;height:12px}
+
+.pt-desafios{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:14px}
+.pt-d{border:1px solid #dce5ee;border-radius:16px;padding:14px;min-height:250px;display:flex;flex-direction:column;background:#fff;position:relative}
+.pt-d.c1{background:#f1fceb;border-color:#bfeaa7}
+.pt-d.c2{background:#f2f8ff;border-color:#cbe2fb}
+.pt-d.c3{background:#fffaf0;border-color:#f5df9d}
+.pt-d.c4{background:#fff3f5;border-color:#f5c4cd}
+.pt-d.travado{background:#f7f9fb;border-color:#e2e8f0;opacity:.75}
+.pt-d-topo{display:flex;align-items:center;gap:8px}
+.pt-d-num{font-weight:900;font-size:15px;color:#2e9a1d}
+.pt-d.c2 .pt-d-num{color:#287bd7}.pt-d.c3 .pt-d-num{color:#c49a00}.pt-d.c4 .pt-d-num{color:#dc3b53}
+.pt-d.travado .pt-d-num{color:#9aa5b4}
+.pt-d-est{margin-left:auto;color:#ffc61a;letter-spacing:1px;font-size:13px}
+.pt-d-est span{color:#d9e1e9}
+.pt-d-arte{height:92px;display:grid;place-items:center;margin:2px 0}
+.pt-d-arte img{height:92px;width:auto;max-width:100%;object-fit:contain;
+  filter:drop-shadow(0 6px 10px rgba(27,49,82,.18))}
+.pt-d-arte .arte-reserva{display:grid;place-items:center}
+.pt-d-arte svg{height:78px;max-width:150px}
+.pt-d h3{font-size:15px;margin:6px 0 5px;line-height:1.2;color:#15243d}
+.pt-d p{font-size:11.5px;line-height:1.45;color:#6f7c8e;margin:0 0 10px;font-weight:700}
+.pt-d .chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:auto;margin-bottom:9px}
+.pt-d .chip{font-size:9px;font-weight:900;background:rgba(255,255,255,.75);border:1px solid #dde4eb;border-radius:99px;padding:4px 7px;color:#657287}
+.pt-d .chip.fmt-g{color:#2e7d18;border-color:#bfe5a8;background:#f2fcec}
+.pt-d .chip.fmt-p{color:#9a6b00;border-color:#f2dd9e;background:#fffaeb}
+.pt-d .chip.fmt-a{color:#c0304a;border-color:#f4c3cc;background:#fff2f4}
+.pt-d .rec{font-size:10.5px;font-weight:800;color:#8a96a6;margin:0 0 8px}
+.pt-d .rec b{color:#3d4c62}
+.pt-d button{width:100%;padding:10px;border:0;border-radius:11px;background:#9ae95d;font-weight:900;color:#11220b}
+.pt-d button:hover{filter:brightness(1.04)}
+.pt-d.travado button{background:#e6ebf1;color:#8a96a6}
+.pt-nota{margin-top:14px;padding:12px 14px;border-radius:12px;background:#eef7ff;border:1px solid #d7e9fb;color:#53657d;font-size:12px;font-weight:750}
+.pt-nota b{color:#2f4661}
+
+/* ---------- listas simples (programas, conquistas, histórico) ---------- */
+.pt-lista{display:grid;gap:10px}
+.pt-item{display:flex;align-items:center;gap:12px;border:1px solid var(--linha);border-radius:14px;padding:12px 14px;background:#fff}
+.pt-item .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:#eef4fb;font-size:18px;flex:none}
+.pt-item b{display:block;color:#15243d;font-size:14.5px}
+.pt-item span{display:block;font-size:11.5px;color:#8a96a6;font-weight:800}
+.pt-item .dir{margin-left:auto;display:flex;gap:8px;align-items:center}
+.pt-item .est{color:#ffc61a;letter-spacing:1px}
+.pt-vazio{padding:22px;text-align:center;color:#8a96a6;font-weight:800;border:1px dashed #d6dee8;border-radius:14px;background:#fff}
+.pt-medalhas{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.pt-medalha{border:1px solid var(--linha);border-radius:16px;padding:14px;background:#fff;display:flex;gap:11px;align-items:flex-start}
+.pt-medalha.on{background:#f1fceb;border-color:#bfeaa7}
+.pt-medalha .ic{font-size:26px;filter:grayscale(1);opacity:.45}
+.pt-medalha.on .ic{filter:none;opacity:1}
+.pt-medalha b{display:block;font-size:13.5px;color:#15243d}
+.pt-medalha span{font-size:11px;color:#77859a;font-weight:750;line-height:1.35;display:block;margin-top:2px}
+.pt-grade2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.pt-bloco{padding:18px 20px}
+.pt-breve{display:grid;place-items:center;text-align:center;gap:10px;padding:48px 24px}
+.pt-breve .ic{font-size:44px}
+.pt-breve h2{margin:0;font-size:22px;color:#15243d}
+.pt-breve p{margin:0;max-width:52ch;color:#718097;font-weight:700;line-height:1.55}
+.pt-breve .selo{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#8a6d00;background:#fff7cc;
+  border:1px solid #ffe36a;border-radius:999px;padding:4px 12px}
+
+@media (max-width:1080px){
+  .pt-grade3{grid-template-columns:1fr}
+  .pt-skill{grid-template-columns:130px 1fr 30px}
+}
+@media (max-width:860px){
+  #portal .tela.pt-app{flex-direction:column}
+  .pt-sidebar{position:relative;width:100%;height:auto;border-right:0;border-bottom:1px solid var(--linha)}
+  .pt-sidebar.fechado .pt-nav,.pt-sidebar.fechado .pt-foot,.pt-sidebar.fechado .pt-plat{display:none}
+  .pt-menu-bt{display:block}
+  .pt-content{padding:16px}
+  .pt-topbar{padding:8px 14px}
+  .pt-topbar .ola{display:none}
+}
 
 /* ======================= ROBOHUB: entrada e escolha do robô ======================= */
 #portal .rh{
@@ -1429,40 +1640,29 @@ body.no-portal{overflow:hidden}
     </div>
   </div>
 
-  <!-- ---------- trilha ---------- -->
-  <section class="tela" id="telaTrilha" aria-labelledby="tituloTrilha" hidden>
-    <header class="portal-topo">
-      <img class="mini-logo" src="data:image/webp;base64,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" alt="">
-      <span class="marca-portal">Portal da Robótica</span>
-      <button class="kit-atual" id="kitAtual" data-acao="kits" title="Trocar de kit"></button>
-      <span class="esp"></span>
-      <div class="segmento" role="radiogroup" aria-label="Segmento">
-        <button role="radio" data-seg="fund">Ensino Fundamental</button>
-        <button role="radio" data-seg="medio">Ensino Médio</button>
-      </div>
-      <span class="ola" id="olaTrilha"></span>
-      <button class="link" data-acao="sair">Sair</button>
-    </header>
-
-    <div class="trilha-miolo">
-      <div class="trilha-cabeca">
-        <div>
-          <h1 id="tituloTrilha">Trilha de conhecimento</h1>
-          <p class="sub" id="subTrilha"></p>
+  <!-- ---------- portal interno: barra lateral + páginas (base: modelo/trilha.html) ---------- -->
+  <section class="tela pt-app" id="telaTrilha" aria-label="ROBOHUB — Portal" hidden>
+    <aside class="pt-sidebar" id="ladoPortal">
+      <div class="pt-brand" data-logo></div>
+      <button class="pt-plat" id="kitAtual" data-acao="kits" title="Trocar de kit"></button>
+      <nav class="pt-nav" id="menuPortal" aria-label="Menu do portal"></nav>
+      <div class="pt-foot"><b>“Do primeiro bloco ao pódio.”</b><span>CROCOBOTS · JGP</span></div>
+    </aside>
+    <main class="pt-main">
+      <header class="pt-topbar">
+        <button class="pt-menu-bt" id="btMenuPortal" aria-label="Abrir o menu">☰</button>
+        <div class="pt-crumb" id="crumbPortal"></div>
+        <span class="esp"></span>
+        <div class="segmento" role="radiogroup" aria-label="Segmento">
+          <button role="radio" data-seg="fund">Fundamental</button>
+          <button role="radio" data-seg="medio">Médio</button>
         </div>
-        <button class="bancada-livre" data-acao="livre">Bancada livre ›</button>
-      </div>
-
-      <section class="desempenho" aria-label="Meu desempenho" id="painelDesempenho"></section>
-
-      <div class="niveis" role="tablist" aria-label="Níveis">
-        <button role="tab" data-nivel="ini">Iniciante</button>
-        <button role="tab" data-nivel="int">Intermediário</button>
-        <button role="tab" data-nivel="av">Avançado · OBR</button>
-      </div>
-      <p class="nivel-intro" id="introNivel"></p>
-      <div class="desafios" id="listaDesafios"></div>
-    </div>
+        <div class="pt-avatar" id="avatarPortal" aria-hidden="true">C</div>
+        <span class="ola" id="olaTrilha"></span>
+        <button class="link" data-acao="sair">Sair</button>
+      </header>
+      <section class="pt-content" id="conteudoPortal" tabindex="-1"></section>
+    </main>
   </section>
 </div>
 
@@ -1598,7 +1798,9 @@ function traduzPrograma(prog) {
    Os blocos são os mesmos por dentro; cada plataforma troca o texto, as portas e o que aparece na paleta.
    Menus e valores padrão podem ser funções: são calculados na hora, pela plataforma atual.
    ======================================================================= */
-const opSentido= () => [["sentido horário","clockwise"],["sentido anti-horário","counterclockwise"]];
+const opSentido= () => [["no sentido horário","clockwise"],["no sentido anti-horário","counterclockwise"]];
+/* "ir para posição" tem três caminhos, como no app */
+const CAMINHOS = [["pelo caminho mais curto","shortest"],["no sentido horário","clockwise"],["no sentido anti-horário","counterclockwise"]];
 
 /* construtores de pedacos de bloco */
 const T = t => ({ k:"t", t });
@@ -1637,7 +1839,9 @@ function specDe(op) { const v = VARIANTES[PLAT.id] && VARIANTES[PLAT.id][op]; re
 const UN_MOV = () => PLAT.unidades;
 const UN_MOT = () => PLAT.id === "arduino" ? [["segundos","seconds"]] : [["rotações","rotations"],["graus","degrees"],["segundos","seconds"]];
 const UN_DIST = () => PLAT.id === "spike" ? [["cm","cm"],["polegadas","inches"],["%","%"]] : PLAT.id === "ev3" ? [["cm","cm"],["polegadas","inches"]] : [["cm","cm"]];
-const CMP = [["menor que","<"],["maior que",">"],["igual a","="]];
+const CMP = [["<","<"],[">",">"],["=","="]];
+/* o sensor de distância usa palavras, como no app */
+const CMP_DIST = [["mais perto que","<"],["exatamente em","="],["mais longe que",">"]];
 const padPar = () => PLAT.id === "spike" ? "AB" : PLAT.par.join("+");
 const padPa = () => PLAT.pa;
 const padCorDir = () => portaDoTipo("cor", "dir");
@@ -1645,98 +1849,125 @@ const padDist = () => portaDoTipo("dist");
 const padForca = () => PLAT.id === "spike" ? "B" : PLAT.portasSensor[0];
 const opCores = () => PLAT.cores;
 const padPreto = () => PLAT.cor.preto;
-const DIRS = [["para frente","forward"],["para trás","back"],["à esquerda","left"],["à direita","right"]];
+/* como o motor para e como ele acelera: os valores são os que o app grava no arquivo */
+const PARADAS = [["frear","1"],["manter a posição","2"],["flutuar","0"]];
+const ACELS = [["lenta","100 100"],["médio","4000 4000"],["rápida","10000 10000"]];
+const DIRS = [["para a frente","forward"],["para trás","back"],["esquerda","left"],["direita","right"]];
 
+/* =========================================================================
+   Os blocos: mesmo texto, mesmas opções e mesma ordem do LEGO Education SPIKE
+   (catálogo de textos do app 3.6, em português). O EV3 e o Arduino trocam o
+   texto pelos seus, mais abaixo, em V(...).
+   ========================================================================= */
 /* --- eventos --- */
 D("ev_inicio","eventos","chapeu",[T("quando o programa iniciar")]);
-D("ev_botao","eventos","chapeu",[T("quando o botão central for pressionado")]);
+D("ev_botao","eventos","chapeu",[T("quando"), M("BOTAO",[["esquerda","left"],["direita","right"]],"left"),
+  T("botão"), M("EV",[["pressionado","pressed"],["solto","released"]],"pressed")]);
 
 /* --- movimento --- */
-D("mov_par","movimento","stack",[T("definir motores de movimento para"), M("PAR", paresDe, padPar)]);
+D("mov_par","movimento","stack",[T("definir motores de movimento como"), M("PAR", paresDe, padPar)]);
 D("mov_mover","movimento","stack",[T("mover"), M("DIR", DIRS), T("por"), N("VAL","10"), M("UN", UN_MOV, () => PLAT.unidades[0][1])]);
-D("mov_iniciar","movimento","stack",[T("começar a mover"), M("DIR", DIRS)]);
-D("mov_esterco","movimento","stack",[T("mover com direção"), N("DIR","0"), T("por"), N("VAL","10"), M("UN", UN_MOV, () => PLAT.unidades[0][1])]);
-D("mov_iniciar_esterco","movimento","stack",[T("começar a mover com direção"), N("DIR","0")]);
-D("mov_dual","movimento","stack",[T("começar a mover: esquerda"), N("ESQ","50"), T("% direita"), N("DIR","50"), T("%")]);
+D("mov_iniciar","movimento","stack",[T("iniciar movimento"), M("DIR", DIRS)]);
+D("mov_esterco","movimento","stack",[T("mover"), N("DIR","0"), T("por"), N("VAL","10"), M("UN", UN_MOV, () => PLAT.unidades[0][1])]);
+D("mov_iniciar_esterco","movimento","stack",[T("iniciar movimento"), N("DIR","0")]);
+D("mov_dual","movimento","stack",[T("iniciar movimento com velocidade de"), N("ESQ","50"), N("DIR","50"), T("%")]);
 D("mov_parar","movimento","stack",[T("parar de mover")]);
-D("mov_vel","movimento","stack",[T("definir velocidade de movimento para"), N("VAL","50"), T("%")]);
-D("mov_rot","movimento","stack",[T("definir rotação da roda para"), N("VAL","17.6"), T("cm")]);
+D("mov_vel","movimento","stack",[T("definir velocidade de movimento a"), N("VAL","50"), T("%")]);
+D("mov_rot","movimento","stack",[T("definir 1 rotação do motor a"), N("VAL","17.6"), T("cm de movimento")]);
+/* --- o que o app chama de "Mais Movimento" --- */
+D("mov_parada","movimento","stack",[T("definir motores de movimento para"), M("STOP", PARADAS, "1"), T("na parada")]);
+D("mov_acel","movimento","stack",[T("definir aceleração do movimento para"), M("ACEL", ACELS, "4000 4000")]);
 
 /* --- motores --- */
-D("mot_girar","motores","stack",[T("motor"), M("P", opMotor, padPa), T("girar"), M("SENT", opSentido()),
+D("mot_girar","motores","stack",[M("P", opMotor, padPa), T("executar"), M("SENT", opSentido()),
   T("por"), N("VAL","1"), M("UN", UN_MOT, () => UN_MOT()[0][1])]);
-D("mot_iniciar","motores","stack",[T("motor"), M("P", opMotor, padPa), T("começar a girar"), M("SENT", opSentido())]);
-D("mot_potencia","motores","stack",[T("motor"), M("P", opMotor, padPa), T("começar a girar com"), N("VAL","50"), T("%")]);
-D("mot_parar","motores","stack",[T("motor"), M("P", opMotor, padPa), T("parar")]);
-D("mot_vel","motores","stack",[T("motor"), M("P", opMotor, padPa), T("definir velocidade para"), N("VAL","75"), T("%")]);
-D("mot_ir","motores","stack",[T("motor"), M("P", opMotor, padPa), T("ir para a posição"), N("VAL","0"), T("graus")]);
-D("mot_zerar","motores","stack",[T("motor"), M("P", opMotor, padPa), T("zerar a contagem")]);
-D("mot_pos","motores","rep",[T("posição do motor"), M("P", opMotor, padPa)]);
-D("mot_velr","motores","rep",[T("velocidade do motor"), M("P", opMotor, padPa)]);
+D("mot_iniciar","motores","stack",[M("P", opMotor, padPa), T("iniciar motor"), M("SENT", opSentido())]);
+D("mot_potencia","motores","stack",[M("P", opMotor, padPa), T("iniciar motor com potência de"), N("VAL","50"), T("%")]);
+D("mot_parar","motores","stack",[M("P", opMotor, padPa), T("parar motor")]);
+D("mot_vel","motores","stack",[M("P", opMotor, padPa), T("definir velocidade a"), N("VAL","75"), T("%")]);
+D("mot_ir","motores","stack",[M("P", opMotor, padPa), T("ir"), M("CAM", CAMINHOS, "shortest"), T("para posição"), N("VAL","0")]);
+D("mot_zerar","motores","stack",[M("P", opMotor, padPa), T("definir posição relativa para"), N("VAL","0")]);
+D("mot_pos","motores","rep",[M("P", opMotor, padPa), T("posição")]);
+D("mot_velr","motores","rep",[M("P", opMotor, padPa), T("velocidade")]);
+/* --- o que o app chama de "Mais Motores" --- */
+D("mot_ir_rel","motores","stack",[M("P", opMotor, padPa), T("ir para a posição relativa"), N("VAL","0"),
+  T("em"), N("VEL","100"), T("% de velocidade")]);
+D("mot_pos_rel","motores","rep",[M("P", opMotor, padPa), T("posição relativa")]);
+D("mot_pot_r","motores","rep",[M("P", opMotor, padPa), T("potência")]);
+D("mot_parada","motores","stack",[M("P", opMotor, padPa), T("definir motores de movimento para"),
+  M("STOP", PARADAS, "1"), T("na parada")]);
+D("mot_acel","motores","stack",[M("P", opMotor, padPa), T("definir aceleração para"), M("ACEL", ACELS, "4000 4000")]);
 
 /* --- luz --- */
-D("luz_texto","luz","stack",[T("escrever"), S("TXT","Oi")]);
-D("luz_limpar","luz","stack",[T("apagar a tela")]);
-D("luz_pixel","luz","stack",[T("acender pixel x"), N("X","3"), T("y"), N("Y","3"), T("com"), N("B","100"), T("% de brilho")]);
-D("luz_cor","luz","stack",[T("definir a cor do hub para"), M("COR", CORES_SPIKE, "6")]);
+D("luz_texto","luz","stack",[T("gravar"), S("TXT","Oi")]);
+D("luz_limpar","luz","stack",[T("desligar pixels")]);
+D("luz_pixel","luz","stack",[T("definir pixel em"), N("X","3"), T(","), N("Y","3"), T("a"), N("B","100"), T("%")]);
+D("luz_cor","luz","stack",[T("definir luz do botão central como"), M("COR", CORES_SPIKE, "6")]);
 D("luz_status","luz","stack",[T("luz de status"), M("COR", [["apagada","0"],["verde","1"],["vermelha","2"],["laranja","3"],["verde piscando","4"],["vermelha piscando","5"],["laranja piscando","6"]], "1")]);
 
 /* --- som --- */
-D("som_bip","som","stack",[T("tocar o bipe"), N("NOTA","60"), T("por"), N("SEG","0.2"), T("segundos")]);
+D("som_bip","som","stack",[T("executar o bipe"), N("NOTA","60"), T("por"), N("SEG","0.2"), T("segundos")]);
 
 /* --- sensores --- */
 D("sen_ecor","sensores","bool",[M("P", opSensor, padCorDir), T("é a cor"), M("COR", opCores, padPreto), T("?")]);
-D("sen_cor","sensores","rep",[T("cor em"), M("P", opSensor, padCorDir)]);
-D("sen_reflexo","sensores","rep",[T("luz refletida em"), M("P", opSensor, padCorDir)]);
-D("sen_ereflexo","sensores","bool",[M("P", opSensor, padCorDir), T("luz refletida"), M("CMP", CMP, "<"), N("VAL","50"), T("%?")]);
-D("sen_cru","sensores","rep",[T("valor bruto"),
-  M("CANAL",[["vermelho","r"],["verde","g"],["azul","b"]],"r"), T("em"), M("P", opSensor, padCorDir)]);
-D("sen_edist","sensores","bool",[T("distância em"), M("P", opSensor, padDist), M("CMP", CMP, "<"), N("VAL","10"), M("UN", UN_DIST, "cm"), T("?")]);
-D("sen_dist","sensores","rep",[T("distância em"), M("P", opSensor, padDist), M("UN", UN_DIST, "cm")]);
-D("sen_forca","sensores","bool",[T("sensor de força"), M("P", opSensor, padForca), T("pressionado?")]);
-D("sen_forcar","sensores","rep",[T("força em"), M("P", opSensor, padForca), T("%")]);
-D("sen_angulo","sensores","rep",[T("ângulo de"),
-  M("EIXO",[["guinada","yaw"],["arfagem","pitch"],["rolagem","roll"]],"yaw")]);
-D("sen_zerar_ang","sensores","stack",[T("zerar o ângulo de guinada")]);
-D("sen_inclinado","sensores","bool",[T("o hub está"),
-  M("O",[["para frente","frente"],["para trás","tras"],["à esquerda","esq"],["à direita","dir"],["nivelado","nivelado"]],"frente"), T("?")]);
-D("sen_cron","sensores","rep",[T("cronômetro")]);
-D("sen_zerar_cron","sensores","stack",[T("zerar o cronômetro")]);
+D("sen_cor","sensores","rep",[M("P", opSensor, padCorDir), T("cor")]);
+D("sen_reflexo","sensores","rep",[M("P", opSensor, padCorDir), T("luz refletida")]);
+D("sen_ereflexo","sensores","bool",[M("P", opSensor, padCorDir), T("reflexo"), M("CMP", CMP, "<"), N("VAL","50"), T("% ?")]);
+D("sen_cru","sensores","rep",[M("P", opSensor, padCorDir), T("cru"),
+  M("CANAL",[["vermelho","r"],["verde","g"],["azul","b"]],"r")]);
+D("sen_edist","sensores","bool",[M("P", opSensor, padDist), T("é"), M("CMP", CMP_DIST, "<"), N("VAL","10"), M("UN", UN_DIST, "cm"), T("?")]);
+D("sen_dist","sensores","rep",[M("P", opSensor, padDist), T("distância em"), M("UN", UN_DIST, "cm")]);
+D("sen_forca","sensores","bool",[M("P", opSensor, padForca), T("é"),
+  M("OPT",[["pressionado","pressed"],["solto","released"]],"pressed"), T("?")]);
+D("sen_forcar","sensores","rep",[M("P", opSensor, padForca), T("pressão em %")]);
+D("sen_angulo","sensores","rep",[M("EIXO",[["arfagem","pitch"],["rotação","roll"],["guinada","yaw"]],"yaw"), T("ângulo")]);
+D("sen_zerar_ang","sensores","stack",[T("definir o ângulo de guinada como 0")]);
+D("sen_inclinado","sensores","bool",[
+  M("O",[["para a frente","frente"],["para trás","tras"],["para a esquerda","esq"],["para a direita","dir"],["nivelado","nivelado"]],"frente"),
+  T("está inclinado?")]);
+D("sen_cron","sensores","rep",[T("temporizador")]);
+D("sen_zerar_cron","sensores","stack",[T("redefinir temporizador")]);
 
 /* --- controle --- */
-D("ctl_esperar","controle","stack",[T("esperar"), N("SEG","1"), T("segundos")]);
-D("ctl_repetir","controle","c",[T("repetir"), N("N","10"), T("vezes")]);
-D("ctl_sempre","controle","c",[T("sempre")]);
-D("ctl_se","controle","c",[T("se"), B("COND"), T("então")]);
-D("ctl_sesenao","controle","c2",[T("se"), B("COND"), T("então")]);
-D("ctl_esperar_ate","controle","stack",[T("esperar até"), B("COND")]);
-D("ctl_repetir_ate","controle","c",[T("repetir até"), B("COND")]);
+D("ctl_esperar","controle","stack",[T("espera"), N("SEG","1"), T("s")]);
+D("ctl_repetir","controle","c",[T("repete"), N("N","10"), T("vezes")]);
+D("ctl_sempre","controle","c",[T("repete para sempre")]);
+D("ctl_se","controle","c",[T("se"), B("COND"), T(", então")]);
+D("ctl_sesenao","controle","c2",[T("se"), B("COND"), T(", então")]);
+D("ctl_esperar_ate","controle","stack",[T("espera até que"), B("COND")]);
+D("ctl_repetir_ate","controle","c",[T("até que"), B("COND"), T(", repete")]);
+D("ctl_parar_outras","controle","stack",[T("parar outras pilhas")]);
 D("ctl_parar","controle","cap",[T("parar"),
-  M("ALVO",[["tudo","all"],["este script","this script"],["outros scripts","other scripts in sprite"]],"all")]);
+  M("ALVO",[["todas","all"],["esta pilha","this script"],["outras pilhas","other scripts in sprite"]],"all")]);
 
 /* --- operadores --- */
 D("op_soma","operadores","rep",[N("A","0"), T("+"), N("B","0")]);
 D("op_sub","operadores","rep",[N("A","0"), T("−"), N("B","0")]);
 D("op_mult","operadores","rep",[N("A","0"), T("×"), N("B","0")]);
-D("op_div","operadores","rep",[N("A","0"), T("÷"), N("B","0")]);
+D("op_div","operadores","rep",[N("A","0"), T("/"), N("B","0")]);
 D("op_menor","operadores","bool",[N("A","0"), T("<"), N("B","50")]);
 D("op_igual","operadores","bool",[N("A","0"), T("="), N("B","50")]);
 D("op_maior","operadores","bool",[N("A","0"), T(">"), N("B","50")]);
+D("op_entre","operadores","bool",[N("A","0"), T("está entre"), N("B","-10"), T("e"), N("C","10"), T("?")]);
 D("op_e","operadores","bool",[B("A"), T("e"), B("B")]);
 D("op_ou","operadores","bool",[B("A"), T("ou"), B("B")]);
-D("op_nao","operadores","bool",[T("não"), B("A")]);
-D("op_aleatorio","operadores","rep",[T("número aleatório entre"), N("A","1"), T("e"), N("B","10")]);
-D("op_arred","operadores","rep",[T("arredondar"), N("A","0")]);
-D("op_mod","operadores","rep",[N("A","0"), T("resto de"), N("B","2")]);
+D("op_nao","operadores","bool",[T("é falso que"), B("A")]);
+D("op_aleatorio","operadores","rep",[T("um valor ao acaso entre"), N("A","1"), T("e"), N("B","10")]);
+D("op_junta","operadores","rep",[T("a junção de"), S("A","maçã"), T("com"), S("B","banana")]);
+D("op_letra","operadores","rep",[T("o caractere"), N("A","1"), T("de"), S("B","maçã")]);
+D("op_tamanho","operadores","rep",[T("o comprimento de"), S("A","maçã")]);
+D("op_contem","operadores","bool",[S("A","maçã"), T("contém"), S("B","a"), T("?")]);
+D("op_mod","operadores","rep",[T("o resto de"), N("A","0"), T("a dividir por"), N("B","2")]);
+D("op_arred","operadores","rep",[T("o arredondamento de"), N("A","0")]);
 D("op_abs","operadores","rep",[T("valor absoluto de"), N("A","0")]);
 
 /* --- variaveis --- */
-D("var_def","variaveis","stack",[T("definir"), VARM("VAR"), T("para"), N("VAL","0")]);
-D("var_muda","variaveis","stack",[T("mudar"), VARM("VAR"), T("por"), N("VAL","1")]);
+D("var_def","variaveis","stack",[T("altera"), VARM("VAR"), T("para"), N("VAL","0")]);
+D("var_muda","variaveis","stack",[T("adiciona a"), VARM("VAR"), T("o valor"), N("VAL","1")]);
 D("var_ler","variaveis","rep",[VARM("VAR")]);
 
 /* --- meus blocos --- */
-D("meu_def","meus","chapeu",[T("definir"), PROCM("NOME")]);
+D("meu_def","meus","chapeu",[T("define"), PROCM("NOME")]);
 D("meu_chama","meus","stack",[PROCM("NOME")]);
 
 /* bloco coringa para opcodes que a bancada ainda nao executa */
@@ -1782,16 +2013,19 @@ V("arduino", "sen_zerar_cron", [T("zerar o cronômetro")]);
 
 /* o que a paleta mostra, por plataforma e categoria */
 const COMUNS = {
-  controle:["ctl_esperar","ctl_repetir","ctl_sempre","ctl_se","ctl_sesenao","ctl_esperar_ate","ctl_repetir_ate","ctl_parar"],
-  operadores:["op_soma","op_sub","op_mult","op_div","op_menor","op_igual","op_maior","op_e","op_ou","op_nao","op_aleatorio","op_arred","op_mod","op_abs"],
+  controle:["ctl_esperar","ctl_repetir","ctl_sempre","ctl_se","ctl_sesenao","ctl_esperar_ate","ctl_repetir_ate","ctl_parar_outras","ctl_parar"],
+  operadores:["op_aleatorio","op_soma","op_sub","op_mult","op_div","op_menor","op_igual","op_maior","op_e","op_ou","op_nao","op_entre",
+              "op_junta","op_letra","op_tamanho","op_contem","op_mod","op_arred","op_abs"],
   variaveis:["var_def","var_muda","var_ler"],
   meus:["meu_def","meu_chama"]
 };
 const PALETAS = {
   spike: Object.assign({
     eventos:["ev_inicio","ev_botao"],
-    movimento:["mov_par","mov_mover","mov_iniciar","mov_esterco","mov_iniciar_esterco","mov_dual","mov_parar","mov_vel","mov_rot"],
-    motores:["mot_girar","mot_iniciar","mot_potencia","mot_parar","mot_vel","mot_ir","mot_zerar","mot_pos","mot_velr"],
+    movimento:["mov_par","mov_mover","mov_iniciar","mov_esterco","mov_iniciar_esterco","mov_parar","mov_vel","mov_rot",
+               "mov_dual","mov_parada","mov_acel"],
+    motores:["mot_girar","mot_ir","mot_iniciar","mot_parar","mot_vel","mot_pos","mot_velr",
+             "mot_ir_rel","mot_potencia","mot_pot_r","mot_pos_rel","mot_zerar","mot_parada","mot_acel"],
     luz:["luz_texto","luz_limpar","luz_pixel","luz_cor"],
     som:["som_bip"],
     sensores:["sen_ecor","sen_cor","sen_reflexo","sen_ereflexo","sen_cru","sen_edist","sen_dist","sen_forca","sen_forcar",
@@ -1873,6 +2107,46 @@ function aplicaTransf() {
   lousa.style.transform = "translate(" + PANX + "px," + PANY + "px) scale(" + ZOOM + ")";
 }
 
+
+/* ---- ícones dos blocos (como no SPIKE): a peça é branca e os furos deixam a cor do bloco aparecer.
+   Um só <path> com fill-rule="evenodd": os círculos de dentro viram furos. ---- */
+const _circ = (cx, cy, r) => "M" + (cx - r) + "," + cy + "a" + r + "," + r + " 0 1,0 " + (2 * r) + ",0a" + r + "," + r + " 0 1,0 " + (-2 * r) + ",0Z";
+const _cx24 = d => '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" fill-rule="evenodd" d="' + d + '"/></svg>';
+/* retângulo arredondado (o hub e os sensores) */
+const _rr = (x, y, w, h, r) => "M" + (x + r) + "," + y + "h" + (w - 2 * r) + "a" + r + "," + r + " 0 0,1 " + r + "," + r +
+  "v" + (h - 2 * r) + "a" + r + "," + r + " 0 0,1 " + (-r) + "," + r + "h" + (-(w - 2 * r)) + "a" + r + "," + r + " 0 0,1 " + (-r) + "," + (-r) +
+  "v" + (-(h - 2 * r)) + "a" + r + "," + r + " 0 0,1 " + r + "," + (-r) + "Z";
+const ICO_BL = {
+  /* rotor do motor: disco branco com o eixo e quatro furos */
+  motor: _cx24(_circ(12, 12, 10.4) + _circ(12, 12, 3.2) + _circ(12, 5.3, 2.1) + _circ(12, 18.7, 2.1) + _circ(5.3, 12, 2.1) + _circ(18.7, 12, 2.1)),
+  /* hub: a matriz de luzes */
+  hub: _cx24(_rr(3.2, 1.8, 17.6, 20.4, 3.6) + [0, 1, 2].map(l => [0, 1, 2].map(c => _circ(7.2 + c * 4.8, 6.4 + l * 4.8, 1.35)).join("")).join("")),
+  /* sensor de cor: a lente */
+  cor: _cx24(_rr(2.4, 2.4, 19.2, 19.2, 5.2) + _circ(12, 12, 6.6) + _circ(12, 12, 2.6)),
+  /* sensor de distância: os dois olhos */
+  dist: _cx24(_rr(1.6, 5.2, 20.8, 13.6, 5) + _circ(7.6, 12, 3.4) + _circ(16.4, 12, 3.4)),
+  /* sensor de força: o botão */
+  forca: _cx24(_rr(2.6, 4.4, 18.8, 15.2, 4.6) + _circ(12, 12, 3.8)),
+  /* começar: o botão de tocar */
+  tocar: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.4" fill="#fff"/><path d="M9.4 7.2 17 12l-7.6 4.8Z" fill="#4cbf56"/></svg>'
+};
+/* qual ícone cada bloco usa (fora daqui, o bloco não tem ícone: controle, operadores e variáveis não têm) */
+const ICO_OP = { ev_inicio: "tocar", ev_botao: "hub" };
+function icoDe(op) {
+  if (ICO_OP[op]) return ICO_BL[ICO_OP[op]];
+  const sp = SPEC[op]; if (!sp) return null;
+  if (sp.cat === "motores" || sp.cat === "movimento") return ICO_BL.motor;
+  if (sp.cat === "luz" || sp.cat === "som") return ICO_BL.hub;
+  if (sp.cat === "sensores") {
+    if (/^sen_(ecor|cor|reflexo|ereflexo|cru)$/.test(op)) return ICO_BL.cor;
+    if (/^sen_(edist|dist)$/.test(op)) return ICO_BL.dist;
+    if (/^sen_(forca|forcar)$/.test(op)) return ICO_BL.forca;
+    if (/^sen_(cron|zerar_cron)$/.test(op)) return null;   /* o temporizador não tem ícone */
+    return ICO_BL.hub;                                      /* ângulo, inclinação, gestos: são do hub */
+  }
+  return null;
+}
+
 function corDe(op) {
   const sp = specDe(op);
   return CORCAT[sp ? sp.cat : "desconhecido"] || CORCAT.desconhecido;
@@ -1941,13 +2215,16 @@ function elArg(b, p) {
 function elBloco(b) {
   const sp = specDe(b.op);
   const d = document.createElement("div");
-  d.className = "bl " + (sp.forma === "chapeu" ? "chapeu" : sp.forma === "rep" ? "rep" : sp.forma === "bool" ? "bool" : "");
+  d.className = "bl " + (sp.forma === "chapeu" ? "chapeu" : sp.forma === "rep" ? "rep" : sp.forma === "bool" ? "bool"
+    : sp.forma === "c" || sp.forma === "c2" ? "cbl" : "");
   d.dataset.id = b.id;
   d.__b = b;
   const cor = corDe(b.op);
   const cab = document.createElement("div");
   cab.className = "cab";
   cab.style.background = cor;
+  const ic = icoDe(b.op);
+  if (ic) { const si = document.createElement("span"); si.className = "bl-ico"; si.innerHTML = ic; cab.appendChild(si); }
   cab.style.borderRadius = (sp.forma === "rep") ? "999px" : (sp.forma === "bool") ? "5px" : "";
   if (b.op === "desconhecido") {
     cab.appendChild(txt("bloco do " + PLAT.nome + ": " + (b.origem || "?")));
@@ -1960,21 +2237,22 @@ function elBloco(b) {
   d.appendChild(cab);
 
   if (sp.forma === "c" || sp.forma === "c2") {
-    d.style.background = cor;
-    d.style.borderRadius = "8px";
+    /* o corpo fica vazado: quem pinta é o cabeçalho, o braço da esquerda e o fecho */
     const corpo = document.createElement("div");
     corpo.className = "corpoc";
+    corpo.style.borderLeft = "16px solid " + cor;
     corpo.appendChild(elPilha(b.c[0]));
     d.appendChild(corpo);
     if (sp.forma === "c2") {
       const barra = document.createElement("div");
       barra.className = "cab"; barra.style.background = cor; barra.style.minHeight = "30px";
-      barra.appendChild(txt("senão"));
+      barra.appendChild(txt("senão,"));
       barra.style.cursor = "default";
       barra.onpointerdown = e => e.stopPropagation();
       d.appendChild(barra);
       const corpo2 = document.createElement("div");
       corpo2.className = "corpoc";
+      corpo2.style.borderLeft = "16px solid " + cor;
       corpo2.appendChild(elPilha(b.c[1]));
       d.appendChild(corpo2);
     }
@@ -4712,6 +4990,8 @@ function fanfarra() { [[72, .12], [76, .12], [79, .12], [84, .35]].reduce((t, [n
    ======================================================================= */
 let VARS = {}, PROCS = {}, FIOS = [], RODANDO = false, PAUSADO = false, ATUAL = null;
 let PARADO_POR = "", TESTANDO = false;
+/* o fio em execução e os ajustes globais do par de movimento */
+let FIO_ATUAL = null, PARADA_MOV = "1", ACEL_MOV = "4000 4000";
 /* o que o hub mostra: matriz 5x5, cor do botao, balao de texto */
 const MATRIZ = new Array(25).fill(0);
 const CARINHA = [0,0,0,0,0, 0,1,0,1,0, 0,0,0,0,0, 1,0,0,0,1, 0,1,1,1,0];
@@ -4775,7 +5055,14 @@ function avaliaBloco(b) {
       return Math.abs(p) < 12 && Math.abs(rr) < 12;
     }
     case "sen_cron":  return +R.cron.toFixed(2);
-    case "mot_pos":   { const m = MOT[aval(b.a.P)]; return m ? Math.round(m.pos) % 360 : 0; }
+    case "mot_pos":   { const m = MOT[aval(b.a.P)]; return m ? ((Math.round(m.pos) % 360) + 360) % 360 : 0; }
+    case "mot_pos_rel": { const m = MOT[aval(b.a.P)]; return m ? Math.round(m.pos) : 0; }
+    case "mot_pot_r": { const m = MOT[aval(b.a.P)]; return m ? Math.round(m.real) : 0; }
+    case "op_entre":  { const v = num(A()), lo = num(Bv()), hi = num(aval(b.a.C)); return v >= Math.min(lo, hi) && v <= Math.max(lo, hi); }
+    case "op_junta":  return String(A()) + String(Bv());
+    case "op_letra":  { const s = String(Bv()), i = Math.round(num(A())); return i >= 1 && i <= s.length ? s[i - 1] : ""; }
+    case "op_tamanho":return String(A()).length;
+    case "op_contem": return String(A()).toLowerCase().indexOf(String(Bv()).toLowerCase()) >= 0;
     case "mot_velr":  { const m = MOT[aval(b.a.P)]; return m ? Math.round(m.real) : 0; }
     default: return 0;
   }
@@ -4867,7 +5154,20 @@ function* execBloco(b) {
     case "mot_parar": { const m = MOT[A("P")]; if (m) m.vel = 0; break; }
     case "mot_potencia": { const m = MOT[A("P")]; if (m) m.vel = Math.max(-100, Math.min(100, num(A("VAL")))); break; }
     case "luz_status": LUZ_STATUS = String(A("COR")); MATRIZ_MUDOU = true; break;
-    case "mot_zerar": { const m = MOT[A("P")]; if (m) m.pos = 0; break; }
+    case "mot_zerar": { const m = MOT[A("P")]; if (m) m.pos = num(A("VAL")) || 0; break; }
+    case "mot_parada": { const m = MOT[A("P")]; if (m) m.parada = String(A("STOP")); break; }
+    case "mot_acel":   { const m = MOT[A("P")]; if (m) m.acel = String(A("ACEL")); break; }
+    case "mov_parada": PARADA_MOV = String(A("STOP")); break;
+    case "mov_acel":   ACEL_MOV = String(A("ACEL")); break;
+    case "mot_ir_rel": {
+      const m = MOT[A("P")]; if (!m) break;
+      const guarda = m.cfg;
+      m.cfg = Math.max(1, Math.min(100, Math.abs(num(A("VEL")))));
+      m.alvo = num(A("VAL")); m.travou = false;
+      let t = 0;
+      while (m.alvo !== undefined && !m.travou && t < 4) { t += DT; yield; }
+      m.alvo = undefined; m.cfg = guarda; break;
+    }
     case "mot_girar": {
       const p = A("P"), m = MOT[p]; if (!m) break;
       const s = (A("SENT") === "clockwise" ? 1 : -1), v = (m.cfg === undefined ? 75 : m.cfg);
@@ -4910,7 +5210,11 @@ function* execBloco(b) {
     case "ctl_sesenao": if (aval(b.a.COND)) yield* execPilha(b.c[0]); else yield* execPilha(b.c[1]); break;
     case "ctl_esperar_ate": { let g = 0; while (!aval(b.a.COND) && g++ < 400000) yield; break; }
     case "ctl_repetir_ate": { let g = 0; while (!aval(b.a.COND) && g++ < 400000) { yield* execPilha(b.c[0]); yield; } break; }
+    case "ctl_parar_outras":
+      FIOS.forEach(f => { if (f !== FIO_ATUAL) f.vivo = false; });
+      break;
     case "ctl_parar":
+      if (A("ALVO") === "other scripts in sprite") { FIOS.forEach(f => { if (f !== FIO_ATUAL) f.vivo = false; }); break; }
       if (A("ALVO") === "this script") throw { fim: "script" };
       paraPar(); PARADO_POR = "bloco parar"; throw { fim: "tudo" };
     case "var_def": VARS[A("VAR")] = A("VAL"); break;
@@ -4938,6 +5242,7 @@ function mapeiaDono() {
 }
 function prepara() {
   VARS = {}; PROCS = {}; FIOS = []; ATUAL = null; PARADO_POR = ""; ULTDONO = "";
+  FIO_ATUAL = null; PARADA_MOV = "1"; ACEL_MOV = "4000 4000";
   for (const v of PROG.vars) VARS[v] = 0;
   for (const s of PROG.scripts) {
     const h = s.pilha[0]; if (!h) continue;
@@ -4959,6 +5264,7 @@ function umPasso() {
   let algum = false;
   for (const f of FIOS) {
     if (!f.vivo) continue;
+    FIO_ATUAL = f;
     try { const r = f.g.next(); if (r.done) f.vivo = false; else algum = true; }
     catch (err) {
       f.vivo = false;
@@ -6721,9 +7027,9 @@ const MAPA = {
   flippermoremotor_motorStartPower:   (b, S) => mk("mot_potencia", { P: entradaSb(b, "PORT", S), VAL: entradaSb(b, "POWER", S) }),
   flippermotor_motorStop:      (b, S) => mk("mot_parar", { P: entradaSb(b, "PORT", S) }),
   flippermotor_motorSetSpeed:  (b, S) => mk("mot_vel", { P: entradaSb(b, "PORT", S), VAL: entradaSb(b, "SPEED", S) }),
-  flippermotor_motorGoDirectionToPosition: (b, S) => mk("mot_ir", { P: entradaSb(b, "PORT", S), VAL: entradaSb(b, "POSITION", S) }),
+  flippermotor_motorGoDirectionToPosition: (b, S) => mk("mot_ir", { P: entradaSb(b, "PORT", S), CAM: campoSb(b, "DIRECTION", "shortest"), VAL: entradaSb(b, "POSITION", S) }),
   flippermotor_motorSetDegreeCounted:      (b, S) => mk("mot_zerar", { P: entradaSb(b, "PORT", S) }),
-  flippermoremotor_motorSetDegreeCounted:  (b, S) => mk("mot_zerar", { P: entradaSb(b, "PORT", S) }),
+  flippermoremotor_motorSetDegreeCounted:  (b, S) => mk("mot_zerar", { P: entradaSb(b, "PORT", S), VAL: entradaSb(b, "VALUE", S) }),
   flippermotor_absolutePosition: (b, S) => mk("mot_pos", { P: entradaSb(b, "PORT", S) }),
   flippermotor_position:         (b, S) => mk("mot_pos", { P: entradaSb(b, "PORT", S) }),
   flippermoremotor_position:     (b, S) => mk("mot_pos", { P: entradaSb(b, "PORT", S) }),
@@ -6755,7 +7061,16 @@ const MAPA = {
   flippersensors_timer:     () => mk("sen_cron"),
   flippersensors_resetTimer:() => mk("sen_zerar_cron"),
   flippercontrol_stop: (b) => mk("ctl_parar", { ALVO: lit(/this/.test(campoSb(b, "STOP_OPTION", "all").lit) ? "this script" : "all") }),
-  flippercontrol_stopOtherStacks: () => mk("ctl_parar", { ALVO: lit("other scripts in sprite") }),
+  flippercontrol_stopOtherStacks: () => mk("ctl_parar_outras", {}),
+  flippermoremotor_motorGoToRelativePosition: (b, S) => mk("mot_ir_rel", { P: entradaSb(b, "PORT", S), VAL: entradaSb(b, "POSITION", S), VEL: entradaSb(b, "SPEED", S) }),
+  flippermoremotor_motorSetStopMethod: (b, S) => mk("mot_parada", { P: entradaSb(b, "PORT", S), STOP: campoSb(b, "STOP", "1") }),
+  flippermoremotor_motorSetAcceleration: (b, S) => mk("mot_acel", { P: entradaSb(b, "PORT", S), ACEL: entradaSb(b, "ACCELERATION", S) }),
+  flippermoremove_movementSetStopMethod: (b) => mk("mov_parada", { STOP: campoSb(b, "STOP", "1") }),
+  flippermoremove_movementSetAcceleration: (b, S) => mk("mov_acel", { ACEL: entradaSb(b, "ACCELERATION", S) }),
+  flippermoremotor_position: (b, S) => mk("mot_pos_rel", { P: entradaSb(b, "PORT", S) }),
+  flippermoremotor_power:    (b, S) => mk("mot_pot_r", { P: entradaSb(b, "PORT", S) }),
+  flippermotor_absolutePosition: (b, S) => mk("mot_pos", { P: entradaSb(b, "PORT", S) }),
+  flipperoperator_isInBetween: (b, S) => mk("op_entre", { A: entradaSb(b, "VALUE", S), B: entradaSb(b, "LOW", S), C: entradaSb(b, "HIGH", S) }),
 
   /* ---- EV3 Classroom ---- */
   ev3events_whenProgramStarts: () => mk("ev_inicio"),
@@ -6794,7 +7109,7 @@ const MAPA = {
   sensing_timer: () => mk("sen_cron"), sensing_resettimer: () => mk("sen_zerar_cron"),
   ev3control_stop: (b) => { const o = campoSb(b, "STOP_OPTION", "program").lit;
     return mk("ctl_parar", { ALVO: lit(o === "this stack" ? "this script" : o === "other stacks" ? "other scripts in sprite" : "all") }); },
-  ev3control_stopOtherStacks: () => mk("ctl_parar", { ALVO: lit("other scripts in sprite") }),
+  ev3control_stopOtherStacks: () => mk("ctl_parar_outras", {}),
 
   /* ---- Scratch (os dois apps usam estes) ---- */
   control_wait:      (b, S) => mk("ctl_esperar", { SEG: entradaSb(b, "DURATION", S) }),
@@ -6813,6 +7128,10 @@ const MAPA = {
   operator_round:    (b, S) => mk("op_arred",{ A: entradaSb(b, "NUM", S) }),
   operator_mathop:   (b, S) => campoSb(b, "OPERATOR", "abs").lit === "abs" ? mk("op_abs", { A: entradaSb(b, "NUM", S) }) : null,
   operator_random:   (b, S) => mk("op_aleatorio", { A: entradaSb(b, "FROM", S), B: entradaSb(b, "TO", S) }),
+  operator_join:     (b, S) => mk("op_junta", { A: entradaSb(b, "STRING1", S), B: entradaSb(b, "STRING2", S) }),
+  operator_letter_of:(b, S) => mk("op_letra", { A: entradaSb(b, "LETTER", S), B: entradaSb(b, "STRING", S) }),
+  operator_length:   (b, S) => mk("op_tamanho", { A: entradaSb(b, "STRING", S) }),
+  operator_contains: (b, S) => mk("op_contem", { A: entradaSb(b, "STRING1", S), B: entradaSb(b, "STRING2", S) }),
   operator_lt:       (b, S) => mk("op_menor", { A: entradaSb(b, "OPERAND1", S), B: entradaSb(b, "OPERAND2", S) }),
   operator_gt:       (b, S) => mk("op_maior", { A: entradaSb(b, "OPERAND1", S), B: entradaSb(b, "OPERAND2", S) }),
   operator_equals:   (b, S) => mk("op_igual", { A: entradaSb(b, "OPERAND1", S), B: entradaSb(b, "OPERAND2", S) }),
@@ -6954,9 +7273,18 @@ const SAIDA_SPIKE = {
   mot_potencia:{ op:"flippermoremotor_motorStartPower", sel:{ PORT:["flippermoremotor_multiple-port-selector","P"] }, val:{ POWER:["VAL", TIPO.num] } },
   mot_parar:  { op:"flippermotor_motorStop", sel:{ PORT:["flippermotor_multiple-port-selector","P"] } },
   mot_vel:    { op:"flippermotor_motorSetSpeed", sel:{ PORT:["flippermotor_multiple-port-selector","P"] }, val:{ SPEED:["VAL", TIPO.num] } },
-  mot_ir:     { op:"flippermotor_motorGoDirectionToPosition", fld:{ DIRECTION:["=", "shortest"] }, sel:{ PORT:["flippermotor_multiple-port-selector","P"], POSITION:["flippermotor_custom-angle","VAL"] } },
-  mot_zerar:  { op:"flippermoremotor_motorSetDegreeCounted", sel:{ PORT:["flippermoremotor_multiple-port-selector","P"] }, fixo:{ VALUE:["0", TIPO.num] } },
-  mot_pos:    { op:"flippermoremotor_position", sel:{ PORT:["flippermoremotor_single-motor-selector","P"] } },
+  mot_ir:     { op:"flippermotor_motorGoDirectionToPosition", fld:{ DIRECTION:["CAM", v => /clockwise$/.test(v) ? v : "shortest"] }, sel:{ PORT:["flippermotor_multiple-port-selector","P"], POSITION:["flippermotor_custom-angle","VAL"] } },
+  mot_zerar:  { op:"flippermoremotor_motorSetDegreeCounted", sel:{ PORT:["flippermoremotor_multiple-port-selector","P"] }, val:{ VALUE:["VAL", TIPO.num] } },
+  mot_pos:    { op:"flippermotor_absolutePosition", sel:{ PORT:["flippermotor_single-motor-selector","P"] } },
+  mot_pos_rel:{ op:"flippermoremotor_position", sel:{ PORT:["flippermoremotor_single-motor-selector","P"] } },
+  mot_pot_r:  { op:"flippermoremotor_power", sel:{ PORT:["flippermoremotor_single-motor-selector","P"] } },
+  mot_ir_rel: { op:"flippermoremotor_motorGoToRelativePosition", sel:{ PORT:["flippermoremotor_multiple-port-selector","P"] }, val:{ POSITION:["VAL", TIPO.num], SPEED:["VEL", TIPO.num] } },
+  mot_parada: { op:"flippermoremotor_motorSetStopMethod", fld:{ STOP:"STOP" }, sel:{ PORT:["flippermoremotor_multiple-port-selector","P"] } },
+  mot_acel:   { op:"flippermoremotor_motorSetAcceleration", sel:{ PORT:["flippermoremotor_multiple-port-selector","P"], ACCELERATION:["flippermoremotor_menu_acceleration","ACEL","acceleration"] } },
+  mov_parada: { op:"flippermoremove_movementSetStopMethod", fld:{ STOP:"STOP" } },
+  mov_acel:   { op:"flippermoremove_movementSetAcceleration", sel:{ ACCELERATION:["flippermoremove_menu_acceleration","ACEL","acceleration"] } },
+  ctl_parar_outras:{ op:"flippercontrol_stopOtherStacks" },
+  op_entre:   { op:"flipperoperator_isInBetween", val:{ VALUE:["A", TIPO.num], LOW:["B", TIPO.num], HIGH:["C", TIPO.num] } },
   mot_velr:   { op:"flippermotor_speed", sel:{ PORT:["flippermotor_single-motor-selector","P"] } },
   luz_texto:  { op:"flipperlight_lightDisplayText", val:{ TEXT:["TXT", TIPO.txt] } },
   luz_limpar: { op:"flipperlight_lightDisplayOff" },
@@ -7010,6 +7338,7 @@ const SAIDA_EV3 = {
   sen_zerar_ang:{ op:"ev3sensors_resetEV3GyroSensorAngle", sel:{ PORT:["ev3sensors_menu_inputPort","P","inputPort", v => /^[1-4]$/.test(v) ? v : (PLAT.giro || "1")] } },
   sen_cron:   { op:"sensing_timer" },
   sen_zerar_cron:{ op:"sensing_resettimer" },
+  ctl_parar_outras:{ op:"ev3control_stopOtherStacks" },
   ctl_parar:  { op:"ev3control_stop", fld:{ STOP_OPTION:["ALVO", v => v === "this script" ? "this stack" : v === "other scripts in sprite" ? "other stacks" : "program"] }, semNext:true }
 };
 const SAIDA_SCRATCH = {
@@ -7034,6 +7363,10 @@ const SAIDA_SCRATCH = {
   op_e:       { op:"operator_and", bool:{ OPERAND1:"A", OPERAND2:"B" } },
   op_ou:      { op:"operator_or",  bool:{ OPERAND1:"A", OPERAND2:"B" } },
   op_nao:     { op:"operator_not", bool:{ OPERAND:"A" } },
+  op_junta:   { op:"operator_join",      val:{ STRING1:["A", TIPO.txt], STRING2:["B", TIPO.txt] } },
+  op_letra:   { op:"operator_letter_of", val:{ LETTER:["A", TIPO.num], STRING:["B", TIPO.txt] } },
+  op_tamanho: { op:"operator_length",    val:{ STRING:["A", TIPO.txt] } },
+  op_contem:  { op:"operator_contains",  val:{ STRING1:["A", TIPO.txt], STRING2:["B", TIPO.txt] } },
   var_def:    { op:"data_setvariableto",    val:{ VALUE:["VAL", TIPO.txt] }, varf:"VAR" },
   var_muda:   { op:"data_changevariableby", val:{ VALUE:["VAL", TIPO.num] }, varf:"VAR" }
 };
@@ -7093,6 +7426,12 @@ function exportaScratch(plat, nome) {
       if (o === "nivelado") return emite({ op: "op_menor", a: { A: { op: "op_abs", a: { A: { op: "sen_angulo", a: { EIXO: lit("pitch") }, c: [] } }, c: [] }, B: lit(12) }, c: [] }, pai);
       const cmpOp = (o === "frente" || o === "esq") ? "op_maior" : "op_menor";
       return emite({ op: cmpOp, a: { A: { op: "sen_angulo", a: { EIXO: lit(eixo) }, c: [] }, B: lit(cmpOp === "op_maior" ? 12 : -12) }, c: [] }, pai);
+    }
+    if (plat === "ev3" && b.op === "op_entre") {
+      const v = b.a.A;
+      return emite({ op: "op_e", a: {
+        A: { op: "op_maior", a: { A: v, B: b.a.B }, c: [] },
+        B: { op: "op_menor", a: { A: v, B: b.a.C }, c: [] } }, c: [] }, pai);
     }
     if (plat === "ev3" && b.op === "mov_iniciar") {
       const d = av(b.a.DIR);
@@ -7276,6 +7615,11 @@ function geraArduino(nome) {
       case "op_e": return "(" + A() + " && " + Bx() + ")";
       case "op_ou": return "(" + A() + " || " + Bx() + ")";
       case "op_nao": return "(!" + A() + ")";
+      case "op_entre": return "(" + A() + " >= min(" + Bx() + ", " + ex(v.a.C) + ") && " + A() + " <= max(" + Bx() + ", " + ex(v.a.C) + "))";
+      case "op_junta": return "(String(" + A() + ") + String(" + Bx() + "))";
+      case "op_letra": return "String(" + Bx() + ").charAt((int)(" + A() + ") - 1)";
+      case "op_tamanho": return "String(" + A() + ").length()";
+      case "op_contem": return "(String(" + A() + ").indexOf(String(" + Bx() + ")) >= 0)";
       case "var_ler": return nVar(av(v.a.VAR));
       case "sen_reflexo": return "lerLinha(" + sensorIdx(av(v.a.P)) + ")";
       case "sen_ereflexo": return "(lerLinha(" + sensorIdx(av(v.a.P)) + ") " + (av(v.a.CMP) === "=" ? "==" : av(v.a.CMP)) + " " + ex(v.a.VAL) + ")";
@@ -7325,7 +7669,9 @@ function geraArduino(nome) {
       case "var_def": return I + nVar(av(b.a.VAR)) + " = " + A("VAL") + ";\n";
       case "var_muda": return I + nVar(av(b.a.VAR)) + " += " + A("VAL") + ";\n";
       case "meu_chama": return I + nProc(av(b.a.NOME)) + "();\n";
-      case "luz_limpar": case "luz_pixel": case "luz_cor": case "luz_status": case "mov_rot": case "mot_vel": case "mot_zerar": return "";
+      case "ctl_parar_outras": return I + "// o Arduino roda um programa só: não há outras pilhas\n";
+      case "luz_limpar": case "luz_pixel": case "luz_cor": case "luz_status": case "mov_rot": case "mot_vel": case "mot_zerar":
+      case "mot_parada": case "mot_acel": case "mov_parada": case "mov_acel": return "";
       default: avisos.push("sem equivalente no Arduino: " + (b.op === "desconhecido" ? b.origem : b.op)); return I + "// (bloco sem equivalente: " + b.op + ")\n";
     }
   };
@@ -7820,7 +8166,7 @@ function abreAjuda(abre) {
     if (acao === "kits" || acao === "inicio") mostraPortal("kits");
     if (acao === "jornada" || acao === "conquistas") {
       fechaMenuEu();
-      if (SESSAO.plataforma) mostraPortal("trilha");
+      if (SESSAO.plataforma) { PAGINA = acao; SESSAO.pagina = acao; gravaSessao(SESSAO); mostraPortal("trilha"); }
       else avisoKits("Escolha um robô primeiro para abrir a sua jornada.");
     }
     if (acao === "ajuda") abreAjuda(true);
@@ -7828,6 +8174,8 @@ function abreAjuda(abre) {
     if (acao === "esqueci") avisoLogin("Acesso de demonstração: usuário crocobots · senha 123456.");
     if (acao === "google") avisoLogin("O login com Google chega na versão para instituições.");
     if (acao === "conta") avisoLogin("Peça o seu acesso ao professor de robótica da sua escola.");
+    if (acao === "pagina") vaiParaPagina(a.dataset.pag);
+    if (acao === "prog") abrePrograma(a.dataset.nome);
     if (acao === "livre") abreLivre();
     if (acao === "kit") escolheKit(a.dataset.kit);
     if (acao === "desafio") abreDesafio(a.dataset.id);
@@ -7847,12 +8195,31 @@ const USUARIOS = { crocobots: "123456" };
 const PATROCINADORES = [];
 const CHAVE_PROGRESSO = "portalRobotica.progresso";
 const CHAVE_LIVRE = "portalRobotica.livre";
-const NIVEIS = { ini: "Iniciante", int: "Intermediário", av: "Avançado · OBR" };
+/* Os cinco níveis da trilha: o aluno não conclui aulas, ele conquista competências.
+   APRENDER → PRATICAR → RESOLVER → DESBLOQUEAR → COMPETIR. */
+const NIVEIS = { n1: "Descoberta", n2: "Construtor", n3: "Programador", n4: "Engenheiro", n5: "Competidor" };
+const ORDEM_NIVEL = Object.keys(NIVEIS);
+const LEMA_NIVEL = {
+  n1: "Conhecer o robô e programar os primeiros movimentos.",
+  n2: "Criar programas usando lógica, repetição e condicionais.",
+  n3: "Resolver problemas usando sensores e tomada de decisão.",
+  n4: "Construir soluções autônomas, precisas e robustas.",
+  n5: "Resolver missões complexas com tempo, precisão e estratégia."
+};
+/* Três formatos de desafio: quanto mais alto o nível, menos coisa vem pronta. */
+const FORMATOS = {
+  guiado:   { nome: "Guiado", cor: "g", desc: "Ensina a competência: dicas, exemplos e valores iniciais abertos.", custo: 0 },
+  problema: { nome: "Problema", cor: "p", desc: "O problema é apresentado; você decide como resolver. Cada dica aberta custa 5 pontos na corrida.", custo: 5 },
+  arena:    { nome: "Arena", cor: "a", desc: "Sem tutorial e sem dicas: você recebe só a missão.", custo: -1 }
+};
+const formatoDe = d => FORMATOS[d.formato] || FORMATOS.guiado;
 const SEGMENTOS = { fund: "Ensino Fundamental", medio: "Ensino Médio" };
 const COMPETENCIAS = {
-  sequencia: "Sequência e movimento", repeticao: "Repetição", sensores: "Sensores", condicoes: "Decisões (se/senão)",
-  variaveis: "Variáveis", controle: "Controle P / PD", estrategia: "Estratégia OBR"
+  sequencia: "Sequência e movimento", repeticao: "Repetição", sensores: "Sensores", cores: "Cores e marcações",
+  condicoes: "Decisões (se/senão)", variaveis: "Variáveis", navegacao: "Navegação", controle: "Controle P / PID",
+  estrategia: "Estratégia OBR"
 };
+const DOMINIO = v => v >= 80 ? "domina" : v >= 45 ? "praticando" : v > 0 ? "começando" : "";
 
 function lerProgresso() { try { return JSON.parse(localStorage.getItem(CHAVE_PROGRESSO) || "null") || {}; } catch (e) { return {}; } }
 function gravaProgresso(p) { try { localStorage.setItem(CHAVE_PROGRESSO, JSON.stringify(p)); } catch (e) {} }
@@ -7891,6 +8258,13 @@ const cone = (E, x, y) => E.objs.push({ x, y, r: 3.2, alt: 11, cor: 0xff7a1a });
 const caixa = (E, x, y, w, h, cor) => E.objs.push({ x, y, w, h, alt: 12, cor: cor || 0x2f6fb0 });
 const parede = (E, x1, y1, x2, y2) => E.objs.push({ x: (x1 + x2) / 2, y: (y1 + y2) / 2, w: Math.abs(x2 - x1), h: Math.abs(y2 - y1), alt: 10, cor: 0xeceae4, parede: true });
 const faixaPreta = (E, x, y1, y2, larg) => E.extras.push(() => ret(x - (larg || 2) / 2, y1, x + (larg || 2) / 2, y2, "preto"));
+/* faixa colorida atravessando o caminho (semaforo) */
+const faixaCor = (E, x, cor, larg) => E.extras.push(() => ret(x, 62, x + (larg || 6), 118, cor));
+/* falso caminho: um beco sem saida num ladrilho vizinho da rota */
+function beco(E, c, l, lado) {
+  if (!E.tapete[l] || c < 0 || c >= E.tapete[l].length || E.tapete[l][c]) return;
+  const t = iL("Beco sem saída"); E.tapete[l][c] = { t, rot: acharRot(t, [lado]) };
+}
 const marcoBandeira = (E, x, y, n) => E.extras.push(() => {
   const pts = []; for (let i = 0; i <= 24; i++) pts.push([x + Math.cos(i / 24 * 6.283) * 6, y + Math.sin(i / 24 * 6.283) * 6]);
   traco(pts, "#b0b8c1", 0.5); texto(String(n), x, y, 5, "#8a939d");
@@ -7912,7 +8286,7 @@ const sensorCorTxt = () => PLAT.id === "arduino" ? "o sensor de linha (SE ou SD)
 /* ---------------------------- os desafios ---------------------------- */
 const DESAFIOS = [
   /* =============================== INICIANTE =============================== */
-  { id: "ini-base", nivel: "ini", titulo: "Primeira missão: até a base", conceitos: ["sequencia"],
+  { id: "ini-base", nivel: "n1", formato: "guiado", titulo: "Primeira missão: até a base", conceitos: ["sequencia"],
     resumo: "Ande em linha reta e pare dentro do quadrado azul.",
     objetivo: s => "O robô sai da <b>SAÍDA</b> e precisa parar com o centro dentro da <b>BASE</b>, que fica " + cm(60) + " à frente. " +
       (s === "medio" ? "No Ensino Médio a base é menor e vale mais parar bem no centro." : "Monte a sequência de blocos e aperte Rodar."),
@@ -7926,7 +8300,7 @@ const DESAFIOS = [
     avalia: (D, s) => { const m = s === "medio" ? 7 : 12, d = Math.hypot(R.x - 100, R.y - 90);
       return [Math.abs(R.x - 100) <= m && Math.abs(R.y - 90) <= m, d <= (s === "medio" ? 2 : 4), contaTudo() <= (s === "medio" ? 3 : 4)]; } },
 
-  { id: "ini-curva", nivel: "ini", titulo: "Curva de 90°: a garagem do lado", conceitos: ["sequencia"],
+  { id: "ini-curva", nivel: "n1", formato: "guiado", titulo: "Curva de 90°: a garagem do lado", conceitos: ["sequencia"],
     resumo: "Ande, gire 90° para a esquerda e entre na garagem sem bater no prédio.",
     objetivo: s => "A garagem fica " + cm(60) + " à frente e " + cm(60) + " à esquerda. O prédio no meio não deixa cortar caminho: " +
       "ande, <b>gire 90°</b> e ande de novo." + (s === "medio" ? " No Médio o robô precisa terminar <b>virado para a frente da garagem</b> (±8°)." : ""),
@@ -7940,7 +8314,7 @@ const DESAFIOS = [
     avalia: (D, s) => { const m = s === "medio" ? 9 : 13;
       return [Math.abs(R.x - 100) <= m && Math.abs(R.y - 100) <= m, difAng(rumoGraus(), 90) <= (s === "medio" ? 8 : 15), CORRIDA.batidas === 0]; } },
 
-  { id: "ini-quadrado", nivel: "ini", titulo: "Quadrado perfeito", conceitos: ["repeticao", "sequencia"],
+  { id: "ini-quadrado", nivel: "n1", formato: "guiado", titulo: "Quadrado perfeito", conceitos: ["repeticao", "sequencia"],
     resumo: "Passe pelas bandeiras 1, 2 e 3 e volte à saída. Use o bloco repetir.",
     objetivo: s => "Desenhe um quadrado de " + cm(50) + " de lado: passe pelas bandeiras <b>1, 2 e 3</b>, nessa ordem, e volte à saída. " +
       "Um quadrado é <b>andar e girar, 4 vezes</b>: o bloco <b>repetir</b> faz isso sem copiar blocos." + (s === "medio" ? " No Médio: no máximo 4 blocos." : ""),
@@ -7953,7 +8327,7 @@ const DESAFIOS = [
       ["Usou no máximo " + (s === "medio" ? 4 : 6) + " blocos", 20]],
     avalia: (D, s) => [D.bandeiras >= 3, Math.hypot(R.x - 60, R.y - 50) <= 8, usaOp(["ctl_repetir"]), contaTudo() <= (s === "medio" ? 4 : 6)] },
 
-  { id: "ini-slalom", nivel: "ini", titulo: "Slalom dos cones", conceitos: ["sequencia", "repeticao"],
+  { id: "ini-slalom", nivel: "n1", formato: "guiado", titulo: "Slalom dos cones", conceitos: ["sequencia", "repeticao"],
     resumo: "Zigue-zague entre 4 cones: por cima do 1º, por baixo do 2º... sem derrubar nenhum.",
     objetivo: s => "Passe o <b>1º cone por cima</b>, o <b>2º por baixo</b>, o 3º por cima e o 4º por baixo, e cruze a linha de chegada à direita. " +
       "Encostar num cone conta como batida." + (s === "medio" ? " No Médio o tempo limite é de 18 s." : " Tempo limite: 25 s."),
@@ -7969,7 +8343,7 @@ const DESAFIOS = [
     avalia: (D, s) => { const certo = [1, -1, 1, -1].filter((sg, i) => D.lados && D.lados[i] === sg).length;
       return [D.cruzou !== undefined, certo === 4 ? true : certo / 4, CORRIDA.batidas === 0, D.cruzou !== undefined && D.cruzou <= (s === "medio" ? 18 : 25)]; } },
 
-  { id: "ini-re", nivel: "ini", titulo: "Estacionar de ré", conceitos: ["sequencia"],
+  { id: "ini-re", nivel: "n1", formato: "problema", titulo: "Estacionar de ré", conceitos: ["sequencia"],
     resumo: "Entre de ré na vaga entre as duas caixas, sem encostar.",
     objetivo: s => "A vaga fica embaixo, à direita. O robô precisa terminar <b>dentro da vaga</b> e <b>de ré</b> (com a frente virada para fora dela). " +
       (s === "medio" ? "No Médio: sem batidas e em até 15 s." : "Sem encostar nas caixas."),
@@ -7981,7 +8355,7 @@ const DESAFIOS = [
       ["Terminou em até " + (s === "medio" ? 15 : 30) + " s", 10]],
     avalia: (D, s) => [Math.abs(R.x - 150) <= 13 && R.y >= 42 && R.y <= 78, difAng(rumoGraus(), 90) <= 15, CORRIDA.batidas === 0, D.fimT <= (s === "medio" ? 15 : 30)] },
 
-  { id: "ini-faixa", nivel: "ini", titulo: "Pare na faixa preta", conceitos: ["sensores", "repeticao"],
+  { id: "ini-faixa", nivel: "n2", formato: "guiado", titulo: "Pare na faixa preta", conceitos: ["sensores", "repeticao"],
     resumo: "A faixa muda de lugar a cada corrida: só o sensor de cor sabe onde parar.",
     objetivo: s => "Ande até achar a <b>faixa preta</b> e pare com " + sensorCorTxt() + " em cima dela. A cada corrida a faixa fica num lugar diferente, " +
       "então contar centímetros não funciona." + (s === "medio" ? " No Médio o robô não pode passar mais de 2 cm da faixa." : ""),
@@ -7994,7 +8368,7 @@ const DESAFIOS = [
     avalia: (D, s) => { const x = D.params.x, sx = pontoSensor().x;
       return [Math.abs(sx - x) <= 1.8, D.maxSx <= x + (s === "medio" ? 2 : 8), D.fimT <= 20]; } },
 
-  { id: "ini-contar", nivel: "ini", titulo: "Contar faixas", conceitos: ["variaveis", "sensores", "repeticao"],
+  { id: "ini-contar", nivel: "n2", formato: "guiado", titulo: "Contar faixas", conceitos: ["variaveis", "sensores", "repeticao"],
     resumo: "Várias faixas no caminho: pare exatamente na faixa pedida, contando com uma variável.",
     objetivo: s => "Há " + (s === "medio" ? 5 : 4) + " faixas pretas com espaços que mudam a cada corrida. Pare em cima da <b>" + (s === "medio" ? "4ª" : "3ª") + " faixa</b>. " +
       "Crie uma <b>variável</b> que soma 1 cada vez que o sensor passa por uma faixa.",
@@ -8007,7 +8381,7 @@ const DESAFIOS = [
     avalia: (D, s) => { const alvo = D.params.xs[s === "medio" ? 3 : 2], sx = pontoSensor().x;
       return [Math.abs(sx - alvo) <= 1.8, usaOp(["var_muda"]) || (usaOp(["var_def"]) && usaOp(["var_ler"])), D.fimT <= 30]; } },
 
-  { id: "ini-radar", nivel: "ini", titulo: "Radar: pare antes da parede", conceitos: ["sensores", "condicoes"],
+  { id: "ini-radar", nivel: "n2", formato: "problema", titulo: "Radar: pare antes da parede", conceitos: ["sensores", "condicoes"],
     resumo: "O ultrassônico mede a distância: pare perto da parede sem encostar.",
     objetivo: s => "A parede fica num lugar diferente a cada corrida. Pare com a frente do robô a <b>" + (s === "medio" ? "5 cm (±1)" : "10 cm (±2)") + "</b> da parede, " +
       "usando o <b>sensor de distância</b>.",
@@ -8020,7 +8394,7 @@ const DESAFIOS = [
       return [Math.abs(folga - alvo) <= tol, CORRIDA.batidas === 0, D.fimT <= 20]; } },
 
   /* =============================== INTERMEDIÁRIO =============================== */
-  { id: "int-borda", nivel: "int", titulo: "Seguidor de borda com 1 sensor", conceitos: ["sensores", "condicoes"],
+  { id: "int-borda", nivel: "n3", formato: "guiado", titulo: "Seguidor de borda com 1 sensor", conceitos: ["sensores", "condicoes"],
     resumo: "Siga a linha usando um sensor só: um lado da borda é preto, o outro é branco.",
     objetivo: s => "Siga a linha do começo até a <b>faixa vermelha</b> usando <b>um sensor</b>. Pare em cima dela e fique 5 s parado (regra da OBR)." +
       (s === "medio" ? " No Médio: sensores com ruído, motores diferentes e até 60 s." : " Até 90 s."),
@@ -8030,7 +8404,7 @@ const DESAFIOS = [
     criterios: s => [["Validou a chegada (5 s parado na faixa vermelha)", 60, true], ["Não saiu da linha", 20], ["Terminou em até " + (s === "medio" ? 60 : 90) + " s", 20]],
     avalia: (D, s) => [CORRIDA.completou, CORRIDA.saidas === 0, CORRIDA.completou && CORRIDA.tempoFim <= (s === "medio" ? 60 : 90)] },
 
-  { id: "int-cantos", nivel: "int", titulo: "Cantos de 90° com 2 sensores", conceitos: ["sensores", "condicoes"],
+  { id: "int-cantos", nivel: "n3", formato: "guiado", titulo: "Cantos de 90° com 2 sensores", conceitos: ["sensores", "condicoes"],
     resumo: "Cantos retos sem verde: com dois sensores o robô sabe para que lado virar.",
     objetivo: s => "Uma linha com <b>cantos de 90°</b>. Use <b>os dois sensores</b>: quando um vê preto, o robô vira para o lado dele. " +
       "Pare na faixa vermelha." + (s === "medio" ? " No Médio: com ruído e até 70 s." : " Até 110 s."),
@@ -8040,7 +8414,7 @@ const DESAFIOS = [
     criterios: s => [["Validou a chegada", 60, true], ["Não saiu da linha", 20], ["Terminou em até " + (s === "medio" ? 70 : 110) + " s", 20]],
     avalia: (D, s) => [CORRIDA.completou, CORRIDA.saidas === 0, CORRIDA.completou && CORRIDA.tempoFim <= (s === "medio" ? 70 : 110)] },
 
-  { id: "int-p", nivel: "int", titulo: "Controle proporcional nas curvas em S", conceitos: ["controle", "variaveis", "sensores"],
+  { id: "int-p", nivel: "n4", formato: "guiado", titulo: "Controle proporcional nas curvas em S", conceitos: ["controle", "variaveis", "sensores"],
     resumo: "Liga-desliga balança. Com o erro × Kp o robô fica em cima da linha: a nota mede quanto ele se afasta dela.",
     objetivo: s => "Siga as <b>curvas em S</b> até a faixa vermelha, <b>ficando o mais perto possível da linha</b>. " +
       "A bancada mede a distância média entre o meio dos sensores e a linha: precisa ficar em até " + (s === "medio" ? "0,9" : "1,5") + " cm.",
@@ -8053,7 +8427,7 @@ const DESAFIOS = [
     medida: D => D.nDesvio ? "distância média da linha: " + (D.somaDesvio / D.nDesvio).toFixed(2).replace(".", ",") + " cm" : "",
     avalia: (D, s) => [CORRIDA.completou, D.nDesvio > 0 && D.somaDesvio / D.nDesvio <= (s === "medio" ? 0.9 : 1.5), CORRIDA.completou && CORRIDA.tempoFim <= (s === "medio" ? 60 : 90)] },
 
-  { id: "int-verde", nivel: "int", titulo: "Verde manda virar", conceitos: ["condicoes", "sensores", "estrategia"],
+  { id: "int-verde", nivel: "n3", formato: "guiado", titulo: "Verde manda virar", conceitos: ["condicoes", "sensores", "estrategia"],
     resumo: "Encruzilhadas: com verde antes da linha, vire para o lado dele; sem verde, siga reto.",
     objetivo: s => "Regra da OBR: um <b>quadrado verde antes</b> da encruzilhada manda virar para o lado do verde. Sem verde, siga reto. " +
       "Chegue à faixa vermelha." + (s === "medio" ? " No Médio: com ruído e sem sair da linha." : ""),
@@ -8064,7 +8438,7 @@ const DESAFIOS = [
     criterios: s => [["Validou a chegada", 60, true], ["Não saiu da linha", 20], ["Terminou em até " + (s === "medio" ? 100 : 150) + " s", 20]],
     avalia: (D, s) => [CORRIDA.completou, CORRIDA.saidas === 0, CORRIDA.completou && CORRIDA.tempoFim <= (s === "medio" ? 100 : 150)] },
 
-  { id: "int-obstaculo", nivel: "int", titulo: "Obstáculo no caminho", conceitos: ["sensores", "condicoes", "estrategia"],
+  { id: "int-obstaculo", nivel: "n4", formato: "problema", titulo: "Obstáculo no caminho", conceitos: ["sensores", "condicoes", "estrategia"],
     resumo: "Siga a linha, perceba o obstáculo com o ultrassônico, contorne e volte para a linha.",
     objetivo: s => "Há um obstáculo em cima da linha. Contorne sem encostar e volte para a linha do outro lado; depois pare na faixa vermelha." +
       (s === "medio" ? " No Médio: com ruído e sem nenhuma batida." : ""),
@@ -8074,7 +8448,7 @@ const DESAFIOS = [
     criterios: s => [["Validou a chegada", 60, true], ["Não encostou no obstáculo", 20], ["Não saiu da linha", 20]],
     avalia: (D) => [CORRIDA.completou, CORRIDA.batidas === 0, CORRIDA.saidas === 0] },
 
-  { id: "int-gap", nivel: "int", titulo: "Gap e linha tracejada", conceitos: ["condicoes", "variaveis"],
+  { id: "int-gap", nivel: "n3", formato: "problema", titulo: "Gap e linha tracejada", conceitos: ["condicoes", "variaveis"],
     resumo: "A linha some por 10 cm: o robô precisa seguir reto até achar a linha de novo.",
     objetivo: s => "Dois <b>gaps</b> e um trecho <b>tracejado</b>. Quando os dois sensores veem branco por um tempo, siga reto em vez de girar procurando." +
       " Pare na faixa vermelha.",
@@ -8084,7 +8458,7 @@ const DESAFIOS = [
     criterios: s => [["Validou a chegada", 60, true], ["Não saiu da linha", 25], ["Terminou em até " + (s === "medio" ? 50 : 80) + " s", 15]],
     avalia: (D, s) => [CORRIDA.completou, CORRIDA.saidas === 0, CORRIDA.completou && CORRIDA.tempoFim <= (s === "medio" ? 50 : 80)] },
 
-  { id: "int-prata", nivel: "int", titulo: "Achar a entrada da sala: a fita prata", conceitos: ["sensores", "variaveis", "estrategia"],
+  { id: "int-prata", nivel: "n3", formato: "problema", titulo: "Achar a entrada da sala: a fita prata", conceitos: ["sensores", "variaveis", "estrategia"],
     resumo: "O jeito que funciona muda de kit para kit. Calibre, encontre a diferença e pare em cima da fita.",
     objetivo: s => "No fim da linha tem a <b>fita prata</b> da sala de resgate. Pare com os sensores <b>em cima dela</b>. " +
       (PLAT.id === "spike" ? "No SPIKE a <b>luz refletida</b> da prata dá o mesmo que o branco: use o <b>valor bruto do vermelho</b>, que cai bastante na prata."
@@ -8105,6 +8479,153 @@ const DESAFIOS = [
       return [ok, D.primeiraParada === undefined || D.primeiraParada >= D.params.x - 3, D.fimT <= 25]; } }
 ];
 
+
+/* =============================== desafios que fecham os buracos da trilha =============================== */
+DESAFIOS.push(
+  /* ---- nivel 2: cores e navegacao ---- */
+  { id: "n2-semaforo", nivel: "n2", formato: "guiado", titulo: "Semáforo", conceitos: ["cores", "condicoes", "sensores"],
+    resumo: "Verde: siga. Amarelo: desacelere. Vermelho: pare em cima da faixa.",
+    objetivo: s => "Três faixas coloridas atravessam o caminho: <b>verde</b> (continuar), <b>amarela</b> (andar bem mais devagar) e <b>vermelha</b> (parar em cima). " +
+      "O robô só pode parar na vermelha." + (s === "medio" ? " No Médio a faixa amarela precisa ser cruzada em pelo menos o dobro do tempo da verde." : ""),
+    dicas: () => ["Use <b>sempre</b> com <b>se / senão se</b> lendo " + sensorCorTxt() + ".",
+      PLAT.id === "ev3" ? "No EV3: verde é a cor 3, amarelo 4 e vermelho 5." : "As cores são verde 6, amarelo 7 e vermelho 9.",
+      "Desacelerar é só <b>definir a velocidade</b> para um número menor; parar é <b>parar de mover</b>."],
+    tempoMax: 45, fimQuandoParar: true,
+    mundo: (E) => { largada(E, 25, 90, 0); faixaCor(E, 70, "verde"); faixaCor(E, 120, "amarelo"); faixaCor(E, 175, "vermelho"); },
+    criterios: s => [["Parou com o sensor em cima da faixa vermelha", 50, true],
+      ["Cruzou a faixa amarela mais devagar que a verde", 25], ["Não parou na verde nem na amarela", 15], ["Terminou em até 35 s", 10]],
+    acompanha: D => { const sx = pontoSensor().x; D.bd = D.bd || {};
+      [[70, "v"], [120, "a"], [175, "m"]].forEach(([x, k]) => { if (sx >= x && sx <= x + 6) { const b = D.bd[k] = D.bd[k] || { t0: R.t }; b.t1 = R.t; } }); },
+    medida: D => { const b = D.bd || {}; return b.v && b.a ? "verde em " + (b.v.t1 - b.v.t0).toFixed(1).replace(".", ",") + " s · amarelo em " + (b.a.t1 - b.a.t0).toFixed(1).replace(".", ",") + " s" : ""; },
+    avalia: (D, s) => { const sx = pontoSensor().x, b = D.bd || {}, dv = b.v ? b.v.t1 - b.v.t0 : 0, da = b.a ? b.a.t1 - b.a.t0 : 0;
+      return [sx >= 174 && sx <= 182, dv > 0.05 && da >= dv * (s === "medio" ? 2 : 1.4), !!b.m && dv < 3 && da < 8, D.fimT <= 35]; } },
+
+  { id: "n2-labirinto", nivel: "n2", formato: "problema", titulo: "Labirinto simples", conceitos: ["navegacao", "condicoes", "sensores"],
+    resumo: "Sem linha nenhuma: só paredes e o sensor de distância. Ache a saída.",
+    objetivo: s => "O robô sai do canto de baixo à esquerda e precisa chegar à <b>SAÍDA</b>, no canto de cima à direita, sem encostar nas paredes. " +
+      "Não há linha: as decisões são tomadas com o <b>sensor de distância</b>." + (s === "medio" ? " No Médio: sem nenhuma batida e em até 60 s." : ""),
+    dicas: () => ["O caminho é sempre o mesmo: siga até a parede, vire, siga até a próxima.",
+      "Um bom laço: <b>sempre</b> → se a distância for menor que 20, gire; senão, ande.",
+      "Girar sempre para o mesmo lado (regra da mão) resolve labirintos simples."],
+    tempoMax: 120, fimQuandoParar: true,
+    mundo: (E, s) => {
+      largada(E, 30, 32, 0);
+      parede(E, 10, 10, 230, 14); parede(E, 10, 166, 230, 170); parede(E, 10, 14, 14, 166); parede(E, 226, 14, 230, 166);
+      parede(E, 58, 14, 62, 130); parede(E, 118, 50, 122, 166); parede(E, 178, 14, 182, 130);
+      base(E, 204, 148, s === "medio" ? 20 : 28, s === "medio" ? 20 : 28, "SAÍDA", "#8fd14f");
+    },
+    criterios: s => [["Chegou à saída", 60, true], ["Não encostou nas paredes", 25], ["Terminou em até " + (s === "medio" ? 60 : 90) + " s", 15]],
+    avalia: (D, s) => { const m = s === "medio" ? 10 : 14;
+      return [Math.abs(R.x - 204) <= m && Math.abs(R.y - 148) <= m, CORRIDA.batidas === 0, D.fimT <= (s === "medio" ? 60 : 90)]; } },
+
+  /* ---- nivel 3: decidir e reencontrar ---- */
+  { id: "n3-encruzilhada", nivel: "n3", formato: "problema", titulo: "Encruzilhada: contar e decidir", conceitos: ["condicoes", "variaveis", "estrategia"],
+    resumo: "Três encruzilhadas, sem verde nenhum: esquerda, reto e direita, nessa ordem.",
+    objetivo: s => "Sem marcação de cor: a ordem é fixa e o robô precisa <b>contar</b> as encruzilhadas. " +
+      "Na <b>1ª</b> vire à <b>esquerda</b>, na <b>2ª</b> siga <b>reto</b> e na <b>3ª</b> vire à <b>direita</b>. " +
+      "Os caminhos errados terminam em becos sem saída. Pare na faixa vermelha e fique 5 s parado.",
+    dicas: () => ["Uma encruzilhada aparece quando os <b>dois sensores</b> veem preto ao mesmo tempo.",
+      "Crie a variável <b>cruz</b>, some 1 a cada encruzilhada e decida com <b>se cruz = 1</b>, <b>se cruz = 2</b>…",
+      "Avance até o meio do cruzamento <b>antes</b> de girar, senão o robô gira em cima da linha atravessada."],
+    tempoMax: 220, realista: true,
+    pista: E => { rota(E, "O", [[0, 1], [1, 1], [2, 1, "Cruzamento"], [2, 2], [2, 3, "Cruzamento"], [2, 4], [2, 5, "Cruzamento"], [3, 5], [4, 5], [5, 5]], "fim");
+      beco(E, 3, 1, "O"); beco(E, 2, 0, "N"); beco(E, 3, 3, "O"); beco(E, 1, 3, "L"); beco(E, 1, 5, "L"); },
+    criterios: s => [["Validou a chegada", 55, true], ["Não saiu da linha", 25], ["Contou as encruzilhadas com uma variável", 20]],
+    avalia: (D, s) => [CORRIDA.completou, CORRIDA.saidas === 0, usaOp(["var_muda"]) || (usaOp(["var_def"]) && usaOp(["var_ler"]))] },
+
+  { id: "n3-perdida", nivel: "n3", formato: "problema", titulo: "Linha perdida", conceitos: ["sensores", "condicoes", "navegacao"],
+    resumo: "A linha acaba no meio do nada e recomeça deslocada: procure e reencontre.",
+    objetivo: s => "A linha <b>termina</b> e só recomeça " + cm(30) + " à frente e " + cm(30) + " à esquerda. Andar reto não resolve: " +
+      "o robô precisa <b>procurar</b> a linha e voltar a segui-la até a faixa vermelha." + (s === "medio" ? " No Médio: com mundo real ligado." : ""),
+    dicas: () => ["Enquanto os dois sensores veem branco por muito tempo, o robô está perdido: pare de seguir e comece a procurar.",
+      "Uma busca que funciona: gire um pouco para um lado, depois o dobro para o outro, aumentando o tamanho da varredura.",
+      "Andar um pouco para a frente entre as varreduras aumenta a área procurada."],
+    tempoMax: 180, realista: true,
+    pista: E => { rota(E, "O", [[0, 2], [1, 2], [2, 2]], "L"); rota(E, "O", [[4, 3], [5, 3], [6, 3]], "fim");
+      E.semLinha.push({ x1: 82, y1: 52, x2: 130, y2: 132 }); },
+    criterios: s => [["Validou a chegada", 60, true], ["Reencontrou a linha em até 40 s", 20], ["Não saiu da linha depois de reencontrá-la", 20]],
+    acompanha: D => { if (D.achou === undefined) { const m = pontoSensor(); if (m.x > 126 && distLinha(m.x, m.y) < 2) D.achou = R.t; } },
+    avalia: (D, s) => [CORRIDA.completou, D.achou !== undefined && D.achou <= 40, CORRIDA.saidas === 0] },
+
+  /* ---- nivel 4: controle fino e obstaculo que muda de lugar ---- */
+  { id: "n4-pid", nivel: "n4", formato: "problema", titulo: "PID: o ajuste fino", conceitos: ["controle", "variaveis", "sensores"],
+    resumo: "Só o proporcional já não basta: com o termo derivativo o robô corre sem balançar.",
+    objetivo: s => "A mesma ideia do controle proporcional, agora com <b>tempo</b>: o robô precisa ficar a no máximo " +
+      (s === "medio" ? "0,6" : "0,9") + " cm da linha <b>e</b> terminar em até " + (s === "medio" ? 45 : 60) + " s. " +
+      "Com um Kp alto o suficiente para ser rápido o robô balança; é o <b>Kd</b> que segura a oscilação.",
+    dicas: () => ["<b>correção = Kp × erro + Kd × (erro − erro anterior)</b>. Guarde o erro anterior numa variável no fim do laço.",
+      "Suba a velocidade base primeiro; quando começar a balançar, suba o Kd.",
+      "O Ki quase não é usado nesta pista: ele serve para o erro que nunca passa.",
+      "A bancada mostra a distância média até a linha no fim da corrida: use esse número para comparar ajustes."],
+    tempoMax: 150, realista: true,
+    pista: E => rota(E, "O", [[0, 1], [1, 1, "Curva em S"], [2, 1, "Curva em S"], [3, 1], [4, 1, "Curva 90"], [4, 2], [4, 3, "Curva 90"], [5, 3, "Curva em S"], [6, 3, "Curva em S"], [7, 3]], "fim"),
+    criterios: s => [["Validou a chegada", 40, true], ["Distância média até a linha de no máximo " + (s === "medio" ? "0,6" : "0,9") + " cm", 30],
+      ["Terminou em até " + (s === "medio" ? 45 : 60) + " s", 30]],
+    acompanha: D => { if (!CORRIDA.completou && !CORRIDA.naChegada) { const m = pontoSensor(); D.somaDesvio = (D.somaDesvio || 0) + Math.min(9, distLinha(m.x, m.y)); D.nDesvio = (D.nDesvio || 0) + 1; } },
+    medida: D => D.nDesvio ? "distância média da linha: " + (D.somaDesvio / D.nDesvio).toFixed(2).replace(".", ",") + " cm" : "",
+    avalia: (D, s) => [CORRIDA.completou, D.nDesvio > 0 && D.somaDesvio / D.nDesvio <= (s === "medio" ? 0.6 : 0.9),
+      CORRIDA.completou && CORRIDA.tempoFim <= (s === "medio" ? 45 : 60)] },
+
+  { id: "n4-obst-aleatorio", nivel: "n4", formato: "problema", titulo: "Obstáculo aleatório", conceitos: ["sensores", "condicoes", "estrategia"],
+    resumo: "O obstáculo muda de lugar a cada corrida: decorar a posição não adianta.",
+    objetivo: s => "Mesma linha, obstáculo em um lugar diferente a cada corrida" + (s === "medio" ? " — e no Médio são <b>dois</b>" : "") + ". " +
+      "Contorne sem encostar, volte para a linha e pare na faixa vermelha. Contornar não conta como sair da linha (regra da OBR).",
+    dicas: () => ["Nada de contar centímetros: a decisão vem do <b>sensor de distância</b>.",
+      "O desvio precisa terminar <b>procurando a linha</b>, não numa posição fixa.",
+      "Vale escrever o desvio como uma função (Meus Blocos) e chamá-la nos dois casos."],
+    tempoMax: 200, realista: true, sorteia: true,
+    mundo: (E, s, P) => {
+      if (!P.iz) { P.iz = [2 + Math.floor(Math.random() * 3)]; if (s === "medio") { const j = 5 - Math.floor(Math.random() * 2); if (P.iz.indexOf(j) < 0) P.iz.push(j); } }
+      const cels = [[0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2]];
+      for (const i of P.iz) cels[i] = [cels[i][0], 2, "Reta", { obst: true }];
+      rota(E, "O", cels, "fim");
+    },
+    criterios: s => [["Validou a chegada", 55, true], ["Não encostou no obstáculo", 25], ["Não saiu da linha", 20]],
+    avalia: (D, s) => [CORRIDA.completou, CORRIDA.batidas === 0, CORRIDA.saidas === 0] },
+
+  /* ---- nivel 5: consistencia e o desafio sem enunciado ---- */
+  { id: "n5-repete", nivel: "n5", formato: "arena", ordem: 9, titulo: "Repetibilidade", conceitos: ["estrategia", "controle"],
+    resumo: "Acertar uma vez é sorte. Cumpra a mesma missão três corridas seguidas.",
+    objetivo: s => "A pista é sempre a mesma. O que vale aqui é <b>repetir</b>: a pontuação cheia só sai depois de <b>três corridas seguidas</b> " +
+      "com a missão cumprida. Numa competição é isso que separa o pódio do azar.",
+    dicas: () => [],
+    tempoMax: 240, realista: true,
+    pista: E => rota(E, "O", [[0, 1], [1, 1], [2, 1, "Curva 90"], [2, 2], [2, 3, "Curva 90"], [3, 3, "Falha (gap)"], [4, 3, "Cruzamento", { verde: 1 }], [4, 4], [4, 5], [5, 5], [6, 5]], "fim"),
+    criterios: s => [["Validou a chegada", 40, true], ["Não saiu da linha", 20], ["Três corridas seguidas com a missão cumprida", 40]],
+    avalia: (D, s) => { const reg = registroDe(D.def.id, s), h = (reg && reg.historico) || [];
+      const antes = h.slice(0, 2).filter(x => x.e > 0).length;
+      return [CORRIDA.completou, CORRIDA.saidas === 0, CORRIDA.completou ? Math.min(1, (antes + 1) / 3) : 0]; } },
+
+  { id: "n5-surpresa", nivel: "n5", formato: "arena", ordem: 9, titulo: "Desafio surpresa", conceitos: ["estrategia", "navegacao", "controle"],
+    resumo: "Você recebe só a missão. A pista é sorteada na hora: pode ter gap, verde ou obstáculo.",
+    objetivo: s => "<b>Missão:</b> saia da largada, chegue à faixa vermelha e valide a chegada (5 s parado). " +
+      "A pista é sorteada a cada corrida entre vários traçados, com gaps, tracejados e obstáculos em posições diferentes. " +
+      "Nenhuma dica, nenhum código inicial: só a missão.",
+    dicas: () => [],
+    tempoMax: 300, realista: true, sorteia: true,
+    mundo: (E, s, P) => {
+      if (!P.v) {
+        const V = [
+          [[0, 1], [1, 1], [2, 1], [2, 2], [2, 3], [3, 3], [4, 3], [4, 2], [4, 1], [5, 1], [6, 1]],
+          [[0, 3], [1, 3, "Curva em S"], [2, 3], [3, 3], [3, 2], [3, 1], [4, 1], [5, 1], [5, 2], [5, 3], [6, 3]],
+          [[0, 2], [1, 2], [2, 2], [3, 2], [3, 3], [4, 3], [5, 3], [5, 2], [5, 1], [6, 1], [7, 1]]
+        ];
+        P.v = V[Math.floor(Math.random() * V.length)].map(c => c.slice());
+        /* sorteia uma surpresa num trecho reto do meio */
+        const cand = [];
+        for (let i = 2; i < P.v.length - 2; i++) { const a = P.v[i - 1], b = P.v[i + 1];
+          if (P.v[i].length === 2 && (a[0] === b[0] || a[1] === b[1])) cand.push(i); }
+        if (cand.length) { const i = cand[Math.floor(Math.random() * cand.length)], r = Math.random();
+          P.v[i] = r < 0.34 ? [P.v[i][0], P.v[i][1], "Falha (gap)"]
+                 : r < 0.67 ? [P.v[i][0], P.v[i][1], "Tracejada"]
+                 : [P.v[i][0], P.v[i][1], "Reta", { obst: true }]; }
+      }
+      rota(E, "O", P.v.map(c => c.slice()), "fim");
+    },
+    criterios: s => [["Validou a chegada", 60, true], ["Não saiu da linha", 20], ["Terminou em até " + (s === "medio" ? 90 : 150) + " s", 20]],
+    avalia: (D, s) => [CORRIDA.completou, CORRIDA.saidas === 0, CORRIDA.completou && CORRIDA.tempoFim <= (s === "medio" ? 90 : 150)] }
+);
+
 /* avançado: as pistas da OBR que a bancada já tem. Fundamental = Nível 1 da área de resgate (sem parede); Médio = Nível 2 (borda de 6 cm) */
 [["Nível 1 · Curvas suaves", "Retas e curvas suaves: o primeiro percurso completo."],
  ["Nível 2 · Cantos de 90° sem verde", "Cantos retos e zigue-zagues sem marcação."],
@@ -8117,7 +8638,8 @@ const DESAFIOS = [
  ["OBR completa · B (sala 120 × 90)", "Tudo o que o manual traz, com sala 120 × 90."],
  ["OBR completa · C (sala 90 × 120)", "Tudo o que o manual traz, com a sala em pé."]].forEach(([nome, resumo], i) => {
   const temSala = /resgate|OBR completa|Desafio OBR/.test(nome);
-  DESAFIOS.push({ id: "av-" + (i + 1), nivel: "av", titulo: nome, conceitos: temSala ? ["estrategia", "controle", "sensores"] : ["estrategia", "controle"],
+  DESAFIOS.push({ id: "av-" + (i + 1), nivel: i < 5 ? "n4" : "n5", formato: i < 7 ? "problema" : "arena",
+    titulo: nome, conceitos: temSala ? ["estrategia", "navegacao", "sensores"] : ["estrategia", "controle"],
     resumo, pistaObr: nome, tempoMax: temSala ? 600 : 400, realista: true,
     objetivo: s => "Pista oficial da bancada, com as regras da OBR 2026: parar 5 s na faixa vermelha, não sair da linha" +
       (temSala ? ", resgatar as vítimas (prata na área verde, preta na vermelha) e sair pela fita preta" : "") + ". " +
@@ -8132,6 +8654,9 @@ const DESAFIOS = [
       ? [CORRIDA.completou, Math.min(1, CORRIDA.resgatadas / 3), CORRIDA.saidas === 0, CORRIDA.completou && CORRIDA.tempoFim <= 300]
       : [CORRIDA.completou, CORRIDA.saidas === 0, CORRIDA.falhas === 0, CORRIDA.completou && CORRIDA.tempoFim <= 300] });
 });
+
+/* agrupa por nível mantendo a ordem de escrita dentro de cada um (é ela que destrava o próximo) */
+DESAFIOS.sort((a, b) => (ORDEM_NIVEL.indexOf(a.nivel) - ORDEM_NIVEL.indexOf(b.nivel)) || ((a.ordem || 0) - (b.ordem || 0)));
 
 /* os mundos dos desafios entram na lista de pistas, escondidos do seletor */
 const PISTA_DESAFIO = {};
@@ -8194,8 +8719,10 @@ function notaDesafio() {
   });
   pontos = Math.round(pontos);
   if (!principal) pontos = Math.min(pontos, 40);
+  const custo = formatoDe(d).custo, desconto = custo > 0 ? (D.dicas || []).filter(Boolean).length * custo : 0;
+  pontos = Math.max(0, pontos - desconto);
   const estrelas = !principal ? 0 : pontos >= 100 ? 3 : pontos >= 80 ? 2 : 1;
-  return { pontos, estrelas, itens, t: D.fimT, medida: d.medida ? d.medida(D) : "" };
+  return { pontos, estrelas, itens, desconto, t: D.fimT, medida: d.medida ? d.medida(D) : "" };
 }
 function terminaDesafio() {
   const D = DESAFIO; if (!D || !CORRIDA || R.t < 0.3) return;
@@ -8218,6 +8745,7 @@ function terminaDesafio() {
     reg.melhor + "</b><span>seu recorde</span></div></div>" +
     '<ul class="criterios">' + n.itens.map(it => '<li class="' + (it.ok ? "ok" : it.parcial ? "meio" : "nao") + '"><span>' + (it.ok ? "✓" : it.parcial ? "◐" : "✕") + "</span>" +
       esc(it.txt) + "<b>" + it.ganho + "/" + it.peso + "</b></li>").join("") + "</ul>" +
+    (n.desconto ? '<p class="medida">−' + n.desconto + " pontos pelas dicas abertas neste desafio.</p>" : "") +
     (n.medida ? '<p class="medida">' + esc(n.medida) + "</p>" : "") +
     (D.motivo && !n.estrelas ? '<p class="medida">Parou por: ' + esc(D.motivo) + ".</p>" : "") +
     (melhorou && reg.tentativas > 1 ? '<p class="recorde">Novo recorde!</p>' : "") +
@@ -8226,7 +8754,7 @@ function terminaDesafio() {
   res.classList.add("show");
   $("resDeNovo").onclick = () => { res.classList.remove("show"); voltaLargada(); $("btRodar").click(); };
   if ($("resProx")) $("resProx").onclick = () => { res.classList.remove("show"); abreDesafio(prox.id); };
-  $("resTrilha").onclick = () => { res.classList.remove("show"); mostraPortal("trilha"); };
+  $("resTrilha").onclick = () => { res.classList.remove("show"); abreTrilha(); };
   if (n.estrelas) { soltaConfete(); fanfarra(); }
 }
 
@@ -8290,41 +8818,232 @@ const ARTE_KIT = {
   ev3: '<svg viewBox="0 0 160 110" aria-hidden="true"><rect x="18" y="62" width="124" height="14" rx="4" fill="#3b3f45"/><circle cx="34" cy="82" r="17" fill="#15161a"/><circle cx="34" cy="82" r="9" fill="#b9bec5"/><circle cx="34" cy="82" r="3.5" fill="#d0342c"/><circle cx="126" cy="82" r="17" fill="#15161a"/><circle cx="126" cy="82" r="9" fill="#b9bec5"/><circle cx="126" cy="82" r="3.5" fill="#d0342c"/><rect x="44" y="12" width="72" height="52" rx="7" fill="#c9ccd0"/><rect x="50" y="17" width="60" height="42" rx="5" fill="#3b3f45"/><rect x="56" y="22" width="36" height="22" rx="2" fill="#a9b89c"/><text x="74" y="37" font-family="monospace" font-size="9" text-anchor="middle" fill="#2b3226">EV3</text><rect x="96" y="24" width="10" height="16" rx="2" fill="#6b7078"/><rect x="62" y="48" width="24" height="7" rx="3" fill="#d0342c" opacity=".85"/><rect x="138" y="52" width="14" height="12" rx="3" fill="#2b2e33"/><circle cx="145" cy="58" r="3" fill="#d0342c"/></svg>',
   arduino: '<svg viewBox="0 0 160 110" aria-hidden="true"><rect x="14" y="52" width="132" height="30" rx="6" fill="#dff3f3" opacity=".55" stroke="#9fd5d6" stroke-width="2"/><rect x="10" y="60" width="16" height="30" rx="4" fill="#f2c230"/><circle cx="18" cy="84" r="15" fill="#15161a"/><circle cx="18" cy="84" r="8" fill="#f2c230"/><rect x="134" y="60" width="16" height="30" rx="4" fill="#f2c230"/><circle cx="142" cy="84" r="15" fill="#15161a"/><circle cx="142" cy="84" r="8" fill="#f2c230"/><rect x="44" y="22" width="64" height="40" rx="3" fill="#00979d"/><rect x="48" y="25" width="40" height="4" fill="#1b1b1b"/><rect x="60" y="55" width="40" height="4" fill="#1b1b1b"/><rect x="92" y="34" width="12" height="12" rx="1" fill="#1b1b1b"/><circle cx="54" cy="46" r="3" fill="#e5e5e5"/><rect x="112" y="30" width="30" height="16" rx="2" fill="#1f5fbf"/><circle cx="120" cy="38" r="5.5" fill="#d9dde2"/><circle cx="134" cy="38" r="5.5" fill="#d9dde2"/><rect x="20" y="36" width="20" height="18" rx="2" fill="#b3202a"/><rect x="24" y="30" width="12" height="8" fill="#26292e"/></svg>'
 };
-let NIVEL_TELA = "ini";
+/* ---------------------------- o portal por dentro: menu e páginas ----------------------------
+   Visual do modelo (modelo/trilha.html): barra lateral clara, topo com o caminho e uma página por vez.
+   A bancada e o simulador continuam exatamente como estavam. */
+const PAGINAS = {
+  jornada:    { nome: "Minha Jornada", ic: "⌂" },
+  trilha:     { nome: "Trilha de Conhecimento", ic: "▦" },
+  livre:      { nome: "Bancada Livre", ic: "⌘", acao: "livre" },
+  programas:  { nome: "Meus Programas", ic: "&lt;/&gt;" },
+  conquistas: { nome: "Conquistas", ic: "🏆" },
+  rankings:   { nome: "Rankings", ic: "▥", ic2: "🏅",
+    breve: "O ranking de aluno, turma e instituição precisa de um servidor para juntar os resultados de todo mundo. O portal ainda guarda tudo só neste navegador, então esta página chega na versão para instituições." },
+  comunidade: { nome: "Comunidade", ic: "●", ic2: "💬",
+    breve: "Programas, pistas e estratégias trocados entre as equipes. Também depende do servidor: por enquanto os programas ficam guardados neste computador, em Meus Programas." }
+};
+let PAGINA = "trilha";
+let NIVEL_TELA = "n1";
+
+/* o robô do cartão é o mesmo da tela de escolha do kit: o modelo 3D da bancada renderizado (js17: fotosDosKits) */
+const roboDoKit = () => '<img data-foto="' + PLAT.id + '" alt="' + esc(PLAT.nome) + '" loading="lazy">';
+
+const estrelasHtml = e => "★".repeat(e) + "<span>" + "★".repeat(3 - e) + "</span>";
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const quando = t => { const d = Math.floor((Date.now() - t) / 86400000);
+  return d <= 0 ? "hoje" : d === 1 ? "ontem" : d < 30 ? "há " + d + " dias" : new Date(t).toLocaleDateString("pt-BR"); };
+
+/* ---- pedaços que aparecem em mais de uma página ---- */
+function cartaoNumeros(R_) {
+  return '<div class="pt-card pt-nums">' +
+    '<div class="pt-num"><span class="ic">★</span><div><b>' + R_.pontos + '</b><span>pontos</span></div></div>' +
+    '<div class="pt-num"><span class="ic">✦</span><div><b>' + R_.estrelas + "<small>/" + DESAFIOS.length * 3 + '</small></b><span>estrelas</span></div></div>' +
+    '<div class="pt-num"><span class="ic verde">⚑</span><div><b>' + R_.feitos + "<small>/" + R_.total + '</small></b><span>desafios cumpridos</span></div></div>' +
+    '<div class="pt-num"><span class="ic azul">▶</span><div><b>' + R_.tentativas + '</b><span>corridas</span></div></div></div>';
+}
+function cartaoCompetencias(R_) {
+  return '<div class="pt-card pt-comp"><div class="pt-card-tit">Competências <small>· média dos seus melhores pontos</small></div>' +
+    Object.keys(COMPETENCIAS).map(c => '<div class="pt-skill"><span>' + COMPETENCIAS[c] +
+      (DOMINIO(R_.comp[c]) ? "<em>" + DOMINIO(R_.comp[c]) + "</em>" : "") + '</span>' +
+      '<div class="pt-barra"><i style="--v:' + R_.comp[c] + '%"></i></div><b>' + R_.comp[c] + "</b></div>").join("") + "</div>";
+}
+function cartaoProximo(R_) {
+  const d = R_.proximo;
+  return '<div class="pt-card pt-prox"><div><div class="pt-card-tit">Próximo passo</div>' +
+    (d ? '<div class="tag">' + esc(NIVEIS[d.nivel]) + " · " + esc(formatoDe(d).nome) + '</div><h3>' + esc(d.titulo) + "</h3><p>" + esc(d.resumo) + "</p>"
+       : '<h3>Trilha completa!</h3><p>Agora é buscar 3 estrelas em tudo e repetir com o mundo real ligado.</p>') + "</div>" +
+    (d ? '<button class="pt-btn" data-acao="desafio" data-id="' + d.id + '">Continuar jornada →</button>'
+       : '<button class="pt-btn" data-acao="livre">Ir para a bancada livre →</button>') + "</div>";
+}
+function cartaoDesafio(d, i, seg) {
+  const r = registroDe(d.id, seg), ok = liberado(d, seg), e = r ? r.estrelas : 0, f = formatoDe(d);
+  return '<article class="pt-d ' + (ok ? "c" + (i % 4 + 1) : "travado") + '">' +
+    '<div class="pt-d-topo"><span class="pt-d-num">' + String(i + 1).padStart(2, "0") + "</span>" +
+    '<span class="pt-d-est" aria-label="' + e + ' de 3 estrelas">' + estrelasHtml(e) + "</span></div>" +
+    '<div class="pt-d-arte">' + roboDoKit() + "</div>" +
+    "<h3>" + esc(d.titulo) + "</h3><p>" + esc(d.resumo) + "</p>" +
+    '<div class="chips"><span class="chip fmt-' + f.cor + '" title="' + esc(f.desc) + '">' + f.nome + "</span>" +
+    d.conceitos.slice(0, 2).map(c => '<span class="chip">' + COMPETENCIAS[c] + "</span>").join("") + "</div>" +
+    '<p class="rec">' + (r ? "recorde <b>" + r.melhor + "</b> · " + r.tentativas + " corrida" + (r.tentativas === 1 ? "" : "s")
+      : ok ? "ainda não tentou" : "🔒 cumpra o desafio anterior") + "</p>" +
+    (ok ? '<button data-acao="desafio" data-id="' + d.id + '">' + (r ? "Treinar" : "Começar") + " →</button>"
+        : "<button disabled>Bloqueado</button>") + "</article>";
+}
+
+/* ---- página: trilha ---- */
+function pgTrilha(R_, seg) {
+  const lista = doNivel(NIVEL_TELA);
+  const extra = { n1: "A nota mede precisão: onde o robô parou, se bateu e quantos blocos você usou.",
+    n2: "Os sensores entram em cena: a cada corrida o mundo muda de lugar, então decorar centímetros não resolve.",
+    n3: seg === "medio" ? "No Ensino Médio o <b>mundo real</b> fica ligado: ruído nos sensores, motores diferentes e inércia." : "Sem ruído no Fundamental: o foco é a lógica da decisão.",
+    n4: "Aqui começam as pistas da OBR 2026. " + (seg === "medio" ? "Área de resgate <b>Nível 2</b> (recipiente com borda de 6 cm) e mundo real ligado." : "Área de resgate <b>Nível 1</b> (triângulo sem parede)."),
+    n5: "Missão completa: tempo, precisão, penalidades e estratégia. Vários desafios daqui não trazem dica nenhuma." }[NIVEL_TELA];
+  return '<div class="pt-hero"><div><h1 id="tituloTrilha">Trilha de Conhecimento</h1>' +
+      "<p>" + SEGMENTOS[seg] + " · " + esc(PLAT.nome) + " · aprenda, pratique e evolua no mundo da robótica!</p></div>" +
+      '<button class="pt-btn" data-acao="livre">▣ Bancada livre →</button></div>' +
+    '<div class="pt-grade3">' + cartaoNumeros(R_) + cartaoCompetencias(R_) + cartaoProximo(R_) + "</div>" +
+    '<div class="pt-tabs" role="tablist">' + ORDEM_NIVEL.map((n, i) => {
+      const v = R_.niveis[n];
+      return '<button role="tab" data-nivel="' + n + '" aria-selected="' + (n === NIVEL_TELA) + '"><i>' + (i + 1) + "</i>" +
+        NIVEIS[n] + "<small>" + v.feitos + "/" + v.total + "</small></button>";
+    }).join("") + "</div>" +
+    '<div class="pt-card pt-nivel"><div class="pt-nivel-cab"><div><h2>' + NIVEIS[NIVEL_TELA].toUpperCase() + ' <span style="color:#82d94a">›</span></h2>' +
+      "<p><b>" + LEMA_NIVEL[NIVEL_TELA] + "</b> " + extra + "</p></div></div>" +
+    '<div class="pt-passos" style="grid-template-columns:repeat(' + lista.length + ',minmax(74px,1fr))">' +
+      lista.map((d, i) => { const r = registroDe(d.id, seg), ok = liberado(d, seg), e = r ? r.estrelas : 0;
+        const cls = e ? "feito" : ok ? "agora" : "travado";
+        return '<button class="pt-passo ' + cls + '" data-acao="' + (ok ? "desafio" : "nada") + '" data-id="' + d.id + '" title="' + esc(d.titulo) + '">' +
+          "<span>" + String(i + 1).padStart(2, "0") + '</span><small>' + esc(d.titulo.split(/[:·]/)[0]) + '</small><i class="est">' + "★".repeat(e) + "</i></button>"; }).join("") +
+      "</div>" +
+    '<div class="pt-desafios">' + lista.map((d, i) => cartaoDesafio(d, i, seg)).join("") + "</div>" +
+    '<div class="pt-nota">💡 <b>Como evoluir:</b> cada desafio libera o próximo com pelo menos 1 estrela. ' +
+      "O objetivo principal dá a 1ª estrela, 80 pontos dão a 2ª e 100 pontos a 3ª. Nos formatos <b>problema</b> cada dica aberta custa 5 pontos; no formato <b>arena</b> não há dica nenhuma.</div></div>";
+}
+
+/* ---- página: minha jornada ---- */
+function pgJornada(R_, seg) {
+  const corridas = [];
+  for (const d of DESAFIOS) { const r = registroDe(d.id, seg);
+    if (r && r.historico) for (const h of r.historico) corridas.push({ d, h }); }
+  corridas.sort((a, b) => b.h.q - a.h.q);
+  const nivelAgora = R_.proximo ? R_.proximo.nivel : ORDEM_NIVEL[ORDEM_NIVEL.length - 1];
+  const v = R_.niveis[nivelAgora];
+  return '<div class="pt-hero"><div><h1 id="tituloTrilha">Minha Jornada</h1>' +
+      "<p>Olá, " + esc(SESSAO.usuario || "aluno") + "! Este é o seu caminho no " + esc(PLAT.nome) + " · " + SEGMENTOS[seg] + ".</p></div>" +
+      '<button class="pt-btn" data-acao="pagina" data-pag="trilha">Ver a trilha →</button></div>' +
+    '<div class="pt-grade3">' + cartaoNumeros(R_) +
+      '<div class="pt-card pt-comp"><div class="pt-card-tit">Onde você está</div>' +
+        ORDEM_NIVEL.map((n, i) => '<div class="pt-skill"><span>' + (i + 1) + ". " + NIVEIS[n] +
+          (n === nivelAgora ? "<em>agora</em>" : "") + '</span><div class="pt-barra"><i style="--v:' +
+          pct(R_.niveis[n].feitos, R_.niveis[n].total) + '%"></i></div><b>' + R_.niveis[n].feitos + "/" + R_.niveis[n].total + "</b></div>").join("") +
+        "</div>" + cartaoProximo(R_) + "</div>" +
+    '<div class="pt-grade2">' +
+      '<div class="pt-card pt-bloco"><div class="pt-card-tit">Últimas corridas</div>' +
+        (corridas.length ? '<div class="pt-lista">' + corridas.slice(0, 8).map(c =>
+          '<div class="pt-item"><span class="ic">' + (c.h.e ? "🎯" : "↻") + "</span><div><b>" + esc(c.d.titulo) + "</b><span>" +
+          quando(c.h.q) + " · " + c.h.t.toString().replace(".", ",") + ' s</span></div><div class="dir"><span class="est">' +
+          "★".repeat(c.h.e) + '</span><b>' + c.h.p + "</b></div></div>").join("") + "</div>"
+          : '<div class="pt-vazio">Nenhuma corrida ainda. Comece pelo nível Descoberta.</div>') + "</div>" +
+      '<div class="pt-card pt-bloco"><div class="pt-card-tit">Atalhos</div><div class="pt-lista">' +
+        '<button class="pt-item" data-acao="livre"><span class="ic">⌘</span><div style="text-align:left"><b>Bancada livre</b><span>programar e testar sem desafio</span></div></button>' +
+        '<button class="pt-item" data-acao="pagina" data-pag="programas"><span class="ic">&lt;/&gt;</span><div style="text-align:left"><b>Meus Programas</b><span>o que você guardou neste navegador</span></div></button>' +
+        '<button class="pt-item" data-acao="pagina" data-pag="conquistas"><span class="ic">🏆</span><div style="text-align:left"><b>Conquistas</b><span>estrelas, competências e medalhas</span></div></button>' +
+        '<button class="pt-item" data-acao="kits"><span class="ic">🤖</span><div style="text-align:left"><b>Trocar de kit</b><span>SPIKE Prime · EV3 · Arduino</span></div></button>' +
+        "</div></div></div>";
+}
+
+/* ---- página: meus programas ---- */
+function pgProgramas(R_, seg) {
+  const guardados = (typeof MEUS !== "undefined" ? MEUS : []).slice().sort((a, b) => (b.quando || 0) - (a.quando || 0));
+  const dosDesafios = DESAFIOS.map(d => ({ d, r: registroDe(d.id, seg) })).filter(x => x.r && x.r.programa)
+    .sort((a, b) => (b.r.ultima || 0) - (a.r.ultima || 0));
+  return '<div class="pt-hero"><div><h1 id="tituloTrilha">Meus Programas</h1>' +
+      "<p>Tudo fica guardado neste navegador, separado por kit. " + esc(PLAT.nome) + ".</p></div>" +
+      '<button class="pt-btn" data-acao="livre">Abrir a bancada →</button></div>' +
+    '<div class="pt-grade2">' +
+      '<div class="pt-card pt-bloco"><div class="pt-card-tit">Guardados por você</div>' +
+        (guardados.length ? '<div class="pt-lista">' + guardados.map(m =>
+          '<button class="pt-item" data-acao="prog" data-nome="' + esc(m.nome) + '"><span class="ic">&lt;/&gt;</span>' +
+          '<div style="text-align:left"><b>' + esc(m.nome) + "</b><span>" + (m.quando ? quando(m.quando) : "guardado") +
+          '</span></div><span class="dir">abrir →</span></button>').join("") + "</div>"
+          : '<div class="pt-vazio">Nada guardado ainda. Na bancada, use 💾 Guardar para salvar um programa com nome.</div>') + "</div>" +
+      '<div class="pt-card pt-bloco"><div class="pt-card-tit">O programa de cada desafio</div>' +
+        (dosDesafios.length ? '<div class="pt-lista">' + dosDesafios.slice(0, 12).map(x =>
+          '<button class="pt-item" data-acao="desafio" data-id="' + x.d.id + '"><span class="ic">🎯</span>' +
+          '<div style="text-align:left"><b>' + esc(x.d.titulo) + "</b><span>" + esc(NIVEIS[x.d.nivel]) + " · recorde " + x.r.melhor +
+          '</span></div><span class="dir est">' + "★".repeat(x.r.estrelas) + "</span></button>").join("") + "</div>"
+          : '<div class="pt-vazio">Cada desafio guarda sozinho o seu programa assim que você roda uma corrida.</div>') + "</div></div>";
+}
+
+/* ---- página: conquistas ---- */
+function medalhas(seg) {
+  const reg = id => registroDe(id, seg) || { estrelas: 0, melhor: 0 };
+  const tres = DESAFIOS.filter(d => reg(d.id).estrelas === 3).length;
+  const feitos = DESAFIOS.filter(d => reg(d.id).estrelas > 0).length;
+  const nivelCheio = n => doNivel(n).every(d => reg(d.id).estrelas > 0);
+  const arenaOk = DESAFIOS.some(d => formatoDe(d).custo === -1 && reg(d.id).estrelas > 0);
+  return [
+    ["🚀", "Primeiros passos", "Cumprir o primeiro desafio da trilha.", feitos >= 1],
+    ["🧭", "Descoberta completa", "Uma estrela em todos os desafios do nível 1.", nivelCheio("n1")],
+    ["🧱", "Construtor completo", "Uma estrela em todos os desafios do nível 2.", nivelCheio("n2")],
+    ["🎨", "Mão firme", "Três estrelas em cinco desafios.", tres >= 5],
+    ["📈", "Controle fino", "Cumprir o desafio do PID.", reg("n4-pid").estrelas > 0],
+    ["🧩", "Sem colar", "Cumprir um desafio no formato arena, sem dica nenhuma.", arenaOk],
+    ["🆘", "Resgate", "Cumprir a sala de resgate.", reg("av-6").estrelas > 0],
+    ["🏁", "OBR completa", "Cumprir uma pista completa da OBR.", ["av-8", "av-9", "av-10"].some(i => reg(i).estrelas > 0)],
+    ["🎯", "Repetibilidade", "Três corridas seguidas cumprindo a mesma missão.", reg("n5-repete").estrelas === 3],
+    ["👑", "Competidor", "Uma estrela em todos os desafios do nível 5.", nivelCheio("n5")]
+  ];
+}
+function pgConquistas(R_, seg) {
+  const M = medalhas(seg), ganhas = M.filter(m => m[3]).length;
+  return '<div class="pt-hero"><div><h1 id="tituloTrilha">Conquistas</h1>' +
+      "<p>" + ganhas + " de " + M.length + " medalhas · " + R_.estrelas + " estrelas · " + R_.pontos + " pontos em " + SEGMENTOS[seg] + ".</p></div>" +
+      '<button class="pt-btn" data-acao="pagina" data-pag="trilha">Buscar mais estrelas →</button></div>' +
+    '<div class="pt-grade3" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">' + cartaoNumeros(R_) + cartaoCompetencias(R_) + "</div>" +
+    '<div class="pt-card pt-bloco" style="margin-bottom:16px"><div class="pt-card-tit">Medalhas</div><div class="pt-medalhas">' +
+      M.map(m => '<div class="pt-medalha' + (m[3] ? " on" : "") + '"><span class="ic">' + m[0] + "</span><div><b>" + m[1] + "</b><span>" + m[2] + "</span></div></div>").join("") +
+      "</div></div>" +
+    '<div class="pt-card pt-bloco"><div class="pt-card-tit">Estrelas por nível</div>' +
+      ORDEM_NIVEL.map((n, i) => { const v = R_.niveis[n];
+        return '<div class="pt-skill"><span>' + (i + 1) + ". " + NIVEIS[n] + '</span><div class="pt-barra"><i style="--v:' +
+          pct(v.estrelas, v.max) + '%"></i></div><b>' + v.estrelas + "/" + v.max + "</b></div>"; }).join("") + "</div>";
+}
+
+/* ---- páginas que ainda dependem de servidor ---- */
+function pgBreve() {
+  const p = PAGINAS[PAGINA];
+  return '<div class="pt-hero"><div><h1 id="tituloTrilha">' + p.nome + "</h1><p>Esta parte do portal ainda não está pronta.</p></div></div>" +
+    '<div class="pt-card pt-breve"><span class="ic">' + (p.ic2 || p.ic) + '</span><span class="selo">em breve</span>' +
+    "<h2>" + p.nome + "</h2><p>" + p.breve + "</p>" +
+    '<button class="pt-btn linha" data-acao="pagina" data-pag="trilha">Voltar para a trilha</button></div>';
+}
+
+/* ---- desenha a tela inteira ---- */
 function desenhaTrilha() {
-  const seg = segAtual(), R_ = resumoDesempenho(seg);
-  $("olaTrilha").textContent = SESSAO.usuario || "";
-  $("kitAtual").innerHTML = '<span class="bolinha ' + INFO_KIT[PLAT.id].classe + '"></span>' + esc(PLAT.nome) + "<small>trocar</small>";
+  const seg = segAtual(), R_ = resumoDesempenho(seg), u = SESSAO.usuario || "";
+  $("olaTrilha").textContent = "Olá, " + u + "!";
+  $("avatarPortal").textContent = (u || "?").slice(0, 1).toUpperCase();
+  $("kitAtual").innerHTML = '<span class="bolinha ' + INFO_KIT[PLAT.id].classe + '"></span>' + esc(PLAT.nome) + "<small>trocar ›</small>";
   document.querySelectorAll("#telaTrilha .segmento button").forEach(b => b.setAttribute("aria-checked", b.dataset.seg === seg ? "true" : "false"));
-  $("subTrilha").textContent = SEGMENTOS[seg] + " · " + PLAT.nome + ". Cada desafio libera o próximo com pelo menos 1 estrela.";
-  const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
-  $("painelDesempenho").innerHTML =
-    '<div class="numeros"><div><b>' + R_.pontos + '</b><span>pontos</span></div><div><b>' + R_.estrelas + "<small>/" + DESAFIOS.length * 3 + '</small></b><span>estrelas</span></div>' +
-    '<div><b>' + R_.feitos + "<small>/" + R_.total + '</small></b><span>desafios cumpridos</span></div><div><b>' + R_.tentativas + '</b><span>corridas</span></div></div>' +
-    '<div class="comp"><h3>Competências <small>média dos melhores pontos</small></h3>' + Object.keys(COMPETENCIAS).map(c =>
-      '<div class="barra-comp"><span>' + COMPETENCIAS[c] + '</span><i style="--v:' + R_.comp[c] + '%"></i><b>' + R_.comp[c] + "</b></div>").join("") + "</div>" +
-    '<div class="proximo">' + (R_.proximo ? '<h3>Próximo passo</h3><p>' + esc(NIVEIS[R_.proximo.nivel]) + '</p><strong>' + esc(R_.proximo.titulo) + '</strong><button data-acao="desafio" data-id="' + R_.proximo.id + '">Começar ›</button>'
-      : "<h3>Trilha completa</h3><p>Agora é buscar 3 estrelas em tudo e testar com o mundo real ligado.</p>") + "</div>";
-  document.querySelectorAll("#telaTrilha .niveis button").forEach(b => {
-    const n = R_.niveis[b.dataset.nivel];
-    b.setAttribute("aria-selected", b.dataset.nivel === NIVEL_TELA ? "true" : "false");
-    b.innerHTML = NIVEIS[b.dataset.nivel] + '<span class="pct" style="--v:' + pct(n.estrelas, n.max) + '%">' + n.feitos + "/" + n.total + "</span>";
+  $("menuPortal").innerHTML = '<div class="titulo">MENU</div>' + Object.keys(PAGINAS).map(k => { const p = PAGINAS[k];
+    return '<button data-acao="' + (p.acao || "pagina") + '" data-pag="' + k + '"' + (k === PAGINA ? ' aria-current="page"' : "") +
+      '><span class="ic">' + p.ic + "</span><span>" + p.nome + "</span>" + (p.breve ? '<span class="breve">em breve</span>' : "") + "</button>"; }).join("");
+  if (innerWidth <= 860) $("ladoPortal").classList.add("fechado");   /* no celular o menu começa fechado */
+  $("crumbPortal").innerHTML = "Portal da Robótica &nbsp;›&nbsp; <b>" + esc(PLAT.nome) + "</b> &nbsp;›&nbsp; " + esc(PAGINAS[PAGINA].nome);
+  const pagina = { trilha: pgTrilha, jornada: pgJornada, programas: pgProgramas, conquistas: pgConquistas }[PAGINA];
+  $("conteudoPortal").innerHTML = pagina ? pagina(R_, seg) : pgBreve();
+  if (typeof preparaFotos === "function") preparaFotos();
+  document.querySelectorAll("#conteudoPortal [data-nivel]").forEach(b => b.onclick = () => {
+    NIVEL_TELA = b.dataset.nivel; SESSAO.nivelTela = NIVEL_TELA; gravaSessao(SESSAO); desenhaTrilha();
+    $("conteudoPortal").querySelector(".pt-tabs").scrollIntoView({ block: "nearest" });
   });
-  $("introNivel").innerHTML = { ini: "Sequência, giros, repetição e os primeiros sensores. Aqui a nota mede precisão: onde o robô parou e quantos blocos usou.",
-    int: "Seguir linha com decisões e controle. " + (seg === "medio" ? "No Ensino Médio o <b>mundo real</b> fica ligado (ruído nos sensores, motores diferentes e inércia)." : "Sem ruído no Fundamental."),
-    av: "As pistas da OBR 2026. " + (seg === "medio" ? "Área de resgate <b>Nível 2</b> (recipiente com borda de 6 cm) e mundo real ligado." : "Área de resgate <b>Nível 1</b> (triângulo sem parede).") }[NIVEL_TELA];
-  $("listaDesafios").innerHTML = doNivel(NIVEL_TELA).map((d, i) => {
-    const r = registroDe(d.id, seg), ok = liberado(d, seg), e = r ? r.estrelas : 0;
-    return '<article class="desafio' + (ok ? "" : " bloqueado") + (e ? " feito" : "") + '">' +
-      '<div class="d-topo"><span class="d-num">' + String(i + 1).padStart(2, "0") + '</span><span class="d-estrelas" aria-label="' + e + ' estrelas">' + "★".repeat(e) + '<span>' + "★".repeat(3 - e) + "</span></span></div>" +
-      '<h3 class="d-titulo">' + esc(d.titulo) + '</h3><p class="d-resumo">' + esc(d.resumo) + "</p>" +
-      '<div class="d-conceitos">' + d.conceitos.map(c => "<span>" + COMPETENCIAS[c] + "</span>").join("") + "</div>" +
-      '<div class="d-rodape"><span class="d-pontos">' + (r ? "recorde <b>" + r.melhor + "</b> · " + r.tentativas + " corrida" + (r.tentativas === 1 ? "" : "s") : ok ? "ainda não tentou" : "🔒 cumpra o anterior") + "</span>" +
-      (ok ? '<button data-acao="desafio" data-id="' + d.id + '">' + (r ? "Treinar" : "Começar") + " ›</button>" : "") + "</div></article>";
-  }).join("");
+}
+function abreTrilha() { PAGINA = "trilha"; SESSAO.pagina = "trilha"; gravaSessao(SESSAO); mostraPortal("trilha"); }
+function vaiParaPagina(pag) {
+  if (!PAGINAS[pag]) return;
+  PAGINA = pag; SESSAO.pagina = pag; gravaSessao(SESSAO);
+  desenhaTrilha();
+  $("conteudoPortal").scrollTop = 0; portal.scrollTop = 0;
+  $("ladoPortal").classList.add("fechado");
+}
+function abrePrograma(nome) {
+  const m = (typeof MEUS !== "undefined" ? MEUS : []).find(x => x.nome === nome); if (!m) return;
+  abreLivre(); usaPrograma(m.prog, m.nome); montaPaleta(); desenhaBlocos(); reinicia();
+  registra('Programa "' + m.nome + '" aberto na bancada livre.');
 }
 document.querySelectorAll("#telaTrilha .segmento button").forEach(b => b.onclick = () => { SESSAO.segmento = b.dataset.seg; gravaSessao(SESSAO); desenhaTrilha(); });
-document.querySelectorAll("#telaTrilha .niveis button").forEach(b => b.onclick = () => { NIVEL_TELA = b.dataset.nivel; SESSAO.nivelTela = NIVEL_TELA; gravaSessao(SESSAO); desenhaTrilha(); });
+$("btMenuPortal").onclick = () => $("ladoPortal").classList.toggle("fechado");
 
 /* ---------------------------- entrar num desafio ou na bancada livre ---------------------------- */
 function guardaProgramaDesafio() {
@@ -8343,10 +9062,10 @@ function abreDesafio(id) {
   if (!DESAFIO) { try { localStorage.setItem(CHAVE_LIVRE + "." + PLAT.id, JSON.stringify({ prog: PROG, tag: $("tagProj").textContent, pista: PISTA_ATUAL })); } catch (e) {} }
   else guardaProgramaDesafio();
   const seg = segAtual();
-  DESAFIO = { def: d, seg, params: {} };
+  DESAFIO = { def: d, seg, params: {}, dicas: [] };
   novaTentativa();
   mundoReal(!!d.realista && seg === "medio");
-  if (d.nivel === "av") { NIVEL_RESGATE = seg === "medio" ? 2 : 1; $("selNivel").value = String(NIVEL_RESGATE); }
+  if (d.pistaObr) { NIVEL_RESGATE = seg === "medio" ? 2 : 1; $("selNivel").value = String(NIVEL_RESGATE); }
   const i = PISTA_DESAFIO[d.id];
   if (!d.pistaObr) PISTAS[i].estado = null;
   const reg = registroDe(d.id, seg);
@@ -8379,7 +9098,7 @@ function abreLivre() {
 (function () {
   const bt = document.createElement("button"); bt.className = "bt trilha"; bt.id = "btTrilha"; bt.innerHTML = "☰ Trilha"; bt.title = "Voltar para a trilha de desafios";
   const marca = document.querySelector("#topo .marca"); marca.after(bt);
-  bt.onclick = () => mostraPortal("trilha");
+  bt.onclick = () => abreTrilha();
   const chip = document.createElement("span"); chip.className = "tag kit " + INFO_KIT[PLAT.id].classe; chip.id = "chipKit"; chip.textContent = PLAT.nome;
   bt.after(chip);
   const ab = document.createElement("button"); ab.dataset.aba = "desafio"; ab.textContent = "🎯 Desafio"; ab.hidden = true;
@@ -8391,25 +9110,39 @@ function abreLivre() {
     document.querySelectorAll(".aba").forEach(a => a.hidden = a.dataset.aba !== "desafio");
   };
 })();
+/* guiado: dicas abertas · problema: cada dica custa pontos · arena: nenhuma dica */
+function dicasDoDesafio(d, abertas) {
+  const fm = formatoDe(d), lista = d.dicas();
+  if (fm.custo === -1 || !lista.length)
+    return '<p class="dz-arena"><b>Formato arena.</b> ' + esc(fm.desc) + " Leia a missão, decida a estratégia e teste na bancada.</p>";
+  if (!fm.custo)
+    return '<details class="dz-dicas" open><summary>Dicas (' + lista.length + ")</summary><ol>" + lista.map(t => "<li>" + t + "</li>").join("") + "</ol></details>";
+  return '<div class="dz-dicas problema"><h5>Dicas · cada uma custa ' + fm.custo + " pontos enquanto este desafio estiver aberto" +
+    (abertas ? " <em>(−" + abertas * fm.custo + " agora)</em>" : "") + "</h5><ol>" +
+    lista.map((t, i) => "<li>" + (DESAFIO.dicas[i] ? t : '<button class="bt dica" data-dica="' + i + '">Abrir a dica ' + (i + 1) + " (−" + fm.custo + ")</button>") + "</li>").join("") +
+    "</ol></div>";
+}
 function mostraAbaDesafio() {
   const ab = document.querySelector('#abas button[data-aba="desafio"]'), P_ = $("abaDesafio");
   ab.hidden = !DESAFIO;
   $("hEquipe").textContent = DESAFIO ? "🎯 " + DESAFIO.def.titulo : "🤖 " + (EQUIPE.nome || "equipe");
   if (!DESAFIO) { if (!P_.hidden) document.querySelector('#abas button[data-aba="sens"]').click(); return; }
   const d = DESAFIO.def, s = DESAFIO.seg, reg = registroDe(d.id, s);
-  P_.innerHTML = '<div class="cartao dz"><div class="dz-chips"><span>' + NIVEIS[d.nivel] + "</span><span>" + SEGMENTOS[s] + "</span>" +
+  const fm = formatoDe(d), abertas = (DESAFIO.dicas || []).filter(Boolean).length;
+  P_.innerHTML = '<div class="cartao dz"><div class="dz-chips"><span>' + NIVEIS[d.nivel] + '</span><span class="f-' + fm.cor + '">' + fm.nome + "</span><span>" + SEGMENTOS[s] + "</span>" +
     (d.realista && s === "medio" ? "<span>mundo real ligado</span>" : "") + (d.sorteia ? "<span>muda a cada corrida</span>" : "") + "</div>" +
     "<h4>" + esc(d.titulo) + "</h4><p>" + d.objetivo(s) + "</p>" +
     '<h5>Como a nota é dada</h5><ul class="dz-crit">' + d.criterios(s).map(([t, p, pr]) => "<li><span>" + esc(t) + (pr ? " <em>objetivo</em>" : "") + "</span><b>" + p + "</b></li>").join("") + "</ul>" +
     '<p class="nota">O objetivo dá a 1ª estrela; 80 pontos dão a 2ª e 100 pontos a 3ª. Tempo máximo da corrida: ' + d.tempoMax + " s.</p>" +
-    '<details class="dz-dicas"><summary>Dicas (' + d.dicas().length + ")</summary><ol>" + d.dicas().map(t => "<li>" + t + "</li>").join("") + "</ol></details>" +
+    dicasDoDesafio(d, abertas) +
     '<div class="dz-reg">' + (reg ? "Recorde: <b>" + reg.melhor + " pontos</b> " + "★".repeat(reg.estrelas) + " · " + reg.tentativas + " corrida(s)" +
       (reg.historico && reg.historico.length ? '<div class="dz-hist">' + reg.historico.slice(0, 8).reverse().map(h => '<i style="--v:' + h.p + '%" title="' + h.p + ' pontos"></i>').join("") + "</div>" : "") : "Ainda sem corridas neste desafio.") + "</div>" +
     '<div class="linha"><button class="bt primaria" id="dzRodar" style="flex:1">▶ Rodar</button><button class="bt" id="dzTrilha">☰ Trilha</button></div>' +
     '<div class="linha"><button class="bt" id="dzZerar" style="flex:1">Começar o programa do zero</button>' +
-    (d.nivel !== "ini" ? '<button class="bt" id="dzExemplo">Ver o exemplo PD</button>' : "") + "</div></div>";
+    (fm.custo !== -1 && ORDEM_NIVEL.indexOf(d.nivel) >= 2 ? '<button class="bt" id="dzExemplo">Ver o exemplo PD</button>' : "") + "</div></div>";
+  P_.querySelectorAll("button[data-dica]").forEach(b => b.onclick = () => { DESAFIO.dicas[+b.dataset.dica] = true; mostraAbaDesafio(); });
   $("dzRodar").onclick = () => $("btRodar").click();
-  $("dzTrilha").onclick = () => mostraPortal("trilha");
+  $("dzTrilha").onclick = () => abreTrilha();
   $("dzZerar").onclick = () => { if (!confirm("Apagar os blocos deste desafio e começar do zero?")) return;
     PROG = { scripts: [{ id: novoId(), x: 40, y: 40, pilha: [criaBloco("ev_inicio")] }], vars: [], procs: [] }; montaPaleta(); desenhaBlocos(); reinicia(); };
   if ($("dzExemplo")) $("dzExemplo").onclick = () => { if (!confirm("Trocar os blocos deste desafio pelo Seguidor PD de exemplo?")) return;
@@ -8418,7 +9151,8 @@ function mostraAbaDesafio() {
 
 /* começa o portal depois que a bancada terminou de carregar */
 function iniciaPortal() {
-  NIVEL_TELA = SESSAO.nivelTela && NIVEIS[SESSAO.nivelTela] ? SESSAO.nivelTela : "ini";
+  NIVEL_TELA = SESSAO.nivelTela && NIVEIS[SESSAO.nivelTela] ? SESSAO.nivelTela : "n1";
+  PAGINA = SESSAO.pagina && PAGINAS[SESSAO.pagina] ? SESSAO.pagina : "trilha";
   /* "manter-me conectado" desmarcado: a sessão vale só até fechar o navegador */
   if (SESSAO.usuario && SESSAO.lembrar === false) { let aberta = null; try { aberta = sessionStorage.getItem(CHAVE_ABERTA); } catch (e) {}
     if (!aberta) { delete SESSAO.usuario; gravaSessao(SESSAO); } }

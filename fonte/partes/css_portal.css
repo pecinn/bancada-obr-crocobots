@@ -102,86 +102,41 @@ body.no-portal{overflow:hidden}
 .kit.atual::after{content:"kit atual";position:absolute;top:12px;right:12px;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
   background:#8fd14f;color:#10200a;border-radius:999px;padding:3px 9px}
 
-/* ---------- trilha ---------- */
-.trilha-miolo{max-width:1240px;width:100%;margin:0 auto;padding-block:clamp(20px,4vh,40px);padding-inline:clamp(16px,4vw,40px)}
-.trilha-cabeca{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.bancada-livre{border:1px solid #3a4048;background:#15181c;color:#eef1f4;border-radius:12px;padding:10px 16px;font-weight:900;margin-bottom:22px}
-.bancada-livre:hover{border-color:#8fd14f}
-.desempenho{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.3fr) minmax(0,.9fr);gap:12px;margin-bottom:22px}
-.desempenho>div{background:linear-gradient(180deg,#1b1e23,#16181c);border:1px solid #2a2f35;border-radius:16px;padding:14px 16px}
-.desempenho h3{margin:0 0 10px;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#8d96a1}
-.desempenho h3 small{text-transform:none;letter-spacing:0;font-weight:700;color:#66707b}
-.numeros{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.numeros div{display:grid;align-content:center}
-.numeros b{font-family:"Black Ops One",Nunito,sans-serif;font-weight:400;font-size:34px;line-height:1;color:#eef1f4;font-variant-numeric:tabular-nums}
-.numeros b small{font-family:Nunito,sans-serif;font-size:15px;color:#6f7883;font-weight:800}
-.numeros span{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#8d96a1;margin-top:4px}
-.barra-comp{display:grid;grid-template-columns:minmax(120px,1.2fr) 2fr 30px;gap:8px;align-items:center;margin:5px 0;font-size:13px;font-weight:700;color:#c7ced6}
-.barra-comp i{height:8px;border-radius:9px;background:linear-gradient(90deg,#8fd14f var(--v),#2a2f35 var(--v))}
-.barra-comp b{text-align:right;font-variant-numeric:tabular-nums;color:#eef1f4}
-.proximo{display:flex;flex-direction:column}
-.proximo p{margin:0;color:#8fd14f;font-weight:900;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
-.proximo strong{font-size:18px;margin:4px 0 12px;color:#eef1f4;line-height:1.25}
-.proximo button{margin-top:auto;border:0;border-radius:11px;padding:10px;font-weight:900;color:#10200a;background:linear-gradient(180deg,#b9e886,#8fd14f)}
-.niveis{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #262b31;margin-bottom:12px}
-.niveis button{display:inline-flex;align-items:center;gap:10px;border:0;background:transparent;color:#98a1ab;font-weight:900;font-size:16px;
-  padding:10px 14px;border-bottom:3px solid transparent;margin-bottom:-1px}
-.niveis button[aria-selected="true"]{color:#eef1f4;border-bottom-color:#8fd14f}
-.niveis .pct{font-size:12px;font-weight:800;border-radius:999px;padding:2px 8px;color:#d8dde3;
-  background:linear-gradient(90deg,rgba(143,209,79,.45) var(--v),#23282e var(--v))}
-.nivel-intro{margin:0 0 14px;color:#98a1ab;font-weight:600;max-width:80ch;line-height:1.5}
-.nivel-intro b{color:#dfe4ea}
-.desafios{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;padding-bottom:40px}
-.desafio{display:flex;flex-direction:column;background:linear-gradient(180deg,#1b1e23,#15171b);border:1px solid #2a2f35;border-radius:16px;padding:14px 15px}
-.desafio.feito{border-color:#3d5a2a}
-.desafio.bloqueado{opacity:.55}
-.d-topo{display:flex;justify-content:space-between;align-items:center}
-.d-num{font-family:"Black Ops One",Nunito,sans-serif;font-size:22px;color:#4a525c}
-.desafio.feito .d-num{color:#8fd14f}
-.d-estrelas{color:#ffd23f;letter-spacing:2px;font-size:16px}
-.d-estrelas span{color:#3a4048}
-.d-titulo{margin:6px 0 6px;font-size:17px;line-height:1.25;color:#eef1f4}
-.d-resumo{margin:0 0 10px;color:#aab1ba;font-size:13.5px;font-weight:600;line-height:1.45}
-.d-conceitos{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
-.d-conceitos span{font-size:11px;font-weight:800;color:#b9c0c8;border:1px solid #30363e;border-radius:999px;padding:2px 8px}
-.d-rodape{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.d-pontos{font-size:12.5px;color:#8d96a1;font-weight:700}
-.d-pontos b{color:#eef1f4}
-.d-rodape button{border:0;border-radius:10px;padding:8px 12px;font-weight:900;color:#10200a;background:linear-gradient(180deg,#b9e886,#8fd14f);white-space:nowrap}
+/* (a trilha agora é a tela clara do modelo: css_trilha.css) */
+@media (max-width:980px){ .login-grade{grid-template-columns:1fr} }
 
-@media (max-width:980px){
-  .login-grade{grid-template-columns:1fr}
-  .desempenho{grid-template-columns:1fr}
-}
-@media (max-width:560px){
-  .portal-topo .marca-portal,.portal-topo .ola{display:none}
-  .segmento button{padding:6px 9px;font-size:12px}
-  .barra-comp{grid-template-columns:1fr 1.2fr 28px;font-size:12px}
-  .numeros b{font-size:28px}
-}
-
-/* ---------- dentro da bancada ---------- */
-#topo .bt.trilha{background:linear-gradient(180deg,#b9e886,#8fd14f);color:#10200a;border-color:transparent;font-weight:900}
-#topo .tag.kit{border-width:1px;color:#e8ecf0;text-transform:none;letter-spacing:.02em;font-weight:900}
+/* ---------- dentro da bancada (tema claro; o cartão de resultado fica sobre o palco e continua escuro) ---------- */
+#topo .bt.trilha{background:linear-gradient(180deg,#a8ee69,#7ee044);color:#11220b;border-color:transparent;font-weight:900}
+#topo .tag.kit{border-width:1px;color:#3d4c62;background:#fff;text-transform:none;letter-spacing:.02em;font-weight:900}
 #topo .tag.kit.spike{border-color:#ffcf00}#topo .tag.kit.ev3{border-color:#d0342c}#topo .tag.kit.ard{border-color:#00979d}
-.dz h4{margin:6px 0 6px;font-size:17px;color:#eef1f4}
-.dz p{font-size:13px;color:#c3cad2;font-weight:600;line-height:1.5;margin:0 0 8px}
-.dz p b{color:#eef1f4}
-.dz h5{margin:12px 0 6px}
+.dz h4{margin:6px 0 6px;font-size:17px;color:#15243d}
+.dz p{font-size:13px;color:#506078;font-weight:600;line-height:1.5;margin:0 0 8px}
+.dz p b{color:#15243d}
+.dz h5{margin:12px 0 6px;color:#536278}
 .dz-chips{display:flex;flex-wrap:wrap;gap:5px}
-.dz-chips span{font-size:10.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:2px 8px;background:#23282e;color:#b9c0c8}
-.dz-chips span:first-child{background:#8fd14f;color:#10200a}
+.dz-chips span{font-size:10.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:3px 9px;background:#eef2f7;color:#5b6a7f}
+.dz-chips span:first-child{background:#e8f9df;color:#2e7d18}
+.dz-chips span.f-g{background:#f2fcec;color:#2e7d18}
+.dz-chips span.f-p{background:#fffaeb;color:#9a6b00}
+.dz-chips span.f-a{background:#fff2f4;color:#c0304a}
 .dz-crit{list-style:none;margin:0;padding:0;display:grid;gap:4px}
-.dz-crit li{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;font-weight:700;color:#c7ced6;background:#121417;border-radius:8px;padding:5px 8px}
-.dz-crit em{font-style:normal;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:#8fd14f;margin-left:4px}
-.dz-crit b{font-variant-numeric:tabular-nums;color:#eef1f4}
-.dz-dicas{margin:8px 0;font-size:13px;color:#c3cad2}
-.dz-dicas summary{cursor:pointer;font-weight:900;color:#8fd14f}
+.dz-crit li{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;font-weight:700;color:#3d4c62;background:#f4f7fa;border-radius:9px;padding:6px 9px}
+.dz-crit em{font-style:normal;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:#3f9c1e;margin-left:4px}
+.dz-crit b{font-variant-numeric:tabular-nums;color:#15243d}
+.dz-dicas{margin:8px 0;font-size:13px;color:#506078}
+.dz-dicas summary{cursor:pointer;font-weight:900;color:#3f9c1e}
 .dz-dicas ol{margin:6px 0 0;padding-left:20px;line-height:1.5;font-weight:600}
-.dz-reg{font-size:12.5px;color:#aab1ba;font-weight:700;margin:8px 0}
-.dz-reg b{color:#eef1f4}
+.dz-dicas.problema h5{margin:0 0 4px;font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#9a6b00}
+.dz-dicas.problema h5 em{font-style:normal;color:#c0304a}
+.dz-dicas.problema li{margin:5px 0}
+.bt.dica{padding:5px 10px;font-size:12px;font-weight:800;color:#9a6b00;border-color:#f2dd9e;background:#fffaeb}
+.dz-arena{border:1px dashed #f4c3cc;border-radius:12px;padding:9px 11px;background:#fff4f6;margin:8px 0 !important}
+.dz-arena b{color:#c0304a}
+.dz-reg{font-size:12.5px;color:#6c788a;font-weight:700;margin:8px 0}
+.dz-reg b{color:#15243d}
 .dz-hist{display:flex;gap:3px;align-items:flex-end;height:34px;margin-top:6px}
-.dz-hist i{flex:1;max-width:22px;border-radius:4px 4px 0 0;background:#8fd14f;height:max(3px,var(--v))}
+.dz-hist i{flex:1;max-width:22px;border-radius:4px 4px 0 0;background:#7ee044;height:max(3px,var(--v))}
+/* o resultado aparece por cima da pista: segue escuro, como o resto do simulador */
 #resultado .res-desafio{min-width:min(340px,86vw)}
 #resultado .criterios{list-style:none;margin:8px 0;padding:0;display:grid;gap:4px;text-align:left}
 #resultado .criterios li{display:grid;grid-template-columns:18px 1fr auto;gap:6px;align-items:center;font-size:12.5px;font-weight:700;color:#d6dce3;

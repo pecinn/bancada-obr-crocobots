@@ -90,9 +90,9 @@ const MAPA = {
   flippermoremotor_motorStartPower:   (b, S) => mk("mot_potencia", { P: entradaSb(b, "PORT", S), VAL: entradaSb(b, "POWER", S) }),
   flippermotor_motorStop:      (b, S) => mk("mot_parar", { P: entradaSb(b, "PORT", S) }),
   flippermotor_motorSetSpeed:  (b, S) => mk("mot_vel", { P: entradaSb(b, "PORT", S), VAL: entradaSb(b, "SPEED", S) }),
-  flippermotor_motorGoDirectionToPosition: (b, S) => mk("mot_ir", { P: entradaSb(b, "PORT", S), VAL: entradaSb(b, "POSITION", S) }),
+  flippermotor_motorGoDirectionToPosition: (b, S) => mk("mot_ir", { P: entradaSb(b, "PORT", S), CAM: campoSb(b, "DIRECTION", "shortest"), VAL: entradaSb(b, "POSITION", S) }),
   flippermotor_motorSetDegreeCounted:      (b, S) => mk("mot_zerar", { P: entradaSb(b, "PORT", S) }),
-  flippermoremotor_motorSetDegreeCounted:  (b, S) => mk("mot_zerar", { P: entradaSb(b, "PORT", S) }),
+  flippermoremotor_motorSetDegreeCounted:  (b, S) => mk("mot_zerar", { P: entradaSb(b, "PORT", S), VAL: entradaSb(b, "VALUE", S) }),
   flippermotor_absolutePosition: (b, S) => mk("mot_pos", { P: entradaSb(b, "PORT", S) }),
   flippermotor_position:         (b, S) => mk("mot_pos", { P: entradaSb(b, "PORT", S) }),
   flippermoremotor_position:     (b, S) => mk("mot_pos", { P: entradaSb(b, "PORT", S) }),
@@ -124,7 +124,16 @@ const MAPA = {
   flippersensors_timer:     () => mk("sen_cron"),
   flippersensors_resetTimer:() => mk("sen_zerar_cron"),
   flippercontrol_stop: (b) => mk("ctl_parar", { ALVO: lit(/this/.test(campoSb(b, "STOP_OPTION", "all").lit) ? "this script" : "all") }),
-  flippercontrol_stopOtherStacks: () => mk("ctl_parar", { ALVO: lit("other scripts in sprite") }),
+  flippercontrol_stopOtherStacks: () => mk("ctl_parar_outras", {}),
+  flippermoremotor_motorGoToRelativePosition: (b, S) => mk("mot_ir_rel", { P: entradaSb(b, "PORT", S), VAL: entradaSb(b, "POSITION", S), VEL: entradaSb(b, "SPEED", S) }),
+  flippermoremotor_motorSetStopMethod: (b, S) => mk("mot_parada", { P: entradaSb(b, "PORT", S), STOP: campoSb(b, "STOP", "1") }),
+  flippermoremotor_motorSetAcceleration: (b, S) => mk("mot_acel", { P: entradaSb(b, "PORT", S), ACEL: entradaSb(b, "ACCELERATION", S) }),
+  flippermoremove_movementSetStopMethod: (b) => mk("mov_parada", { STOP: campoSb(b, "STOP", "1") }),
+  flippermoremove_movementSetAcceleration: (b, S) => mk("mov_acel", { ACEL: entradaSb(b, "ACCELERATION", S) }),
+  flippermoremotor_position: (b, S) => mk("mot_pos_rel", { P: entradaSb(b, "PORT", S) }),
+  flippermoremotor_power:    (b, S) => mk("mot_pot_r", { P: entradaSb(b, "PORT", S) }),
+  flippermotor_absolutePosition: (b, S) => mk("mot_pos", { P: entradaSb(b, "PORT", S) }),
+  flipperoperator_isInBetween: (b, S) => mk("op_entre", { A: entradaSb(b, "VALUE", S), B: entradaSb(b, "LOW", S), C: entradaSb(b, "HIGH", S) }),
 
   /* ---- EV3 Classroom ---- */
   ev3events_whenProgramStarts: () => mk("ev_inicio"),
@@ -163,7 +172,7 @@ const MAPA = {
   sensing_timer: () => mk("sen_cron"), sensing_resettimer: () => mk("sen_zerar_cron"),
   ev3control_stop: (b) => { const o = campoSb(b, "STOP_OPTION", "program").lit;
     return mk("ctl_parar", { ALVO: lit(o === "this stack" ? "this script" : o === "other stacks" ? "other scripts in sprite" : "all") }); },
-  ev3control_stopOtherStacks: () => mk("ctl_parar", { ALVO: lit("other scripts in sprite") }),
+  ev3control_stopOtherStacks: () => mk("ctl_parar_outras", {}),
 
   /* ---- Scratch (os dois apps usam estes) ---- */
   control_wait:      (b, S) => mk("ctl_esperar", { SEG: entradaSb(b, "DURATION", S) }),
@@ -182,6 +191,10 @@ const MAPA = {
   operator_round:    (b, S) => mk("op_arred",{ A: entradaSb(b, "NUM", S) }),
   operator_mathop:   (b, S) => campoSb(b, "OPERATOR", "abs").lit === "abs" ? mk("op_abs", { A: entradaSb(b, "NUM", S) }) : null,
   operator_random:   (b, S) => mk("op_aleatorio", { A: entradaSb(b, "FROM", S), B: entradaSb(b, "TO", S) }),
+  operator_join:     (b, S) => mk("op_junta", { A: entradaSb(b, "STRING1", S), B: entradaSb(b, "STRING2", S) }),
+  operator_letter_of:(b, S) => mk("op_letra", { A: entradaSb(b, "LETTER", S), B: entradaSb(b, "STRING", S) }),
+  operator_length:   (b, S) => mk("op_tamanho", { A: entradaSb(b, "STRING", S) }),
+  operator_contains: (b, S) => mk("op_contem", { A: entradaSb(b, "STRING1", S), B: entradaSb(b, "STRING2", S) }),
   operator_lt:       (b, S) => mk("op_menor", { A: entradaSb(b, "OPERAND1", S), B: entradaSb(b, "OPERAND2", S) }),
   operator_gt:       (b, S) => mk("op_maior", { A: entradaSb(b, "OPERAND1", S), B: entradaSb(b, "OPERAND2", S) }),
   operator_equals:   (b, S) => mk("op_igual", { A: entradaSb(b, "OPERAND1", S), B: entradaSb(b, "OPERAND2", S) }),
@@ -323,9 +336,18 @@ const SAIDA_SPIKE = {
   mot_potencia:{ op:"flippermoremotor_motorStartPower", sel:{ PORT:["flippermoremotor_multiple-port-selector","P"] }, val:{ POWER:["VAL", TIPO.num] } },
   mot_parar:  { op:"flippermotor_motorStop", sel:{ PORT:["flippermotor_multiple-port-selector","P"] } },
   mot_vel:    { op:"flippermotor_motorSetSpeed", sel:{ PORT:["flippermotor_multiple-port-selector","P"] }, val:{ SPEED:["VAL", TIPO.num] } },
-  mot_ir:     { op:"flippermotor_motorGoDirectionToPosition", fld:{ DIRECTION:["=", "shortest"] }, sel:{ PORT:["flippermotor_multiple-port-selector","P"], POSITION:["flippermotor_custom-angle","VAL"] } },
-  mot_zerar:  { op:"flippermoremotor_motorSetDegreeCounted", sel:{ PORT:["flippermoremotor_multiple-port-selector","P"] }, fixo:{ VALUE:["0", TIPO.num] } },
-  mot_pos:    { op:"flippermoremotor_position", sel:{ PORT:["flippermoremotor_single-motor-selector","P"] } },
+  mot_ir:     { op:"flippermotor_motorGoDirectionToPosition", fld:{ DIRECTION:["CAM", v => /clockwise$/.test(v) ? v : "shortest"] }, sel:{ PORT:["flippermotor_multiple-port-selector","P"], POSITION:["flippermotor_custom-angle","VAL"] } },
+  mot_zerar:  { op:"flippermoremotor_motorSetDegreeCounted", sel:{ PORT:["flippermoremotor_multiple-port-selector","P"] }, val:{ VALUE:["VAL", TIPO.num] } },
+  mot_pos:    { op:"flippermotor_absolutePosition", sel:{ PORT:["flippermotor_single-motor-selector","P"] } },
+  mot_pos_rel:{ op:"flippermoremotor_position", sel:{ PORT:["flippermoremotor_single-motor-selector","P"] } },
+  mot_pot_r:  { op:"flippermoremotor_power", sel:{ PORT:["flippermoremotor_single-motor-selector","P"] } },
+  mot_ir_rel: { op:"flippermoremotor_motorGoToRelativePosition", sel:{ PORT:["flippermoremotor_multiple-port-selector","P"] }, val:{ POSITION:["VAL", TIPO.num], SPEED:["VEL", TIPO.num] } },
+  mot_parada: { op:"flippermoremotor_motorSetStopMethod", fld:{ STOP:"STOP" }, sel:{ PORT:["flippermoremotor_multiple-port-selector","P"] } },
+  mot_acel:   { op:"flippermoremotor_motorSetAcceleration", sel:{ PORT:["flippermoremotor_multiple-port-selector","P"], ACCELERATION:["flippermoremotor_menu_acceleration","ACEL","acceleration"] } },
+  mov_parada: { op:"flippermoremove_movementSetStopMethod", fld:{ STOP:"STOP" } },
+  mov_acel:   { op:"flippermoremove_movementSetAcceleration", sel:{ ACCELERATION:["flippermoremove_menu_acceleration","ACEL","acceleration"] } },
+  ctl_parar_outras:{ op:"flippercontrol_stopOtherStacks" },
+  op_entre:   { op:"flipperoperator_isInBetween", val:{ VALUE:["A", TIPO.num], LOW:["B", TIPO.num], HIGH:["C", TIPO.num] } },
   mot_velr:   { op:"flippermotor_speed", sel:{ PORT:["flippermotor_single-motor-selector","P"] } },
   luz_texto:  { op:"flipperlight_lightDisplayText", val:{ TEXT:["TXT", TIPO.txt] } },
   luz_limpar: { op:"flipperlight_lightDisplayOff" },
@@ -379,6 +401,7 @@ const SAIDA_EV3 = {
   sen_zerar_ang:{ op:"ev3sensors_resetEV3GyroSensorAngle", sel:{ PORT:["ev3sensors_menu_inputPort","P","inputPort", v => /^[1-4]$/.test(v) ? v : (PLAT.giro || "1")] } },
   sen_cron:   { op:"sensing_timer" },
   sen_zerar_cron:{ op:"sensing_resettimer" },
+  ctl_parar_outras:{ op:"ev3control_stopOtherStacks" },
   ctl_parar:  { op:"ev3control_stop", fld:{ STOP_OPTION:["ALVO", v => v === "this script" ? "this stack" : v === "other scripts in sprite" ? "other stacks" : "program"] }, semNext:true }
 };
 const SAIDA_SCRATCH = {
@@ -403,6 +426,10 @@ const SAIDA_SCRATCH = {
   op_e:       { op:"operator_and", bool:{ OPERAND1:"A", OPERAND2:"B" } },
   op_ou:      { op:"operator_or",  bool:{ OPERAND1:"A", OPERAND2:"B" } },
   op_nao:     { op:"operator_not", bool:{ OPERAND:"A" } },
+  op_junta:   { op:"operator_join",      val:{ STRING1:["A", TIPO.txt], STRING2:["B", TIPO.txt] } },
+  op_letra:   { op:"operator_letter_of", val:{ LETTER:["A", TIPO.num], STRING:["B", TIPO.txt] } },
+  op_tamanho: { op:"operator_length",    val:{ STRING:["A", TIPO.txt] } },
+  op_contem:  { op:"operator_contains",  val:{ STRING1:["A", TIPO.txt], STRING2:["B", TIPO.txt] } },
   var_def:    { op:"data_setvariableto",    val:{ VALUE:["VAL", TIPO.txt] }, varf:"VAR" },
   var_muda:   { op:"data_changevariableby", val:{ VALUE:["VAL", TIPO.num] }, varf:"VAR" }
 };
@@ -462,6 +489,12 @@ function exportaScratch(plat, nome) {
       if (o === "nivelado") return emite({ op: "op_menor", a: { A: { op: "op_abs", a: { A: { op: "sen_angulo", a: { EIXO: lit("pitch") }, c: [] } }, c: [] }, B: lit(12) }, c: [] }, pai);
       const cmpOp = (o === "frente" || o === "esq") ? "op_maior" : "op_menor";
       return emite({ op: cmpOp, a: { A: { op: "sen_angulo", a: { EIXO: lit(eixo) }, c: [] }, B: lit(cmpOp === "op_maior" ? 12 : -12) }, c: [] }, pai);
+    }
+    if (plat === "ev3" && b.op === "op_entre") {
+      const v = b.a.A;
+      return emite({ op: "op_e", a: {
+        A: { op: "op_maior", a: { A: v, B: b.a.B }, c: [] },
+        B: { op: "op_menor", a: { A: v, B: b.a.C }, c: [] } }, c: [] }, pai);
     }
     if (plat === "ev3" && b.op === "mov_iniciar") {
       const d = av(b.a.DIR);
@@ -645,6 +678,11 @@ function geraArduino(nome) {
       case "op_e": return "(" + A() + " && " + Bx() + ")";
       case "op_ou": return "(" + A() + " || " + Bx() + ")";
       case "op_nao": return "(!" + A() + ")";
+      case "op_entre": return "(" + A() + " >= min(" + Bx() + ", " + ex(v.a.C) + ") && " + A() + " <= max(" + Bx() + ", " + ex(v.a.C) + "))";
+      case "op_junta": return "(String(" + A() + ") + String(" + Bx() + "))";
+      case "op_letra": return "String(" + Bx() + ").charAt((int)(" + A() + ") - 1)";
+      case "op_tamanho": return "String(" + A() + ").length()";
+      case "op_contem": return "(String(" + A() + ").indexOf(String(" + Bx() + ")) >= 0)";
       case "var_ler": return nVar(av(v.a.VAR));
       case "sen_reflexo": return "lerLinha(" + sensorIdx(av(v.a.P)) + ")";
       case "sen_ereflexo": return "(lerLinha(" + sensorIdx(av(v.a.P)) + ") " + (av(v.a.CMP) === "=" ? "==" : av(v.a.CMP)) + " " + ex(v.a.VAL) + ")";
@@ -694,7 +732,9 @@ function geraArduino(nome) {
       case "var_def": return I + nVar(av(b.a.VAR)) + " = " + A("VAL") + ";\n";
       case "var_muda": return I + nVar(av(b.a.VAR)) + " += " + A("VAL") + ";\n";
       case "meu_chama": return I + nProc(av(b.a.NOME)) + "();\n";
-      case "luz_limpar": case "luz_pixel": case "luz_cor": case "luz_status": case "mov_rot": case "mot_vel": case "mot_zerar": return "";
+      case "ctl_parar_outras": return I + "// o Arduino roda um programa só: não há outras pilhas\n";
+      case "luz_limpar": case "luz_pixel": case "luz_cor": case "luz_status": case "mov_rot": case "mot_vel": case "mot_zerar":
+      case "mot_parada": case "mot_acel": case "mov_parada": case "mov_acel": return "";
       default: avisos.push("sem equivalente no Arduino: " + (b.op === "desconhecido" ? b.origem : b.op)); return I + "// (bloco sem equivalente: " + b.op + ")\n";
     }
   };

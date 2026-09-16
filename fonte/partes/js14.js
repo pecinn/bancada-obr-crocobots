@@ -4,7 +4,9 @@
    Os blocos são os mesmos por dentro; cada plataforma troca o texto, as portas e o que aparece na paleta.
    Menus e valores padrão podem ser funções: são calculados na hora, pela plataforma atual.
    ======================================================================= */
-const opSentido= () => [["sentido horário","clockwise"],["sentido anti-horário","counterclockwise"]];
+const opSentido= () => [["no sentido horário","clockwise"],["no sentido anti-horário","counterclockwise"]];
+/* "ir para posição" tem três caminhos, como no app */
+const CAMINHOS = [["pelo caminho mais curto","shortest"],["no sentido horário","clockwise"],["no sentido anti-horário","counterclockwise"]];
 
 /* construtores de pedacos de bloco */
 const T = t => ({ k:"t", t });
@@ -43,7 +45,9 @@ function specDe(op) { const v = VARIANTES[PLAT.id] && VARIANTES[PLAT.id][op]; re
 const UN_MOV = () => PLAT.unidades;
 const UN_MOT = () => PLAT.id === "arduino" ? [["segundos","seconds"]] : [["rotações","rotations"],["graus","degrees"],["segundos","seconds"]];
 const UN_DIST = () => PLAT.id === "spike" ? [["cm","cm"],["polegadas","inches"],["%","%"]] : PLAT.id === "ev3" ? [["cm","cm"],["polegadas","inches"]] : [["cm","cm"]];
-const CMP = [["menor que","<"],["maior que",">"],["igual a","="]];
+const CMP = [["<","<"],[">",">"],["=","="]];
+/* o sensor de distância usa palavras, como no app */
+const CMP_DIST = [["mais perto que","<"],["exatamente em","="],["mais longe que",">"]];
 const padPar = () => PLAT.id === "spike" ? "AB" : PLAT.par.join("+");
 const padPa = () => PLAT.pa;
 const padCorDir = () => portaDoTipo("cor", "dir");
@@ -51,98 +55,125 @@ const padDist = () => portaDoTipo("dist");
 const padForca = () => PLAT.id === "spike" ? "B" : PLAT.portasSensor[0];
 const opCores = () => PLAT.cores;
 const padPreto = () => PLAT.cor.preto;
-const DIRS = [["para frente","forward"],["para trás","back"],["à esquerda","left"],["à direita","right"]];
+/* como o motor para e como ele acelera: os valores são os que o app grava no arquivo */
+const PARADAS = [["frear","1"],["manter a posição","2"],["flutuar","0"]];
+const ACELS = [["lenta","100 100"],["médio","4000 4000"],["rápida","10000 10000"]];
+const DIRS = [["para a frente","forward"],["para trás","back"],["esquerda","left"],["direita","right"]];
 
+/* =========================================================================
+   Os blocos: mesmo texto, mesmas opções e mesma ordem do LEGO Education SPIKE
+   (catálogo de textos do app 3.6, em português). O EV3 e o Arduino trocam o
+   texto pelos seus, mais abaixo, em V(...).
+   ========================================================================= */
 /* --- eventos --- */
 D("ev_inicio","eventos","chapeu",[T("quando o programa iniciar")]);
-D("ev_botao","eventos","chapeu",[T("quando o botão central for pressionado")]);
+D("ev_botao","eventos","chapeu",[T("quando"), M("BOTAO",[["esquerda","left"],["direita","right"]],"left"),
+  T("botão"), M("EV",[["pressionado","pressed"],["solto","released"]],"pressed")]);
 
 /* --- movimento --- */
-D("mov_par","movimento","stack",[T("definir motores de movimento para"), M("PAR", paresDe, padPar)]);
+D("mov_par","movimento","stack",[T("definir motores de movimento como"), M("PAR", paresDe, padPar)]);
 D("mov_mover","movimento","stack",[T("mover"), M("DIR", DIRS), T("por"), N("VAL","10"), M("UN", UN_MOV, () => PLAT.unidades[0][1])]);
-D("mov_iniciar","movimento","stack",[T("começar a mover"), M("DIR", DIRS)]);
-D("mov_esterco","movimento","stack",[T("mover com direção"), N("DIR","0"), T("por"), N("VAL","10"), M("UN", UN_MOV, () => PLAT.unidades[0][1])]);
-D("mov_iniciar_esterco","movimento","stack",[T("começar a mover com direção"), N("DIR","0")]);
-D("mov_dual","movimento","stack",[T("começar a mover: esquerda"), N("ESQ","50"), T("% direita"), N("DIR","50"), T("%")]);
+D("mov_iniciar","movimento","stack",[T("iniciar movimento"), M("DIR", DIRS)]);
+D("mov_esterco","movimento","stack",[T("mover"), N("DIR","0"), T("por"), N("VAL","10"), M("UN", UN_MOV, () => PLAT.unidades[0][1])]);
+D("mov_iniciar_esterco","movimento","stack",[T("iniciar movimento"), N("DIR","0")]);
+D("mov_dual","movimento","stack",[T("iniciar movimento com velocidade de"), N("ESQ","50"), N("DIR","50"), T("%")]);
 D("mov_parar","movimento","stack",[T("parar de mover")]);
-D("mov_vel","movimento","stack",[T("definir velocidade de movimento para"), N("VAL","50"), T("%")]);
-D("mov_rot","movimento","stack",[T("definir rotação da roda para"), N("VAL","17.6"), T("cm")]);
+D("mov_vel","movimento","stack",[T("definir velocidade de movimento a"), N("VAL","50"), T("%")]);
+D("mov_rot","movimento","stack",[T("definir 1 rotação do motor a"), N("VAL","17.6"), T("cm de movimento")]);
+/* --- o que o app chama de "Mais Movimento" --- */
+D("mov_parada","movimento","stack",[T("definir motores de movimento para"), M("STOP", PARADAS, "1"), T("na parada")]);
+D("mov_acel","movimento","stack",[T("definir aceleração do movimento para"), M("ACEL", ACELS, "4000 4000")]);
 
 /* --- motores --- */
-D("mot_girar","motores","stack",[T("motor"), M("P", opMotor, padPa), T("girar"), M("SENT", opSentido()),
+D("mot_girar","motores","stack",[M("P", opMotor, padPa), T("executar"), M("SENT", opSentido()),
   T("por"), N("VAL","1"), M("UN", UN_MOT, () => UN_MOT()[0][1])]);
-D("mot_iniciar","motores","stack",[T("motor"), M("P", opMotor, padPa), T("começar a girar"), M("SENT", opSentido())]);
-D("mot_potencia","motores","stack",[T("motor"), M("P", opMotor, padPa), T("começar a girar com"), N("VAL","50"), T("%")]);
-D("mot_parar","motores","stack",[T("motor"), M("P", opMotor, padPa), T("parar")]);
-D("mot_vel","motores","stack",[T("motor"), M("P", opMotor, padPa), T("definir velocidade para"), N("VAL","75"), T("%")]);
-D("mot_ir","motores","stack",[T("motor"), M("P", opMotor, padPa), T("ir para a posição"), N("VAL","0"), T("graus")]);
-D("mot_zerar","motores","stack",[T("motor"), M("P", opMotor, padPa), T("zerar a contagem")]);
-D("mot_pos","motores","rep",[T("posição do motor"), M("P", opMotor, padPa)]);
-D("mot_velr","motores","rep",[T("velocidade do motor"), M("P", opMotor, padPa)]);
+D("mot_iniciar","motores","stack",[M("P", opMotor, padPa), T("iniciar motor"), M("SENT", opSentido())]);
+D("mot_potencia","motores","stack",[M("P", opMotor, padPa), T("iniciar motor com potência de"), N("VAL","50"), T("%")]);
+D("mot_parar","motores","stack",[M("P", opMotor, padPa), T("parar motor")]);
+D("mot_vel","motores","stack",[M("P", opMotor, padPa), T("definir velocidade a"), N("VAL","75"), T("%")]);
+D("mot_ir","motores","stack",[M("P", opMotor, padPa), T("ir"), M("CAM", CAMINHOS, "shortest"), T("para posição"), N("VAL","0")]);
+D("mot_zerar","motores","stack",[M("P", opMotor, padPa), T("definir posição relativa para"), N("VAL","0")]);
+D("mot_pos","motores","rep",[M("P", opMotor, padPa), T("posição")]);
+D("mot_velr","motores","rep",[M("P", opMotor, padPa), T("velocidade")]);
+/* --- o que o app chama de "Mais Motores" --- */
+D("mot_ir_rel","motores","stack",[M("P", opMotor, padPa), T("ir para a posição relativa"), N("VAL","0"),
+  T("em"), N("VEL","100"), T("% de velocidade")]);
+D("mot_pos_rel","motores","rep",[M("P", opMotor, padPa), T("posição relativa")]);
+D("mot_pot_r","motores","rep",[M("P", opMotor, padPa), T("potência")]);
+D("mot_parada","motores","stack",[M("P", opMotor, padPa), T("definir motores de movimento para"),
+  M("STOP", PARADAS, "1"), T("na parada")]);
+D("mot_acel","motores","stack",[M("P", opMotor, padPa), T("definir aceleração para"), M("ACEL", ACELS, "4000 4000")]);
 
 /* --- luz --- */
-D("luz_texto","luz","stack",[T("escrever"), S("TXT","Oi")]);
-D("luz_limpar","luz","stack",[T("apagar a tela")]);
-D("luz_pixel","luz","stack",[T("acender pixel x"), N("X","3"), T("y"), N("Y","3"), T("com"), N("B","100"), T("% de brilho")]);
-D("luz_cor","luz","stack",[T("definir a cor do hub para"), M("COR", CORES_SPIKE, "6")]);
+D("luz_texto","luz","stack",[T("gravar"), S("TXT","Oi")]);
+D("luz_limpar","luz","stack",[T("desligar pixels")]);
+D("luz_pixel","luz","stack",[T("definir pixel em"), N("X","3"), T(","), N("Y","3"), T("a"), N("B","100"), T("%")]);
+D("luz_cor","luz","stack",[T("definir luz do botão central como"), M("COR", CORES_SPIKE, "6")]);
 D("luz_status","luz","stack",[T("luz de status"), M("COR", [["apagada","0"],["verde","1"],["vermelha","2"],["laranja","3"],["verde piscando","4"],["vermelha piscando","5"],["laranja piscando","6"]], "1")]);
 
 /* --- som --- */
-D("som_bip","som","stack",[T("tocar o bipe"), N("NOTA","60"), T("por"), N("SEG","0.2"), T("segundos")]);
+D("som_bip","som","stack",[T("executar o bipe"), N("NOTA","60"), T("por"), N("SEG","0.2"), T("segundos")]);
 
 /* --- sensores --- */
 D("sen_ecor","sensores","bool",[M("P", opSensor, padCorDir), T("é a cor"), M("COR", opCores, padPreto), T("?")]);
-D("sen_cor","sensores","rep",[T("cor em"), M("P", opSensor, padCorDir)]);
-D("sen_reflexo","sensores","rep",[T("luz refletida em"), M("P", opSensor, padCorDir)]);
-D("sen_ereflexo","sensores","bool",[M("P", opSensor, padCorDir), T("luz refletida"), M("CMP", CMP, "<"), N("VAL","50"), T("%?")]);
-D("sen_cru","sensores","rep",[T("valor bruto"),
-  M("CANAL",[["vermelho","r"],["verde","g"],["azul","b"]],"r"), T("em"), M("P", opSensor, padCorDir)]);
-D("sen_edist","sensores","bool",[T("distância em"), M("P", opSensor, padDist), M("CMP", CMP, "<"), N("VAL","10"), M("UN", UN_DIST, "cm"), T("?")]);
-D("sen_dist","sensores","rep",[T("distância em"), M("P", opSensor, padDist), M("UN", UN_DIST, "cm")]);
-D("sen_forca","sensores","bool",[T("sensor de força"), M("P", opSensor, padForca), T("pressionado?")]);
-D("sen_forcar","sensores","rep",[T("força em"), M("P", opSensor, padForca), T("%")]);
-D("sen_angulo","sensores","rep",[T("ângulo de"),
-  M("EIXO",[["guinada","yaw"],["arfagem","pitch"],["rolagem","roll"]],"yaw")]);
-D("sen_zerar_ang","sensores","stack",[T("zerar o ângulo de guinada")]);
-D("sen_inclinado","sensores","bool",[T("o hub está"),
-  M("O",[["para frente","frente"],["para trás","tras"],["à esquerda","esq"],["à direita","dir"],["nivelado","nivelado"]],"frente"), T("?")]);
-D("sen_cron","sensores","rep",[T("cronômetro")]);
-D("sen_zerar_cron","sensores","stack",[T("zerar o cronômetro")]);
+D("sen_cor","sensores","rep",[M("P", opSensor, padCorDir), T("cor")]);
+D("sen_reflexo","sensores","rep",[M("P", opSensor, padCorDir), T("luz refletida")]);
+D("sen_ereflexo","sensores","bool",[M("P", opSensor, padCorDir), T("reflexo"), M("CMP", CMP, "<"), N("VAL","50"), T("% ?")]);
+D("sen_cru","sensores","rep",[M("P", opSensor, padCorDir), T("cru"),
+  M("CANAL",[["vermelho","r"],["verde","g"],["azul","b"]],"r")]);
+D("sen_edist","sensores","bool",[M("P", opSensor, padDist), T("é"), M("CMP", CMP_DIST, "<"), N("VAL","10"), M("UN", UN_DIST, "cm"), T("?")]);
+D("sen_dist","sensores","rep",[M("P", opSensor, padDist), T("distância em"), M("UN", UN_DIST, "cm")]);
+D("sen_forca","sensores","bool",[M("P", opSensor, padForca), T("é"),
+  M("OPT",[["pressionado","pressed"],["solto","released"]],"pressed"), T("?")]);
+D("sen_forcar","sensores","rep",[M("P", opSensor, padForca), T("pressão em %")]);
+D("sen_angulo","sensores","rep",[M("EIXO",[["arfagem","pitch"],["rotação","roll"],["guinada","yaw"]],"yaw"), T("ângulo")]);
+D("sen_zerar_ang","sensores","stack",[T("definir o ângulo de guinada como 0")]);
+D("sen_inclinado","sensores","bool",[
+  M("O",[["para a frente","frente"],["para trás","tras"],["para a esquerda","esq"],["para a direita","dir"],["nivelado","nivelado"]],"frente"),
+  T("está inclinado?")]);
+D("sen_cron","sensores","rep",[T("temporizador")]);
+D("sen_zerar_cron","sensores","stack",[T("redefinir temporizador")]);
 
 /* --- controle --- */
-D("ctl_esperar","controle","stack",[T("esperar"), N("SEG","1"), T("segundos")]);
-D("ctl_repetir","controle","c",[T("repetir"), N("N","10"), T("vezes")]);
-D("ctl_sempre","controle","c",[T("sempre")]);
-D("ctl_se","controle","c",[T("se"), B("COND"), T("então")]);
-D("ctl_sesenao","controle","c2",[T("se"), B("COND"), T("então")]);
-D("ctl_esperar_ate","controle","stack",[T("esperar até"), B("COND")]);
-D("ctl_repetir_ate","controle","c",[T("repetir até"), B("COND")]);
+D("ctl_esperar","controle","stack",[T("espera"), N("SEG","1"), T("s")]);
+D("ctl_repetir","controle","c",[T("repete"), N("N","10"), T("vezes")]);
+D("ctl_sempre","controle","c",[T("repete para sempre")]);
+D("ctl_se","controle","c",[T("se"), B("COND"), T(", então")]);
+D("ctl_sesenao","controle","c2",[T("se"), B("COND"), T(", então")]);
+D("ctl_esperar_ate","controle","stack",[T("espera até que"), B("COND")]);
+D("ctl_repetir_ate","controle","c",[T("até que"), B("COND"), T(", repete")]);
+D("ctl_parar_outras","controle","stack",[T("parar outras pilhas")]);
 D("ctl_parar","controle","cap",[T("parar"),
-  M("ALVO",[["tudo","all"],["este script","this script"],["outros scripts","other scripts in sprite"]],"all")]);
+  M("ALVO",[["todas","all"],["esta pilha","this script"],["outras pilhas","other scripts in sprite"]],"all")]);
 
 /* --- operadores --- */
 D("op_soma","operadores","rep",[N("A","0"), T("+"), N("B","0")]);
 D("op_sub","operadores","rep",[N("A","0"), T("−"), N("B","0")]);
 D("op_mult","operadores","rep",[N("A","0"), T("×"), N("B","0")]);
-D("op_div","operadores","rep",[N("A","0"), T("÷"), N("B","0")]);
+D("op_div","operadores","rep",[N("A","0"), T("/"), N("B","0")]);
 D("op_menor","operadores","bool",[N("A","0"), T("<"), N("B","50")]);
 D("op_igual","operadores","bool",[N("A","0"), T("="), N("B","50")]);
 D("op_maior","operadores","bool",[N("A","0"), T(">"), N("B","50")]);
+D("op_entre","operadores","bool",[N("A","0"), T("está entre"), N("B","-10"), T("e"), N("C","10"), T("?")]);
 D("op_e","operadores","bool",[B("A"), T("e"), B("B")]);
 D("op_ou","operadores","bool",[B("A"), T("ou"), B("B")]);
-D("op_nao","operadores","bool",[T("não"), B("A")]);
-D("op_aleatorio","operadores","rep",[T("número aleatório entre"), N("A","1"), T("e"), N("B","10")]);
-D("op_arred","operadores","rep",[T("arredondar"), N("A","0")]);
-D("op_mod","operadores","rep",[N("A","0"), T("resto de"), N("B","2")]);
+D("op_nao","operadores","bool",[T("é falso que"), B("A")]);
+D("op_aleatorio","operadores","rep",[T("um valor ao acaso entre"), N("A","1"), T("e"), N("B","10")]);
+D("op_junta","operadores","rep",[T("a junção de"), S("A","maçã"), T("com"), S("B","banana")]);
+D("op_letra","operadores","rep",[T("o caractere"), N("A","1"), T("de"), S("B","maçã")]);
+D("op_tamanho","operadores","rep",[T("o comprimento de"), S("A","maçã")]);
+D("op_contem","operadores","bool",[S("A","maçã"), T("contém"), S("B","a"), T("?")]);
+D("op_mod","operadores","rep",[T("o resto de"), N("A","0"), T("a dividir por"), N("B","2")]);
+D("op_arred","operadores","rep",[T("o arredondamento de"), N("A","0")]);
 D("op_abs","operadores","rep",[T("valor absoluto de"), N("A","0")]);
 
 /* --- variaveis --- */
-D("var_def","variaveis","stack",[T("definir"), VARM("VAR"), T("para"), N("VAL","0")]);
-D("var_muda","variaveis","stack",[T("mudar"), VARM("VAR"), T("por"), N("VAL","1")]);
+D("var_def","variaveis","stack",[T("altera"), VARM("VAR"), T("para"), N("VAL","0")]);
+D("var_muda","variaveis","stack",[T("adiciona a"), VARM("VAR"), T("o valor"), N("VAL","1")]);
 D("var_ler","variaveis","rep",[VARM("VAR")]);
 
 /* --- meus blocos --- */
-D("meu_def","meus","chapeu",[T("definir"), PROCM("NOME")]);
+D("meu_def","meus","chapeu",[T("define"), PROCM("NOME")]);
 D("meu_chama","meus","stack",[PROCM("NOME")]);
 
 /* bloco coringa para opcodes que a bancada ainda nao executa */
@@ -188,16 +219,19 @@ V("arduino", "sen_zerar_cron", [T("zerar o cronômetro")]);
 
 /* o que a paleta mostra, por plataforma e categoria */
 const COMUNS = {
-  controle:["ctl_esperar","ctl_repetir","ctl_sempre","ctl_se","ctl_sesenao","ctl_esperar_ate","ctl_repetir_ate","ctl_parar"],
-  operadores:["op_soma","op_sub","op_mult","op_div","op_menor","op_igual","op_maior","op_e","op_ou","op_nao","op_aleatorio","op_arred","op_mod","op_abs"],
+  controle:["ctl_esperar","ctl_repetir","ctl_sempre","ctl_se","ctl_sesenao","ctl_esperar_ate","ctl_repetir_ate","ctl_parar_outras","ctl_parar"],
+  operadores:["op_aleatorio","op_soma","op_sub","op_mult","op_div","op_menor","op_igual","op_maior","op_e","op_ou","op_nao","op_entre",
+              "op_junta","op_letra","op_tamanho","op_contem","op_mod","op_arred","op_abs"],
   variaveis:["var_def","var_muda","var_ler"],
   meus:["meu_def","meu_chama"]
 };
 const PALETAS = {
   spike: Object.assign({
     eventos:["ev_inicio","ev_botao"],
-    movimento:["mov_par","mov_mover","mov_iniciar","mov_esterco","mov_iniciar_esterco","mov_dual","mov_parar","mov_vel","mov_rot"],
-    motores:["mot_girar","mot_iniciar","mot_potencia","mot_parar","mot_vel","mot_ir","mot_zerar","mot_pos","mot_velr"],
+    movimento:["mov_par","mov_mover","mov_iniciar","mov_esterco","mov_iniciar_esterco","mov_parar","mov_vel","mov_rot",
+               "mov_dual","mov_parada","mov_acel"],
+    motores:["mot_girar","mot_ir","mot_iniciar","mot_parar","mot_vel","mot_pos","mot_velr",
+             "mot_ir_rel","mot_potencia","mot_pot_r","mot_pos_rel","mot_zerar","mot_parada","mot_acel"],
     luz:["luz_texto","luz_limpar","luz_pixel","luz_cor"],
     som:["som_bip"],
     sensores:["sen_ecor","sen_cor","sen_reflexo","sen_ereflexo","sen_cru","sen_edist","sen_dist","sen_forca","sen_forcar",
@@ -279,6 +313,46 @@ function aplicaTransf() {
   lousa.style.transform = "translate(" + PANX + "px," + PANY + "px) scale(" + ZOOM + ")";
 }
 
+
+/* ---- ícones dos blocos (como no SPIKE): a peça é branca e os furos deixam a cor do bloco aparecer.
+   Um só <path> com fill-rule="evenodd": os círculos de dentro viram furos. ---- */
+const _circ = (cx, cy, r) => "M" + (cx - r) + "," + cy + "a" + r + "," + r + " 0 1,0 " + (2 * r) + ",0a" + r + "," + r + " 0 1,0 " + (-2 * r) + ",0Z";
+const _cx24 = d => '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" fill-rule="evenodd" d="' + d + '"/></svg>';
+/* retângulo arredondado (o hub e os sensores) */
+const _rr = (x, y, w, h, r) => "M" + (x + r) + "," + y + "h" + (w - 2 * r) + "a" + r + "," + r + " 0 0,1 " + r + "," + r +
+  "v" + (h - 2 * r) + "a" + r + "," + r + " 0 0,1 " + (-r) + "," + r + "h" + (-(w - 2 * r)) + "a" + r + "," + r + " 0 0,1 " + (-r) + "," + (-r) +
+  "v" + (-(h - 2 * r)) + "a" + r + "," + r + " 0 0,1 " + r + "," + (-r) + "Z";
+const ICO_BL = {
+  /* rotor do motor: disco branco com o eixo e quatro furos */
+  motor: _cx24(_circ(12, 12, 10.4) + _circ(12, 12, 3.2) + _circ(12, 5.3, 2.1) + _circ(12, 18.7, 2.1) + _circ(5.3, 12, 2.1) + _circ(18.7, 12, 2.1)),
+  /* hub: a matriz de luzes */
+  hub: _cx24(_rr(3.2, 1.8, 17.6, 20.4, 3.6) + [0, 1, 2].map(l => [0, 1, 2].map(c => _circ(7.2 + c * 4.8, 6.4 + l * 4.8, 1.35)).join("")).join("")),
+  /* sensor de cor: a lente */
+  cor: _cx24(_rr(2.4, 2.4, 19.2, 19.2, 5.2) + _circ(12, 12, 6.6) + _circ(12, 12, 2.6)),
+  /* sensor de distância: os dois olhos */
+  dist: _cx24(_rr(1.6, 5.2, 20.8, 13.6, 5) + _circ(7.6, 12, 3.4) + _circ(16.4, 12, 3.4)),
+  /* sensor de força: o botão */
+  forca: _cx24(_rr(2.6, 4.4, 18.8, 15.2, 4.6) + _circ(12, 12, 3.8)),
+  /* começar: o botão de tocar */
+  tocar: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.4" fill="#fff"/><path d="M9.4 7.2 17 12l-7.6 4.8Z" fill="#4cbf56"/></svg>'
+};
+/* qual ícone cada bloco usa (fora daqui, o bloco não tem ícone: controle, operadores e variáveis não têm) */
+const ICO_OP = { ev_inicio: "tocar", ev_botao: "hub" };
+function icoDe(op) {
+  if (ICO_OP[op]) return ICO_BL[ICO_OP[op]];
+  const sp = SPEC[op]; if (!sp) return null;
+  if (sp.cat === "motores" || sp.cat === "movimento") return ICO_BL.motor;
+  if (sp.cat === "luz" || sp.cat === "som") return ICO_BL.hub;
+  if (sp.cat === "sensores") {
+    if (/^sen_(ecor|cor|reflexo|ereflexo|cru)$/.test(op)) return ICO_BL.cor;
+    if (/^sen_(edist|dist)$/.test(op)) return ICO_BL.dist;
+    if (/^sen_(forca|forcar)$/.test(op)) return ICO_BL.forca;
+    if (/^sen_(cron|zerar_cron)$/.test(op)) return null;   /* o temporizador não tem ícone */
+    return ICO_BL.hub;                                      /* ângulo, inclinação, gestos: são do hub */
+  }
+  return null;
+}
+
 function corDe(op) {
   const sp = specDe(op);
   return CORCAT[sp ? sp.cat : "desconhecido"] || CORCAT.desconhecido;
@@ -347,13 +421,16 @@ function elArg(b, p) {
 function elBloco(b) {
   const sp = specDe(b.op);
   const d = document.createElement("div");
-  d.className = "bl " + (sp.forma === "chapeu" ? "chapeu" : sp.forma === "rep" ? "rep" : sp.forma === "bool" ? "bool" : "");
+  d.className = "bl " + (sp.forma === "chapeu" ? "chapeu" : sp.forma === "rep" ? "rep" : sp.forma === "bool" ? "bool"
+    : sp.forma === "c" || sp.forma === "c2" ? "cbl" : "");
   d.dataset.id = b.id;
   d.__b = b;
   const cor = corDe(b.op);
   const cab = document.createElement("div");
   cab.className = "cab";
   cab.style.background = cor;
+  const ic = icoDe(b.op);
+  if (ic) { const si = document.createElement("span"); si.className = "bl-ico"; si.innerHTML = ic; cab.appendChild(si); }
   cab.style.borderRadius = (sp.forma === "rep") ? "999px" : (sp.forma === "bool") ? "5px" : "";
   if (b.op === "desconhecido") {
     cab.appendChild(txt("bloco do " + PLAT.nome + ": " + (b.origem || "?")));
@@ -366,21 +443,22 @@ function elBloco(b) {
   d.appendChild(cab);
 
   if (sp.forma === "c" || sp.forma === "c2") {
-    d.style.background = cor;
-    d.style.borderRadius = "8px";
+    /* o corpo fica vazado: quem pinta é o cabeçalho, o braço da esquerda e o fecho */
     const corpo = document.createElement("div");
     corpo.className = "corpoc";
+    corpo.style.borderLeft = "16px solid " + cor;
     corpo.appendChild(elPilha(b.c[0]));
     d.appendChild(corpo);
     if (sp.forma === "c2") {
       const barra = document.createElement("div");
       barra.className = "cab"; barra.style.background = cor; barra.style.minHeight = "30px";
-      barra.appendChild(txt("senão"));
+      barra.appendChild(txt("senão,"));
       barra.style.cursor = "default";
       barra.onpointerdown = e => e.stopPropagation();
       d.appendChild(barra);
       const corpo2 = document.createElement("div");
       corpo2.className = "corpoc";
+      corpo2.style.borderLeft = "16px solid " + cor;
       corpo2.appendChild(elPilha(b.c[1]));
       d.appendChild(corpo2);
     }
