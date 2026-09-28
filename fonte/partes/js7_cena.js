@@ -177,8 +177,12 @@ function caixaR(w, h, d, r, mat) {
   const m = new THREE.Mesh(g, mat); m.castShadow = true; m.receiveShadow = true;
   return m;
 }
+/* o robo e refeito toda vez que muda a configuracao, entao as geometrias repetidas ficam guardadas */
+const GEO_CIL = {};
 function cil(r, h, mat, seg) {
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg || 24), mat);
+  const k = r + "|" + h + "|" + (seg || 24);
+  const g = GEO_CIL[k] || (GEO_CIL[k] = new THREE.CylinderGeometry(r, r, h, seg || 24));
+  const m = new THREE.Mesh(g, mat);
   m.castShadow = true; m.receiveShadow = true; return m;
 }
 function cabo(pts, mat) {
@@ -271,7 +275,7 @@ function montaTracao(g, M, rodaR, L) {
   }
   if (MODELO === "rodas4") {
     for (const z of [-3.9, 3.9]) motorGrande(g, M, -0.6, rodaR + 0.6, z);
-    if (L) {   /* carregadeira: pneus largos com aro na cor do kit, sem o trem de engrenagens aparente */
+    if (L) {   /* explorador: pneus largos com aro na cor do kit, sem o trem de engrenagens aparente */
       for (const z of [-7.1, 7.1]) {
         const sg = Math.sign(z), lado = z < 0 ? "E" : "D";
         for (const x of [4.6, -4.6]) {
@@ -307,12 +311,14 @@ function montaTracao(g, M, rodaR, L) {
   for (const z of [-7.0, 7.0]) {
     const sg = Math.sign(z), lado = z < 0 ? "E" : "D";
     for (const x of [TRILHO.cx, -TRILHO.cx]) {
-      const e = engrenagem(L ? { cinza: L.roda, azul: L.preto } : M, TRILHO.r - 0.35, 12, 2.1); e.position.set(x, c, z); g.add(e);
+      /* roda dentada da esteira: amarela com o eixo azul, como na foto */
+      const e = engrenagem(L ? { cinza: L.dentada, azul: L.eixoAzul } : M, TRILHO.r - 0.35, 12, 2.1); e.position.set(x, c, z); g.add(e);
       PECAS.giram.push({ o: e, lado, raio: TRILHO.r });
     }
     for (const x of [-2.6, 0, 2.6]) {                /* rodinhas de apoio */
-      const rr = cil(1.25, 1.9, L ? L.roda : M.grafite, 20); rr.rotation.x = Math.PI / 2; rr.position.set(x, 1.55, z); g.add(rr);
-      const cb = cil(0.45, 2.0, L ? (L.kit === "spike" ? L.acento : L.preto) : M.azul, 10); cb.rotation.x = Math.PI / 2; cb.position.set(x, 1.55, z); g.add(cb);
+      const rr = cil(1.25, 1.9, L ? L.preto : M.grafite, 20); rr.rotation.x = Math.PI / 2; rr.position.set(x, 1.55, z); g.add(rr);
+      const cb = cil(0.55, 2.1, L ? L.dentada : M.azul, 12); cb.rotation.x = Math.PI / 2; cb.position.set(x, 1.55, z); g.add(cb);
+      if (L) { const ei = cil(0.22, 2.3, L.eixoAzul, 8); ei.rotation.x = Math.PI / 2; ei.position.set(x, 1.55, z); g.add(ei); }
     }
     const placa = caixaR(13.2, 3.2, 0.5, 0.5, M.chassi); placa.position.set(0, c, z - sg * 1.55); g.add(placa);
     if (!L) { const lama = caixaR(16.4, 0.45, 3.2, 0.5, M.chassi); lama.position.set(0, c + TRILHO.r + 0.95, z); g.add(lama); }
@@ -342,24 +348,30 @@ function animaTracao(posE, posD, rodaR) {
   }
 }
 
-/* ---------- carregadeira: SPIKE e EV3 com esteira ou 4 rodas (modelo/WhatsApp Image 2026-09-13 at 18.38.31.jpeg) ----------
-   hub (ou bloco EV3) em pé na frente, com o ultrassônico; braços e pistões dos dois lados; caçamba com dentes presa no eixo da pá */
-function estiloCarregadeira() {
+/* ---------- explorador: SPIKE e EV3 com esteira ou 4 rodas (modelo do Robô Explorador) ----------
+   hub (ou bloco EV3) deitado em cima do chassi, ultrassônico no centro da frente e vigas dos dois lados;
+   a pá continua a mesma: caçamba com dentes, braços e pistões presos no eixo da pá */
+function estiloExplorador() {
   if (MODELO === "rodas2" || PLAT.id === "arduino") return null;
   const std = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: corL(c), roughness: 0.42 }, o || {}));
   const comum = {
     preto: std("#1b1c1f", { roughness: .55 }), cilindro: std("#e6e8eb", { roughness: .28 }),
     haste: new THREE.MeshStandardMaterial({ color: 0xdfe3e8, metalness: 1, roughness: .16 }),
     cacamba: std("#454a52", { roughness: .48, metalness: .12 }), dente: std("#3b3f46", { roughness: .5, metalness: .12 }),
-    pneu: std("#16171a", { roughness: .88 })
+    pneu: std("#16171a", { roughness: .88 }), furo: std("#101114", { roughness: .8 })
   };
   if (PLAT.id === "ev3") return Object.assign(comum, { kit: "ev3", corpo: std("#eceef0", { roughness: .35 }), cinza: std("#b9bdc2"),
     braco: std("#c8141b", { roughness: .32 }), acento: std("#c8141b", { roughness: .32 }), pino: std("#2b4fa8"),
     roda: std("#c8141b", { roughness: .32 }), aro: std("#c8141b", { roughness: .3 }), painel: std("#eceef0", { roughness: .35 }),
+    dentada: std("#c8141b", { roughness: .34 }), eixoAzul: std("#3b3f45"), magenta: std("#8d1b2d"),
+    azulEsc: std("#4a4f57"), azulC: std("#b9bdc2"),
     largBraco: 0.8, raioPistao: 0.72 });
+  /* cores do SPIKE na foto: amarelo, azul-claro, azul-escuro, magenta e muito preto */
   return Object.assign(comum, { kit: "spike", corpo: std("#f3f3ef", { roughness: .35 }), cinza: std("#b9bec5"),
     quadro: std("#1c9ad6", { roughness: .35 }), braco: std("#f2b400", { roughness: .32 }), acento: std("#f2b400", { roughness: .32 }), pino: std("#1f3d8a"),
     roda: std("#8f959c", { roughness: .35, metalness: .2 }), aro: std("#1ea3dc", { roughness: .3 }), painel: std("#f3f3ef", { roughness: .35 }),
+    dentada: std("#f2b400", { roughness: .34 }), eixoAzul: std("#1ea3dc", { roughness: .3 }), magenta: std("#c8256e", { roughness: .34 }),
+    azulEsc: std("#2b5fa8", { roughness: .34 }), azulC: std("#5bb4e0", { roughness: .34 }),
     largBraco: 1.25, raioPistao: 0.55 });
 }
 /* barra (viga) e cilindro entre dois pontos (x, y) de um mesmo plano lateral, na profundidade z */
@@ -429,91 +441,141 @@ function texFaceEv3() {
     x.fillStyle = "#3a3d42"; for (let i = 0; i < 4; i++) x.fillRect(38 + i * 64, 458, 40, 16);
   });
 }
-function montaCarregadeira(g, M, L) {
+/* ---------- peças Technic soltas, para o corpo ficar com a cara da montagem de verdade ----------
+   1 furo = 0,8 cm. A viga nasce deitada no eixo x, com 0,5 cm de espessura em z. */
+let GEO_FURO = null, GEO_ANEL = null;
+function vigaT(n, mat, L, alt) {
+  const g = new THREE.Group(), h = alt || 0.8;
+  g.add(caixaR(n * 0.8, h, 0.5, 0.34, mat));
+  if (!GEO_FURO) {
+    GEO_FURO = new THREE.CylinderGeometry(0.23, 0.23, 0.58, 12); GEO_FURO.rotateX(Math.PI / 2);
+    GEO_ANEL = new THREE.TorusGeometry(0.28, 0.045, 6, 14);
+  }
+  /* os furos e os aneis de uma viga saem todos num desenho so, senao o robo vira centenas de chamadas */
+  const furos = new THREE.InstancedMesh(GEO_FURO, L.furo, n);
+  const aneis = new THREE.InstancedMesh(GEO_ANEL, mat, 2 * n);
+  const m = new THREE.Matrix4();
+  for (let i = 0; i < n; i++) {
+    const x = (i - (n - 1) / 2) * 0.8;
+    m.makeTranslation(x, 0, 0); furos.setMatrixAt(i, m);
+    m.makeTranslation(x, 0, 0.25); aneis.setMatrixAt(2 * i, m);
+    m.makeTranslation(x, 0, -0.25); aneis.setMatrixAt(2 * i + 1, m);
+  }
+  furos.castShadow = aneis.castShadow = true;
+  g.add(furos); g.add(aneis);
+  return g;
+}
+function pinoT(mat) { const p = cil(0.22, 0.86, mat, 10); p.rotation.x = Math.PI / 2; return p; }
+
+function montaExplorador(g, M, L) {
   const lados = [-1, 1];
-  PECAS.olhos = []; PECAS.olhoBrilho = 0.12;   /* anéis metálicos, como na foto; acendem em laranja quando há obstáculo perto */
+  PECAS.olhos = []; PECAS.olhoBrilho = 0.1;
   const temDist = portasDe("dist").length > 0;
-  /* olhos do ultrassônico, virados para a frente */
-  const olhos = (x, y, cor) => {
-    PECAS.olhoX = x + 0.4; PECAS.olhoH = y;
-    for (const z of [-1.35, 1.35]) {
-      const olho = cil(0.95, 0.5, M.vidro, 24); olho.rotation.z = Math.PI / 2; olho.position.set(x, y, z); g.add(olho);
-      const anel = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.15, 8, 28),
-        new THREE.MeshStandardMaterial({ color: 0x9aa0a8, emissive: cor, emissiveIntensity: 0.12, roughness: .25, metalness: .9 }));
-      anel.rotation.y = Math.PI / 2; anel.position.set(x + 0.27, y, z); g.add(anel); PECAS.olhos.push(anel.material);
-      const brilho = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-      brilho.position.set(x + 0.3, y + 0.35, z - 0.3); g.add(brilho);
+  /* atalhos: viga ("x" deitada, "z" travessa, "y" em pé) e pino */
+  const V = (n, mat, x, y, z, eixo, h) => {
+    const v = vigaT(n, mat, L, h); v.position.set(x, y, z);
+    if (eixo === "z") v.rotation.y = Math.PI / 2; else if (eixo === "y") v.rotation.z = Math.PI / 2;
+    g.add(v); return v;
+  };
+  const PN = (mat, x, y, z) => { const p = pinoT(mat); p.position.set(x, y, z); g.add(p); };
+
+  /* ---- sensor ultrassônico do SPIKE: caixa branca arredondada com as duas lentes pretas ---- */
+  const olhos = (x, y) => {
+    PECAS.olhoX = x + 1.2; PECAS.olhoH = y;
+    const caixa = caixaR(1.8, 2.5, 5.4, 0.7, L.corpo); caixa.position.set(x, y, 0); g.add(caixa);
+    const face = caixaR(0.6, 2.1, 5.0, 0.6, L.preto); face.position.set(x + 0.8, y, 0); g.add(face);
+    for (const z of [-1.3, 1.3]) {
+      const lente = cil(0.95, 0.4, L.preto, 28); lente.rotation.z = Math.PI / 2; lente.position.set(x + 1.0, y, z); g.add(lente);
+      const anel = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.17, 10, 30),
+        new THREE.MeshStandardMaterial({ color: 0x8b9096, emissive: 0xffffff, emissiveIntensity: 0.1, roughness: .3, metalness: .85 }));
+      anel.rotation.y = Math.PI / 2; anel.position.set(x + 1.16, y, z); g.add(anel); PECAS.olhos.push(anel.material);
+      const malha = cil(0.64, 0.14, new THREE.MeshStandardMaterial({ color: 0x0a0b0d, roughness: .95 }), 24);
+      malha.rotation.z = Math.PI / 2; malha.position.set(x + 1.24, y, z); g.add(malha);
+      const brilho = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      brilho.position.set(x + 1.3, y + 0.44, z - 0.36); g.add(brilho);
     }
   };
-  /* base escura por baixo do hub */
-  const base = caixaR(9.5, 1.6, 8.6, 0.5, L.preto); base.position.set(-0.2, 6.0, 0); g.add(base);
 
+  /* ---- quadro dos dois lados: viga preta estrutural, a amarela comprida da foto e os pinos ---- */
+  for (const s of lados) {
+    V(15, L.preto, -0.6, 5.0, s * 5.55);
+    V(17, L.braco, -0.6, 6.2, s * 5.55);
+    for (let i = -7; i <= 7; i += 2) PN(i % 4 ? L.eixoAzul : L.magenta, -0.6 + i * 0.8, 6.2, s * 5.55);
+    for (let i = -6; i <= 6; i += 3) PN(L.eixoAzul, -0.6 + i * 0.8, 5.0, s * 5.55);
+    /* painel preto fechando o vão entre as duas vigas */
+    const painel = caixaR(10.4, 1.0, 0.4, 0.3, L.preto); painel.position.set(-0.6, 5.6, s * 5.05); g.add(painel);
+    /* cantoneiras azuis da frente e de trás */
+    V(3, L.azulEsc, -6.6, 5.6, s * 4.6, "z");
+    V(3, L.azulEsc, 4.2, 5.6, s * 4.6, "z");
+  }
+  /* travessas que amarram os dois lados */
+  V(13, L.azulEsc, -7.0, 5.0, 0, "z");
+  V(13, L.preto, -2.6, 4.5, 0, "z");
+  V(13, L.azulEsc, 4.6, 5.0, 0, "z");
+  for (const z of [-4.4, 0, 4.4]) { PN(L.magenta, -7.0, 5.0, z); PN(L.magenta, 4.6, 5.0, z); }
+
+  /* ---- deck e cérebro ---- */
+  const deck = caixaR(11.6, 0.6, 8.4, 0.4, L.preto); deck.position.set(-1.6, 5.9, 0); g.add(deck);
   if (L.kit === "spike") {
-    /* hub em pé, com o botão de luz na frente e a matriz de luzes atrás */
-    const hub = caixaR(3.3, 8.8, 5.9, 1.0, L.corpo); hub.position.set(1.55, 11.3, 0); g.add(hub);
-    const aroB = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.13, 8, 28), L.cinza); aroB.rotation.y = Math.PI / 2; aroB.position.set(3.25, 9.4, 0); g.add(aroB);
-    const botao = cil(0.66, 0.3, new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x33ff66, emissiveIntensity: 1 }), 24);
-    botao.rotation.z = Math.PI / 2; botao.position.set(3.2, 9.4, 0); g.add(botao); PECAS.botao = botao.material;
-    const tela = caixaR(0.25, 5.0, 5.0, 0.5, M.grafite); tela.position.set(-0.18, 12.6, 0); g.add(tela);
+    /* hub deitado: matriz de luzes em cima, botão de luz na frente e as portas amarelas nas laterais */
+    const hub = caixaR(11.0, 3.0, 7.2, 0.9, L.corpo); hub.position.set(-1.8, 7.7, 0); g.add(hub);
+    const tela = caixaR(5.0, 0.24, 5.0, 0.5, M.grafite); tela.position.set(-1.2, 9.3, 0); g.add(tela);
     PECAS.leds = [];
     for (let yy = 0; yy < 5; yy++) for (let xx = 0; xx < 5; xx++) {
       const mat = new THREE.MeshStandardMaterial({ color: 0x2a2d31, emissive: 0xffffff, emissiveIntensity: 0, roughness: .4 });
-      const led = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.62, 0.62), mat);
-      led.position.set(-0.36, 12.6 + (2 - yy) * 0.84, (xx - 2) * 0.84); g.add(led); PECAS.leds.push(mat);
+      const led = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.62), mat);
+      led.position.set(-1.2 + (2 - yy) * 0.86, 9.46, (xx - 2) * 0.86); g.add(led); PECAS.leds.push(mat);
     }
-    /* ultrassônico preso na parte de cima da frente do hub */
-    if (temDist) {
-      const sup = caixaR(1.1, 3.0, 6.0, 0.45, L.corpo); sup.position.set(3.65, 13.5, 0); g.add(sup);
-      const caixaO = caixaR(0.7, 2.2, 5.0, 0.5, L.preto); caixaO.position.set(4.3, 13.5, 0); g.add(caixaO);
-      olhos(4.65, 13.5, 0xffffff);
-    }
+    const botao = cil(0.62, 0.3, new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x33ff66, emissiveIntensity: 1 }), 24);
+    botao.rotation.z = Math.PI / 2; botao.position.set(3.7, 7.7, 0); g.add(botao); PECAS.botao = botao.material;
+    const aroB = new THREE.Mesh(new THREE.TorusGeometry(0.76, 0.12, 8, 26), L.cinza);
+    aroB.rotation.y = Math.PI / 2; aroB.position.set(3.72, 7.7, 0); g.add(aroB);
     for (const s of lados) {
-      /* orelhas brancas em cima e os cabos pretos */
-      const orelha = caixaR(1.2, 1.6, 1.1, 0.4, L.corpo); orelha.position.set(1.2, 16.2, s * 2.3); g.add(orelha);
-      g.add(cabo([[0.6, 16.6, s * 1.6], [-1.8, 18.4, s * 3.2], [-5.0, 13.0, s * 4.8], [-6.2, 8.0, s * 4.2]], L.preto));
-      /* torres amarelas ao lado do hub */
-      const torre = caixaR(1.1, 8.4, 1.0, 0.4, L.braco); torre.position.set(0.1, 11.0, s * 3.75); g.add(torre);
-      furos(g, [0.1, 14.6], [0.1, 7.4], 5, s * 4.27, L.pino);
-      const topo = caixaR(1.8, 1.2, 1.2, 0.4, L.braco); topo.position.set(0.6, 15.4, s * 3.75); g.add(topo);
-      /* quadro azul-claro atrás */
-      const v = caixaR(1.0, 7.0, 0.9, 0.4, L.quadro); v.position.set(-3.6, 9.8, s * 4.7); g.add(v);
-      furos(g, [-3.6, 12.8], [-3.6, 6.8], 5, s * 5.17, L.preto);
-      const hz = caixaR(7.5, 1.0, 0.9, 0.4, L.quadro); hz.position.set(-2.2, 9.8, s * 5.5); g.add(hz);
-      furos(g, [-5.6, 9.8], [1.2, 9.8], 7, s * 5.97, L.preto);
-      g.add(barraEntre([-6.2, 6.6], [-1.2, 13.6], s * 4.2, 0.9, 0.9, L.quadro));
-      /* placas amarelas da frente, embaixo do hub */
-      const placa = caixaR(1.0, 5.0, 1.4, 0.4, L.braco); placa.position.set(3.7, 5.5, s * 2.0); g.add(placa);
-      furos(g, [4.22, 7.4], [4.22, 3.6], 4, s * 2.0, L.pino, true);
+      const faixa = caixaR(9.6, 2.0, 0.45, 0.25, L.braco); faixa.position.set(-1.8, 7.3, s * 3.63); g.add(faixa);
+      for (const x of [-5.7, -2.9, -0.1, 2.7]) {
+        const bocal = caixaR(1.6, 1.2, 0.3, 0.18, L.preto); bocal.position.set(x, 7.3, s * 3.9); g.add(bocal);
+        const pino = cil(0.2, 0.3, L.cinza, 10); pino.rotation.x = Math.PI / 2; pino.position.set(x, 7.3, s * 4.02); g.add(pino);
+      }
+      /* fitas brancas do hub para os motores e para os sensores da frente */
+      g.add(cabo([[-3.2, 9.2, s * 1.2], [-6.4, 12.4, s * 2.6], [-8.4, 8.4, s * 3.9], [-7.4, 6.4, s * 4.4]], L.corpo));
     }
-    const eixoF = caixaR(0.8, 0.8, 5.0, 0.3, L.preto); eixoF.position.set(4.0, 7.0, 0); g.add(eixoF);
+    g.add(cabo([[1.2, 9.2, -1.2], [4.8, 12.2, -0.8], [7.6, 8.8, -0.3]], L.corpo));
   } else {
-    /* bloco EV3 em pé: tela com olhos, botões e a luz de status em volta do botão do meio */
-    const bloco = caixaR(4.0, 11.0, 7.4, 1.0, L.corpo); bloco.position.set(1.2, 11.4, 0); g.add(bloco);
+    /* bloco EV3 deitado: a textura tem 50 px por cm e, virada assim, a linha 0 aponta para a frente */
+    const bloco = caixaR(10.8, 3.8, 7.2, 1.0, L.corpo); bloco.position.set(-2.0, 8.1, 0); g.add(bloco);
     const face = new THREE.Mesh(new THREE.PlaneGeometry(6.3, 9.9), new THREE.MeshStandardMaterial({ map: texFaceEv3(), roughness: .45 }));
-    face.rotation.y = Math.PI / 2; face.position.set(3.22, 11.4, 0); g.add(face);
+    face.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); face.position.set(-2.0, 10.02, 0); g.add(face);
     const luz = new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0x33ff66, emissiveIntensity: 1.2, roughness: .4 });
     PECAS.status = [luz];
-    const yb = 11.4 + 4.95 - 250 / 50;
-    for (const [dy, dz, hh, dd] of [[0.52, 0, 0.1, 1.14], [-0.52, 0, 0.1, 1.14], [0, 0.52, 1.14, 0.1], [0, -0.52, 1.14, 0.1]]) {
-      const b = new THREE.Mesh(new THREE.BoxGeometry(0.08, hh, dd), luz); b.position.set(3.27, yb + dy, dz); g.add(b);
+    const xb = -2.0 + 4.95 - 250 / 50;
+    for (const [dx, dz, ww, dd] of [[0.52, 0, 0.1, 1.14], [-0.52, 0, 0.1, 1.14], [0, 0.52, 1.14, 0.1], [0, -0.52, 1.14, 0.1]]) {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(ww, 0.08, dd), luz); b.position.set(xb + dx, 10.07, dz); g.add(b);
     }
-    /* ultrassônico embaixo do bloco, com os anéis vermelhos */
-    if (temDist) {
-      const us = caixaR(1.2, 2.2, 5.2, 0.5, L.preto); us.position.set(3.9, 4.9, 0); g.add(us);
-      olhos(4.5, 4.9, 0xff3b30);
-    }
-    const travessa = caixaR(0.9, 0.9, 6.4, 0.3, L.preto); travessa.position.set(3.7, 7.0, 0); g.add(travessa);
-    furos(g, [4.17, 7.0], [4.17, 7.0], 1, 0, L.cinza, true);
     for (const s of lados) {
-      const viga = caixaR(1.0, 9.0, 0.9, 0.4, L.preto); viga.position.set(-0.2, 11.2, s * 4.2); g.add(viga);
-      furos(g, [-0.2, 15.0], [-0.2, 7.4], 6, s * 4.67, L.cinza);
-      const painel = caixaR(5.2, 3.4, 0.7, 1.3, L.painel); painel.position.set(-0.6, 6.9, s * 5.3); g.add(painel);
-      const conector = caixaR(1.4, 1.0, 1.1, 0.35, L.acento); conector.position.set(1.4, 14.2, s * 4.25); g.add(conector);
-      const orelha = caixaR(1.2, 1.5, 1.1, 0.4, L.cinza); orelha.position.set(1.0, 17.4, s * 2.9); g.add(orelha);
-      const traseira = caixaR(3.0, 5.5, 1.0, 0.5, L.painel); traseira.position.set(-4.6, 9.4, s * 4.6); g.add(traseira);
-      const pe = caixaR(1.2, 1.4, 1.2, 0.35, L.acento); pe.position.set(3.6, 5.3, s * 3.3); g.add(pe);
-      g.add(cabo([[0.4, 17.0, s * 1.8], [-2.2, 18.6, s * 3.4], [-5.4, 13.4, s * 5.0], [-6.4, 8.2, s * 4.4]], L.preto));
+      for (const x of [-5.2, -3.4]) { const con = caixaR(1.4, 1.1, 0.4, 0.2, L.acento); con.position.set(x, 8.1, s * 3.7); g.add(con); }
+      g.add(cabo([[-3.4, 10.1, s * 1.2], [-6.6, 12.6, s * 2.6], [-8.4, 8.6, s * 3.9], [-7.4, 6.4, s * 4.4]], L.painel));
     }
+    g.add(cabo([[1.0, 10.1, -1.2], [4.8, 12.2, -0.8], [7.6, 8.8, -0.3]], L.painel));
+  }
+
+  /* ---- torres amarelas da frente: é nelas que o ombro da pá se apoia (a garra não mudou de lugar) ---- */
+  for (const s of lados) {
+    V(9, L.braco, 1.7, 9.8, s * 5.55, "y");
+    PN(L.eixoAzul, 1.7, 12.6, s * 5.55); PN(L.magenta, 1.7, 10.2, s * 5.55); PN(L.eixoAzul, 1.7, 7.8, s * 5.55);
+    g.add(barraEntre([1.7, 11.4], [-3.4, 7.0], s * 5.55, 0.8, 0.5, L.azulC));
+    const pe = caixaR(1.4, 1.2, 1.0, 0.3, L.azulEsc); pe.position.set(1.7, 6.6, s * 5.55); g.add(pe);
+  }
+  V(13, L.braco, 2.0, 12.9, 0, "z");
+  for (const z of [-4.4, 0, 4.4]) PN(L.eixoAzul, 2.0, 12.9, z);
+
+  /* ---- ultrassônico no centro da frente, pendurado nas torres ---- */
+  if (temDist) {
+    V(7, L.preto, 4.8, 8.2, 0, "z");
+    for (const s of lados) {
+      g.add(barraEntre([2.0, 12.5], [4.8, 8.2], s * 2.5, 0.7, 0.5, L.braco));
+      PN(L.magenta, 4.8, 8.2, s * 2.5);
+    }
+    olhos(6.4, 8.2);
   }
 
   /* caçamba, braços e pistões: tudo gira junto no eixo da pá (PA_PIVO); abaixada, o fundo fica no chão */
@@ -575,15 +637,17 @@ function montaCarro3d() {
   };
   PECAS = { M };
   const rodaR = ROD_MM / 20;
-  /* SPIKE e EV3 (esteira ou 4 rodas) seguem o modelo da carregadeira, com o chassi escuro como na foto */
-  const L = estiloCarregadeira();
+  /* SPIKE e EV3 (esteira ou 4 rodas) seguem o modelo do explorador, com o chassi escuro como na foto */
+  const L = estiloExplorador();
   if (L) M.chassi = L.preto;
   PECAS.olhoX = 10; PECAS.olhoH = 8.2;
 
   /* chassi: placa com as vigas de encaixe */
   const acrilico = new THREE.MeshPhysicalMaterial({ color: corL(EQUIPE.cor), transparent: true, opacity: 0.45, roughness: 0.08, metalness: 0, clearcoat: 1 });
-  const placa = caixaR(19.5, PLAT.id === "arduino" ? 0.5 : 1.3, 11.8, PLAT.id === "arduino" ? 0.25 : 1.4, PLAT.id === "arduino" ? acrilico : M.chassi);
-  placa.position.set(-0.5, 4.6, 0); g.add(placa);
+  /* no explorador o quadro Technic e que sustenta tudo, entao a placa e so uma chapa fina por dentro */
+  const placa = L ? caixaR(12.8, 0.7, 9.0, 0.4, L.preto)
+    : caixaR(19.5, PLAT.id === "arduino" ? 0.5 : 1.3, 11.8, PLAT.id === "arduino" ? 0.25 : 1.4, PLAT.id === "arduino" ? acrilico : M.chassi);
+  placa.position.set(L ? -0.8 : -0.5, L ? 4.3 : 4.6, 0); g.add(placa);
   if (PLAT.id !== "arduino" && !L) for (const z of [-5.3, 5.3]) {
     const viga = caixaR(19, 0.9, 1.1, 0.4, M.chassi); viga.position.set(-0.5, 5.6, z); g.add(viga);
     for (let i = -4; i <= 4; i++) {           /* furinhos das vigas */
@@ -593,7 +657,7 @@ function montaCarro3d() {
   montaTracao(g, M, rodaR, L);
 
   PECAS.leds = []; PECAS.botao = null; PECAS.status = null;
-  if (L) montaCarregadeira(g, M, L);
+  if (L) montaExplorador(g, M, L);
   else if (PLAT.id === "ev3") montaBlocoEv3(g, M);
   else if (PLAT.id === "arduino") montaArduino(g, M);
   else {
@@ -633,7 +697,9 @@ function montaCarro3d() {
       const pcb = caixaR(2.6, 0.18, 3.0, 0.1, new THREE.MeshStandardMaterial({ color: corL("#1f5fbf"), roughness: .5 })); pcb.position.y = 1.4; s.add(pcb);
       const chip = caixaR(1.2, 0.5, 1.2, 0.1, M.preto); chip.position.y = 1.0; s.add(chip);
     } else {
-    const corpo = caixaR(2.2, 2.5, 2.2, 0.55, PLAT.id === "ev3" ? M.grafite : M.preto); corpo.position.y = 2.05; s.add(corpo);
+    /* sensor de cor do kit: no SPIKE o corpo e branco com a boca preta virada para baixo */
+    const corpo = caixaR(2.2, 2.5, 2.2, 0.55, L && L.kit === "spike" ? L.corpo : PLAT.id === "ev3" ? M.grafite : M.preto); corpo.position.y = 2.05; s.add(corpo);
+    if (L) { const boca = caixaR(2.0, 0.8, 2.0, 0.4, L.preto); boca.position.y = 1.05; s.add(boca); }
     }
     const aro = cil(0.78, 0.18, PLAT.id === "ev3" ? M.azul : M.branco, 20); aro.position.y = 0.74; s.add(aro);
     const lente = cil(0.5, 0.2, new THREE.MeshBasicMaterial({ color: 0xffffff }), 16); lente.position.y = 0.7; s.add(lente);

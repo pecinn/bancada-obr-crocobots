@@ -3,6 +3,8 @@ P = 'partes/'
 orig = open('original.html', encoding='utf8').read().split('\n')
 css_orig = '\n'.join(orig[6:163])   # linhas 7..163
 logo = open(P + 'logo_md.txt').read().strip()
+# logo do Instituto Gradual: opcional. Sem o arquivo, os selos simplesmente nao aparecem.
+gradual = open(P + 'logo_gradual.txt').read().strip() if os.path.exists(P + 'logo_gradual.txt') else ''
 # arte da entrada, do jeito que veio na pasta modelo (PNG original, sem recompressão)
 login_png = 'data:image/png;base64,' + base64.b64encode(open('../modelo/robohub-login.png', 'rb').read()).decode()
 plataformas_png = 'data:image/png;base64,' + base64.b64encode(open('../modelo/robohub-plataformas.png', 'rb').read()).decode()
@@ -18,7 +20,7 @@ js11 = r('js11.js').replace('</script>', '').rstrip()
 ordem = ['js13_plataforma.js', 'js14.js', 'js5_mundo.js', 'js6_robo.js', 'js7_cena.js', 'js8_interp.js', 'js9_ui.js',
          'js9b_resgate.js', 'js16_formatos.js', 'js17_robohub.js', 'js15_trilha.js']
 out = (head + css_orig + '\n' + r('css_novo.css') + '\n' + r('css_portal.css') + '\n' + r('css_trilha.css') + '\n' + r('css_robohub.css') + '\n' + r('css_modelo.css') + '\n</style>\n' +
-       r('html_novo.html').replace('LOGO_DATA', logo) + '\n' + r('html_portal.html').replace('ROBOHUB_LOGIN_DATA', login_png).replace('ROBOHUB_PLATAFORMAS_DATA', plataformas_png).replace('LOGO_DATA', logo) +
+       r('html_novo.html').replace('LOGO_DATA', logo).replace('GRADUAL_DATA', gradual) + '\n' + r('html_portal.html').replace('ROBOHUB_LOGIN_DATA', login_png).replace('ROBOHUB_PLATAFORMAS_DATA', plataformas_png).replace('LOGO_DATA', logo).replace('GRADUAL_DATA', gradual) +
        '\n<script>\n' + '\n'.join(r(f) for f in ordem) +
        '\n/* =======================================================================\n   10. PARTIDA\n   ======================================================================= */\n' +
        r('embutido.js') + '\n' + r('js10_partida.js') + '\n' + js11 + '\n</script>\n')

@@ -1,6 +1,6 @@
 
 <div id="topo">
-  <span class="marca"><img class="logo" id="logoTopo" src="LOGO_DATA" alt="CROCOBOTS"><span><span class="nome">Bancada OBR</span><span class="sub">CROCOBOTS · Clube de Robótica JGP</span></span></span>
+  <span class="marca"><img class="logo" id="logoTopo" src="LOGO_DATA" alt="CROCOBOTS"><span><span class="nome">CROCOBOTS</span><span class="sub">Clube de Robótica JGP</span></span></span>
   <span class="tag" id="tagProj">programa novo</span>
   <button class="bt" id="btAbrir" title="Abrir um projeto">Abrir</button>
   <input type="file" id="arq" accept=".llsp3,.lmsp,.sb3,.zip,.json,.ino" style="display:none">
@@ -26,7 +26,9 @@
   <button class="bt icone" id="btReset" title="Voltar para a largada">⟲</button>
   <button class="bt teste" id="btTestar" title="Roda o programa em todas as pistas e mostra o relatório">🧪 Testar tudo</button>
   <button class="bt icone" id="btSom" title="Som ligado">🔊</button>
+  <span class="selo-grad" data-gradual></span>
 </div>
+<img id="logoGradual" src="GRADUAL_DATA" alt="" hidden>
 <form id="guardaBox" hidden>
   <label for="guardaNome">Guardar o programa atual como</label>
   <input id="guardaNome" maxlength="60" autocomplete="off">
@@ -59,6 +61,7 @@
       <canvas id="lona2" width="600" height="450" hidden></canvas>
       <canvas id="confete"></canvas>
       <img id="marcaDagua" src="LOGO_DATA" alt="">
+      <span id="marcaDaguaG" class="selo-grad" data-gradual></span>
       <div id="selo"></div>
       <div id="hudTopo">
         <span class="chip"><span class="ponto" id="hPonto"></span><span id="hEstado">parado</span></span>

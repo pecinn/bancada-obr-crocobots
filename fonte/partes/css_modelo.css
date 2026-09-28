@@ -244,7 +244,7 @@
 #telaKits .rh-menu button{border:0;background:none;color:#e9f0fb;text-align:left;padding:12px 14px;border-radius:8px;font-size:16px;font-family:Arial,Helvetica,sans-serif;cursor:pointer}
 #telaKits .rh-menu button:hover{background:rgba(43,140,255,.14)}
 
-/* ======================= SIMULADOR: modelo do robô com as fotos da carregadeira (SPIKE e EV3) ======================= */
+/* ======================= SIMULADOR: modelo do robô com as fotos do explorador (SPIKE e EV3) ======================= */
 .modelos.com-fotos{grid-template-columns:1fr 1fr}
 .modelos.com-fotos button{padding:6px 6px 8px;align-content:start}
 .modelos.com-fotos .foto-modelo{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:7px;margin-bottom:4px}
@@ -252,3 +252,23 @@
 .modelos.com-fotos button[data-modelo="rodas2"]{grid-column:1/-1;grid-template-columns:auto 1fr;justify-items:start;align-items:center;column-gap:10px;padding:8px 10px}
 .modelos.com-fotos button[data-modelo="rodas2"] svg{grid-row:span 2}
 .modelos.com-fotos button[data-modelo="rodas2"] small{text-align:left}
+
+/* ======================= SELO DO INSTITUTO GRADUAL =======================
+   Um só arquivo de imagem (#logoGradual), clonado pelo selosGradual() nos pontos data-gradual. */
+.selo-grad{display:inline-flex;align-items:center;gap:6px}
+.selo-grad img{display:block;height:100%;width:auto}
+/* topo da bancada: na ponta direita, separado dos botões por um traço */
+#topo .selo-grad{height:34px;flex:none;margin-left:10px;padding-left:12px;border-left:1px solid var(--borda)}
+#topo .selo-grad img{height:34px}
+/* marca d'água sobre a pista, logo abaixo da marca da equipe */
+#marcaDaguaG{position:absolute;right:12px;top:130px;height:32px;opacity:.5;z-index:3;pointer-events:none}
+#palco.pequeno #marcaDaguaG{height:24px;top:110px}
+/* canto da tela de entrada do RoboHub */
+.selo-login{position:absolute;right:24px;bottom:20px;height:36px;z-index:4;opacity:.92}
+/* rodapé do menu lateral do portal */
+.selo-foot{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin-top:12px}
+.selo-foot small{font-size:8px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:#8a96a6}
+.selo-foot img{height:26px}
+/* tela de resultado do desafio: os dois logos lado a lado */
+.logosRes{display:flex;align-items:center;justify-content:center;gap:14px}
+.logosRes .selo-grad img{height:26px}

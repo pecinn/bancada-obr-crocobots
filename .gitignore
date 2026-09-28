@@ -3,3 +3,7 @@ __pycache__/
 fonte/bancada-obr.html
 .DS_Store
 fonte/check.js
+
+# Listas/certificados por turma com dado de aluno: repositorio e publico,
+# isso nunca sobe (decisao do dono, 28/09/2026).
+*.pdf

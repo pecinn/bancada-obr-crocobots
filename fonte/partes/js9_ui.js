@@ -152,7 +152,7 @@ function fimDeCorrida() {
   const res = $("resultado");
   const vit = VITIMAS.length ? '<div><b>' + C.resgatadas + "/" + VITIMAS.length + "</b><span>vítimas na área certa" +
     (C.trocadas ? " (+" + C.trocadas + " na trocada)" : "") + "</span></div>" : "";
-  res.innerHTML = '<img class="logoRes" src="' + LOGO_IMG.src + '" alt=""><div class="estrelas">' + "★".repeat(st) + '<span style="opacity:.3">' + "★".repeat(3 - st) + "</span></div>" +
+  res.innerHTML = '<span class="logosRes"><img class="logoRes" src="' + LOGO_IMG.src + '" alt=""><span class="selo-grad" data-gradual></span></span><div class="estrelas">' + "★".repeat(st) + '<span style="opacity:.3">' + "★".repeat(3 - st) + "</span></div>" +
     "<h3>" + titulos[nota.txt] + "</h3><p>" + nome + "</p>" +
     '<div class="nums"><div><b>' + C.pct + '%</b><span>percurso</span></div><div><b>' + (C.tempoFim || R.t).toFixed(1).replace(".", ",") +
     ' s</b><span>' + (C.completou ? "tempo da volta" : "tempo até parar") + '</span></div><div><b>' + C.saidas + "</b><span>saídas</span></div>" + vit + "</div>" +
@@ -161,6 +161,7 @@ function fimDeCorrida() {
       C.naChegada ? "Chegou na faixa vermelha, mas não ficou 5 s completamente parado." :
       explicaParada(C)) + "</p>" +
     '<button class="verde" id="resDeNovo">⟲ Tentar de novo</button><button id="resFecha">Fechar</button>';
+  selosGradual(res);
   res.classList.add("show");
   $("resDeNovo").onclick = () => { res.classList.remove("show"); voltaLargada(); $("btRodar").click(); };
   $("resFecha").onclick = () => res.classList.remove("show");
@@ -273,6 +274,19 @@ function montaPortas() {
   nota.textContent = (PLAT.id === "arduino" ? "Passe o mouse no nome para ver os pinos. " : "") + "Se o robô virar para o lado errado no quadrado verde, troque aqui qual sensor de cor é o da esquerda.";
   d.appendChild(nota);
 }
+/* ---- selo do Instituto Gradual ----
+   A imagem entra uma vez só (#logoGradual) e é clonada nos pontos marcados com data-gradual.
+   Sem o arquivo partes/logo_gradual.txt o src vem vazio e os selos são removidos. */
+const LOGO_GRADUAL = (function () { const i = $("logoGradual"), v = i && i.getAttribute("src"); return v && v.length > 10 ? v : ""; })();
+function selosGradual(raiz) {
+  (raiz || document).querySelectorAll("[data-gradual]").forEach(el => {
+    if (!LOGO_GRADUAL) return el.remove();
+    if (el.firstChild) return;
+    el.innerHTML = (el.dataset.legenda ? "<small>" + el.dataset.legenda + "</small>" : "") +
+      '<img src="' + LOGO_GRADUAL + '" alt="Instituto Gradual">';
+  });
+}
+selosGradual();
 function marcaModelo() {
   document.querySelectorAll("#modelos button").forEach(b => b.setAttribute("aria-checked", b.dataset.modelo === MODELO ? "true" : "false"));
 }
@@ -281,7 +295,7 @@ const FOTOS_MODELO = FOTOS_MODELO_JSON;
 (function () {
   const caixa = $("modelos");
   if (!caixa || (PLAT.id !== "spike" && PLAT.id !== "ev3")) return;
-  const textos = { rodas4: ["4 rodas", "carregadeira, pneus largos"], esteira: ["Esteira", "carregadeira, sobe fácil"] };
+  const textos = { rodas4: ["4 rodas", "explorador, pneus largos"], esteira: ["Esteira", "explorador, sobe fácil"] };
   caixa.classList.add("com-fotos");
   for (const m of ["rodas4", "esteira"]) {
     const b = caixa.querySelector('[data-modelo="' + m + '"]'), src = FOTOS_MODELO[PLAT.id + "_" + m];
